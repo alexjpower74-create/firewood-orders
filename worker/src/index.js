@@ -2,24 +2,24 @@
 import { ApiError, bad, badState, notFound } from './errors.js'
 import { DEALER_HOURS, DRIVER_DAYS, hashPin, randomId, randomToken, sameHex, sha256Hex } from './auth.js'
 import { now as clockNow, testMode } from './clock.js'
-import { customerBalance, owingCents, paidCents, priceOrder } from './money.js'
+import { counts, customerBalance, owingCents, paidCents, priceOrder } from './money.js'
 import { optimizeRoute, pathKm } from './route.js'
 import { sampleStatements } from './sample.js'
 import { addDays, isValidDate, isoWeekday, longLabel, nlDate, shortLabel, TZ, weekdayName } from './time.js'
 import { cordsOf, cordsText } from './units.js'
-import { MAX_PAYMENT_CENTS, parseOrderInput, phoneDigits } from './validate.js'
+import { MAX_PAYMENT_CENTS, parseContactInput, parseOrderInput, parseProductInput, phoneDigits } from './validate.js'
 import {
   customerOrderView, DAY_STATUSES, dateView, deliveredLabel, deliveryView, loadProducts, loadSettings, MAP, METHOD_LABELS,
-  nextDeliveryDates, NOTE, ORDER_SELECT, orderMessages, orderSummary, paymentView, publicProduct, qtyLabelOf,
+  nextDeliveryDates, NOTE, ORDER_SELECT, orderMessages, orderSummary, paymentView, preferredDates, publicProduct, qtyLabelOf,
 } from './views.js'
+import { adjustStock, changePin, createProduct, getSettings, putSettings, updateProduct } from './admin.js'
+import { assertOrderAllowed, assertSigninAllowed, orderAttempt, signinAttempt } from './guards.js'
+import { json } from './http.js'
+import { ordersCsv, paymentsCsv, totals } from './reports.js'
+import { seedDemo } from './seed.js'
 
 const MAX_PHOTO_BYTES = 5000000
 const PHOTO_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
-
-const json = (body, status = 200, headers = {}) =>
-  new Response(JSON.stringify(body), {
-    status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers },
-  })
 
 // [method, path pattern, handler, access] — access: undefined (public), 'dealer', 'driver' (either role), 'test'.
 const ROUTES = [
@@ -46,10 +46,26 @@ const ROUTES = [
   ['POST', '/api/driver/day/:date/start', startDay, 'driver'],
   ['POST', '/api/driver/checkins', checkin, 'driver'],
   ['PUT', '/api/driver/checkins/:op_id/photo', putPhoto, 'driver'],
+  ['POST', '/api/o/:token/cancel', cancelByCustomer],
+  ['PUT', '/api/dealer/orders/:id', editOrder, 'dealer'],
+  ['POST', '/api/dealer/orders/:id/cancel', cancelOrder, 'dealer'],
+  ['POST', '/api/dealer/orders/:id/undeliver', undeliver, 'dealer'],
+  ['DELETE', '/api/dealer/payments/:id', voidPayment, 'dealer'],
+  ['GET', '/api/dealer/totals', totals, 'dealer'],
+  ['GET', '/api/dealer/export/orders.csv', ordersCsv, 'dealer'],
+  ['GET', '/api/dealer/export/payments.csv', paymentsCsv, 'dealer'],
+  ['GET', '/api/dealer/settings', getSettings, 'dealer'],
+  ['PUT', '/api/dealer/settings', putSettings, 'dealer'],
+  ['POST', '/api/dealer/products', createProduct, 'dealer'],
+  ['PUT', '/api/dealer/products/:id', updateProduct, 'dealer'],
+  ['POST', '/api/dealer/products/:id/stock', adjustStock, 'dealer'],
+  ['PUT', '/api/dealer/pin', changePin, 'dealer'],
+  ['DELETE', '/api/driver/checkins/:op_id', undoCheckin, 'driver'],
   ['POST', '/api/test/reset', testReset, 'test'],
+  ['POST', '/api/test/seed', testSeed, 'test'],
 ].map(([method, pattern, handler, access]) => {
   const names = []
-  const re = new RegExp('^' + pattern.replace(/:(\w+)/g, (_, n) => (names.push(n), '([^/]+)')) + '$')
+  const re = new RegExp('^' + pattern.replace(/\./g, '\\.').replace(/:(\w+)/g, (_, n) => (names.push(n), '([^/]+)')) + '$')
   return { method, re, names, handler, access }
 })
 
@@ -114,13 +130,17 @@ async function requireRole(c, access) {
 async function signin(c) {
   const body = await c.body()
   const pin = typeof body?.pin === 'string' ? body.pin : ''
+  await assertSigninAllowed(c)
   const row = await c.db.prepare('SELECT dealer_pin_hash, dealer_pin_salt, driver_pin_hash, driver_pin_salt FROM settings WHERE id = 1').first()
   let role = null
   if (/^\d{4,8}$/.test(pin)) {
     if (sameHex(await hashPin(pin, row.dealer_pin_salt), row.dealer_pin_hash)) role = 'dealer'
     else if (sameHex(await hashPin(pin, row.driver_pin_salt), row.driver_pin_hash)) role = 'driver'
   }
-  if (!role) throw new ApiError(401, 'unauthorized', 'That PIN is not right.', { field: 'pin' })
+  if (!role) {
+    await signinAttempt(c, false).run()
+    throw new ApiError(401, 'unauthorized', 'That PIN is not right.', { field: 'pin' })
+  }
   const token = randomToken()
   const ms = role === 'dealer' ? DEALER_HOURS * 3600e3 : DRIVER_DAYS * 86400e3
   const expires = new Date(c.now.getTime() + ms).toISOString()
@@ -142,7 +162,7 @@ async function info(c) {
   const products = (await loadProducts(c.db)).filter((p) => p.active).map((p) => publicProduct(p, s))
     .filter((p) => p.units.length)
   return json({
-    name: s.name, short_name: s.short_name, sample: true, timezone: TZ, today: c.today, now: c.nowIso, phone: s.phone,
+    name: s.name, short_name: s.short_name, sample: s.sample, timezone: TZ, today: c.today, now: c.nowIso, phone: s.phone,
     season_open: s.season_open, season_message: s.season_message, deposit_text: s.deposit_text,
     min_order_cents: s.min_order_cents, hst_registered: s.hst_registered, yard: s.yard, delivery: deliveryView(s.delivery),
     load: { cords: s.load.cords, description: s.load.description }, products,
@@ -167,12 +187,14 @@ async function createOrder(c, source) {
   const body = await c.body()
   const { s, products, deliveryDates } = await orderContext(c)
   if (source === 'online' && !s.season_open) throw new ApiError(403, 'season_closed', s.season_message)
+  if (source === 'online') await assertOrderAllowed(c)
   const input = parseOrderInput(body, { products, settings: s, deliveryDates, full: true, dealer: source === 'phone' })
   const q = priceOrder(input, s)
   const id = randomId('o')
   const token = randomToken()
   const phoneKey = phoneDigits(input.phone).slice(-10)
   await c.db.batch([
+    ...(source === 'online' ? [orderAttempt(c)] : []),
     c.db.prepare('INSERT INTO customers (id, name, phone, phone_key, created_at) VALUES (?, ?, ?, ?, ?) ' +
       'ON CONFLICT (phone_key) DO UPDATE SET name = excluded.name, phone = excluded.phone')
       .bind(randomId('c'), input.name, input.phone, phoneKey, c.nowIso),
@@ -449,7 +471,7 @@ async function customers(c) {
     const last = os.map((o) => o.created_at).sort().pop()
     const balance = customerBalance(os, ps)
     return { id: cu.id, name: cu.name, phone: cu.phone, orders: live.length,
-      total_cents: live.reduce((a, o) => a + o.total_cents, 0), paid_cents: ps.filter((p) => !p.voided)
+      total_cents: live.reduce((a, o) => a + o.total_cents, 0), paid_cents: ps.filter(counts)
         .reduce((a, p) => a + p.amount_cents, 0), balance_cents: balance,
       last_order_label: last ? shortLabel(nlDate(last)) : null }
   })
@@ -465,7 +487,7 @@ async function ledger(c) {
   const rows = [
     ...orders.filter((o) => o.status !== 'cancelled').map((o) => ({ date: nlDate(o.created_at), at: o.created_at,
       kind: 'order', text: `Order: ${qtyLabelOf(o)} of ${o.product_label}`, charge_cents: o.total_cents, payment_cents: 0 })),
-    ...payments.filter((p) => !p.voided).map((p) => ({ date: p.date, at: p.created_at, kind: 'payment',
+    ...payments.filter(counts).map((p) => ({ date: p.date, at: p.created_at, kind: 'payment',
       text: `${p.source === 'door' ? 'Paid at the door' : 'Payment'}: ${METHOD_LABELS[p.method]}${p.note ? ` (${p.note})` : ''}`,
       charge_cents: 0, payment_cents: p.amount_cents })),
   ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.at < b.at ? -1 : a.at > b.at ? 1 : 0))
@@ -516,7 +538,7 @@ async function driverDay(c) {
   const rows = await dayOrders(c, date)
   const payments = rows.length ? await allPayments(c) : []
   return json({
-    dealer: { name: s.name, short_name: s.short_name, sample: true }, date, long_label: longLabel(date), yard: s.yard,
+    dealer: { name: s.name, short_name: s.short_name, sample: s.sample }, date, long_label: longLabel(date), yard: s.yard,
     started: await isStarted(c, date), note: NOTE,
     counts: { done: rows.filter((o) => o.status === 'delivered').length, total: rows.length },
     stops: rows.map((o, i) => ({
@@ -646,12 +668,168 @@ async function putPhoto(c) {
   return json({ stored: true, photo_url: `/api/photos/${o.token}` })
 }
 
+// ---------- M2: cancel, edit, undeliver, undo, void ----------
+
+async function cancelByCustomer(c) {
+  const o = await orderByToken(c, c.params.token)
+  const r = await c.db.prepare(`UPDATE orders SET status = 'cancelled', cancelled_at = ?, updated_at = ?
+    WHERE id = ? AND status = 'requested'`).bind(c.nowIso, c.nowIso, o.id).run()
+  if (r.meta.changes === 0) {
+    throw badState(o.status === 'cancelled' ? 'This order is already cancelled.'
+      : 'This order is already on the schedule. Call us to change it.')
+  }
+  return json({ status: 'cancelled' })
+}
+
+async function cancelOrder(c) {
+  const o = await orderById(c, c.params.id)
+  const r = await c.db.prepare(`UPDATE orders SET status = 'cancelled', cancelled_at = ?, updated_at = ?, delivery_date = NULL,
+    route_pos = NULL WHERE id = ? AND status IN ('requested', 'scheduled')`).bind(c.nowIso, c.nowIso, o.id).run()
+  if (r.meta.changes === 0) {
+    throw badState(o.status === 'cancelled' ? 'This order is already cancelled.'
+      : o.status === 'delivered' ? 'This order was delivered. Mark it not delivered first.'
+        : "This order is out for delivery and can't be cancelled now.")
+  }
+  if (o.delivery_date) await compactDay(c, o.delivery_date)
+  return json({ order: await summaryOf(c, o.id) })
+}
+
+const MONEY_KEYS = ['qty', 'unit', 'stacking', 'delivery_cents', 'lat', 'lng', 'zone_id']
+
+async function editOrder(c) {
+  const b = await c.body()
+  if (!b || typeof b !== 'object' || Array.isArray(b)) throw bad('body', 'Send the changes as JSON.')
+  const o = await orderById(c, c.params.id)
+  if (o.status === 'cancelled') throw badState("A cancelled order can't be changed.")
+  const current = { qty: o.qty, unit: o.unit, stacking: !!o.stacking, delivery_cents: o.delivery_cents, lat: o.lat, lng: o.lng,
+    zone_id: o.zone_id }
+  const moneyChanged = MONEY_KEYS.some((k) => b[k] !== undefined && b[k] !== current[k])
+  if (moneyChanged && o.status === 'delivered') {
+    throw badState('This order was delivered. Mark it not delivered before changing the amount or the price.')
+  }
+  const { s, products, deliveryDates } = await orderContext(c)
+  const contact = parseContactInput({ address: b.address ?? o.address, dump_notes: b.dump_notes ?? o.dump_notes,
+    note: b.note ?? o.note, name: b.name ?? o.name, phone: b.phone ?? o.phone, preferred: b.preferred ?? { any: true } },
+  { deliveryDates })
+  const preferredAny = b.preferred === undefined ? !!o.preferred_any : contact.preferred_any
+  const preferred = b.preferred === undefined ? preferredDates(o) : contact.preferred_dates
+  // Money is recomputed (with today's prices) only when something that sets it changes.
+  let next = o
+  if (moneyChanged) {
+    const pinMoved = ['lat', 'lng', 'zone_id'].some((k) => b[k] !== undefined && b[k] !== current[k])
+    const override = b.delivery_cents !== undefined ? b.delivery_cents : pinMoved ? null : o.delivery_cents
+    const input = parseProductInput({ product_id: o.product_id, unit: b.unit ?? o.unit, qty: b.qty ?? o.qty,
+      stacking: b.stacking ?? !!o.stacking, lat: b.lat ?? o.lat, lng: b.lng ?? o.lng, zone_id: b.zone_id ?? o.zone_id,
+      delivery_cents: override },
+    { products: products.map((p) => (p.id === o.product_id ? { ...p, active: true } : p)), settings: s, dealer: true })
+    const q = priceOrder(input, s)
+    next = { ...q, qty: input.qty, unit: input.unit, stacking: input.stacking, lat: input.lat, lng: input.lng,
+      zone_id: input.zone_id }
+  }
+  // CAPACITY-GUARD (edit): like scheduling, the new volume and the day's check are one statement. Shrinking is always
+  // allowed, so a day that is over a lowered limit can still be fixed.
+  const r = await c.db.prepare(`UPDATE orders SET product_label = ?1, explain = ?2, qty = ?3, unit = ?4, stacking = ?5, lat = ?6,
+      lng = ?7, zone_id = ?8, distance_km = ?9, wood_cu_in = ?10, pellet_bags = ?11, goods_cents = ?12, stacking_cents = ?13,
+      delivery_cents = ?14, subtotal_cents = ?15, hst_cents = ?16, total_cents = ?17, address = ?18, dump_notes = ?19, note = ?20,
+      preferred_any = ?21, preferred_dates = ?22, updated_at = ?23
+    WHERE id = ?24 AND status = ?25
+      AND (status NOT IN ('scheduled', 'out_for_delivery')
+        OR (?10 <= wood_cu_in AND ?11 <= pellet_bags)
+        OR ((SELECT COALESCE(SUM(x.wood_cu_in), 0) FROM orders x
+              WHERE x.delivery_date = orders.delivery_date AND x.id <> orders.id AND x.status IN ${DAY_STATUSES})
+            + ?10 <= (SELECT cap_cu_in FROM settings WHERE id = 1)
+          AND (SELECT COALESCE(SUM(x.pellet_bags), 0) FROM orders x
+              WHERE x.delivery_date = orders.delivery_date AND x.id <> orders.id AND x.status IN ${DAY_STATUSES})
+            + ?11 <= (SELECT cap_bags FROM settings WHERE id = 1)))`)
+    .bind(next.product_label, next.explain, next.qty, next.unit, next.stacking ? 1 : 0, next.lat, next.lng, next.zone_id,
+      next.distance_km, next.wood_cu_in, next.pellet_bags, next.goods_cents, next.stacking_cents, next.delivery_cents,
+      next.subtotal_cents, next.hst_cents, next.total_cents, contact.address, contact.dump_notes, contact.note,
+      preferredAny ? 1 : 0, JSON.stringify(preferred), c.nowIso, o.id, o.status).run()
+  if (r.meta.changes === 0) {
+    const now = await orderById(c, o.id)
+    if (now.status !== o.status) throw badState('This order changed while you were editing. Reload and try again.')
+    const use = await dayUse(c, now.delivery_date)
+    throw overCapacity(s, now.delivery_date, { wood: use.wood - now.wood_cu_in, bags: use.bags - now.pellet_bags },
+      { kind: now.kind, wood_cu_in: next.wood_cu_in, pellet_bags: next.pellet_bags })
+  }
+  if (b.name !== undefined || b.phone !== undefined) {
+    // The order (and its payments) follow the phone number to that customer; the newest name wins.
+    const key = phoneDigits(contact.phone).slice(-10)
+    const customer = '(SELECT id FROM customers WHERE phone_key = ?)'
+    await c.db.batch([
+      c.db.prepare('INSERT INTO customers (id, name, phone, phone_key, created_at) VALUES (?, ?, ?, ?, ?) ' +
+        'ON CONFLICT (phone_key) DO UPDATE SET name = excluded.name, phone = excluded.phone')
+        .bind(randomId('c'), contact.name, contact.phone, key, c.nowIso),
+      c.db.prepare(`UPDATE orders SET customer_id = ${customer} WHERE id = ?`).bind(key, o.id),
+      c.db.prepare(`UPDATE payments SET customer_id = ${customer} WHERE order_id = ?`).bind(key, o.id),
+    ])
+  }
+  return json({ order: await summaryOf(c, o.id) })
+}
+
+// Reverses a delivered check-in in one batch: the check-in marked undone, stock back with an 'undo' move, its door payment
+// voided, and the order back to its day (out for delivery if that day was started). Each statement applies only while
+// the order is still delivered by this check-in, so a second undo changes nothing.
+async function undoDelivery(c, o) {
+  const op = o.checkin_op_id
+  if (!op) throw badState('This delivery has no check-in to undo.')
+  const db = c.db
+  const col = o.kind === 'wood' ? 'stock_cu_in' : 'stock_bags'
+  const change = o.kind === 'wood' ? o.wood_cu_in : o.pellet_bags
+  const G = `EXISTS (SELECT 1 FROM orders WHERE id = ? AND checkin_op_id = ? AND status = 'delivered')`
+  const results = await db.batch([
+    db.prepare(`UPDATE checkins SET undone_at = ? WHERE op_id = ? AND undone_at IS NULL AND ${G}`).bind(c.nowIso, op, o.id, op),
+    db.prepare(`UPDATE products SET ${col} = ${col} + ? WHERE id = ? AND ${G}`).bind(change, o.product_id, o.id, op),
+    db.prepare(`INSERT INTO stock_moves (product_id, change, reason, order_id, checkin_op_id, at)
+      SELECT ?, ?, 'undo', ?, ?, ? WHERE ${G}`).bind(o.product_id, change, o.id, op, c.nowIso, o.id, op),
+    db.prepare(`UPDATE payments SET voided = 1, voided_at = ? WHERE checkin_op_id = ? AND voided = 0 AND ${G}`)
+      .bind(c.nowIso, op, o.id, op),
+    db.prepare(`UPDATE orders SET delivered_at = NULL, door_payment = NULL, checkin_op_id = NULL, updated_at = ?,
+        status = CASE WHEN EXISTS (SELECT 1 FROM day_starts WHERE date = orders.delivery_date) THEN 'out_for_delivery'
+          ELSE 'scheduled' END
+      WHERE id = ? AND checkin_op_id = ? AND status = 'delivered'`).bind(c.nowIso, o.id, op),
+  ])
+  if (results[results.length - 1].meta.changes === 0) throw badState('This delivery was already changed. Reload and try again.')
+}
+
+async function undeliver(c) {
+  const o = await c.db.prepare('SELECT * FROM orders WHERE id = ?').bind(c.params.id).first()
+  if (!o) throw notFound("We couldn't find that order.")
+  if (o.status !== 'delivered') throw badState('Only a delivered order can be marked not delivered.')
+  await undoDelivery(c, o)
+  return json({ order: await summaryOf(c, o.id) })
+}
+
+const UNDO_WINDOW_MS = 15 * 60e3
+
+async function undoCheckin(c) {
+  const ck = await c.db.prepare('SELECT * FROM checkins WHERE op_id = ?').bind(c.params.op_id).first()
+  if (!ck) throw notFound("We couldn't find that delivery.")
+  if (ck.undone_at) throw badState('This delivery was already undone.')
+  if (c.now.getTime() - Date.parse(ck.received_at) > UNDO_WINDOW_MS) {
+    throw new ApiError(409, 'too_late', 'Too late to undo here. Ask the dealer to change it.')
+  }
+  const o = await c.db.prepare('SELECT * FROM orders WHERE id = ?').bind(ck.order_id).first()
+  if (o.status !== 'delivered' || o.checkin_op_id !== ck.op_id) throw badState('The dealer already changed this delivery.')
+  await undoDelivery(c, o)
+  return json({ order: await summaryOf(c, o.id) })
+}
+
+async function voidPayment(c) {
+  const p = await c.db.prepare('SELECT * FROM payments WHERE id = ?').bind(c.params.id).first()
+  if (!p) throw notFound("We couldn't find that payment.")
+  if (!p.voided) {
+    await c.db.prepare('UPDATE payments SET voided = 1, voided_at = ? WHERE id = ? AND voided = 0').bind(c.nowIso, p.id).run()
+  }
+  return json({ payment: paymentView({ ...p, voided: 1 }) })
+}
+
 // ---------- test ----------
 
 const TABLES = ['stock_moves', 'checkins', 'payments', 'orders', 'customers', 'products', 'settings', 'sessions',
   'signin_attempts', 'order_attempts', 'day_starts']
 
-async function testReset(c) {
+async function resetAll(c) {
   await c.db.batch([
     ...TABLES.map((t) => c.db.prepare(`DELETE FROM ${t}`)),
     ...sampleStatements().map(({ sql, params }) => c.db.prepare(sql).bind(...params)),
@@ -662,6 +840,17 @@ async function testReset(c) {
     if (list.objects.length) await c.env.PHOTOS.delete(list.objects.map((o) => o.key))
     cursor = list.truncated ? list.cursor : undefined
   } while (cursor)
+}
+
+async function testReset(c) {
+  await resetAll(c)
   return json({ reset: true })
+}
+
+async function testSeed(c) {
+  const b = await c.body()
+  if (b?.scenario !== 'demo') throw bad('scenario', 'The only scenario is "demo".')
+  await resetAll(c)
+  return json({ seeded: true, scenario: 'demo', ...(await seedDemo(c)) })
 }
 

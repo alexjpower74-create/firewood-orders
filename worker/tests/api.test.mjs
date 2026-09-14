@@ -1,101 +1,13 @@
-// API suite against a real local Worker (wrangler dev --local, TEST_MODE=1). Run through `npm test` (tests/run.mjs).
+// M1 API suite against a real local Worker (wrangler dev --local, TEST_MODE=1). Run through `npm test` (tests/run.mjs).
 // Every test starts from POST /api/test/reset. "Now" is pinned with X-Test-Now: Mon Sep 14 2026, 9:30 AM NDT.
-//
-// Stock is not public and GET /api/dealer/settings is M2, so the stock tests read the `products` table directly from the
-// local D1 SQLite file the Worker persists to (STATE_DIR/v3/d1/miniflare-D1DatabaseObject/*.sqlite), read-only, through
-// node:sqlite. Test-only: nothing in the Worker knows about it. Switch to GET /api/dealer/settings once M2 lands.
+// Helpers, and how stock is read (GET /api/dealer/settings since M2), are in api-helpers.mjs. M2 routes: api-m2.test.mjs.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readdirSync } from 'node:fs'
-import path from 'node:path'
-import { DatabaseSync } from 'node:sqlite'
 import { optimizeRoute, pathKm } from '../src/route.js'
-import { SAMPLE_PLACES } from '../src/sample-places.js'
 import { SAMPLE_SETTINGS } from '../src/sample.js'
-
-const BASE = process.env.API_BASE || 'http://127.0.0.1:7702'
-const STATE_DIR = process.env.STATE_DIR
-const T0 = '2026-09-14T12:00:00.000Z' // Monday, 9:30 AM in St. John's
-const TUE = '2026-09-15'
-const WED = '2026-09-16'
-const SUN = '2026-09-20'
-const CORD = 221184
-const place = (name) => SAMPLE_PLACES.find((p) => p.name === name)
-const YARD = SAMPLE_SETTINGS.yard
-
-async function call(method, url, { body, token, now = T0, headers = {}, raw } = {}) {
-  const h = { 'X-Test-Now': now, ...headers }
-  if (token) h.Authorization = `Bearer ${token}`
-  let payload
-  if (raw !== undefined) payload = raw
-  else if (body !== undefined) {
-    h['Content-Type'] = 'application/json'
-    payload = JSON.stringify(body)
-  }
-  const r = await fetch(BASE + url, { method, headers: h, body: payload })
-  const type = r.headers.get('content-type') || ''
-  const data = type.includes('application/json') ? await r.json() : new Uint8Array(await r.arrayBuffer())
-  return { status: r.status, body: data, headers: r.headers }
-}
-
-async function reset() {
-  const r = await call('POST', '/api/test/reset')
-  assert.equal(r.status, 200, 'reset needs a Worker started with TEST_MODE=1')
-}
-
-async function signin(pin, now = T0) {
-  const r = await call('POST', '/api/signin', { body: { pin }, now })
-  assert.equal(r.status, 200, JSON.stringify(r.body))
-  return r.body.token
-}
-
-let seq = 0
-function orderBody(over = {}) {
-  seq++
-  const at = place(over.place || "King's Point")
-  const { place: _p, ...rest } = over
-  return { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, stacking: false, lat: at.lat, lng: at.lng,
-    address: 'Up the lane past the church', dump_notes: 'By the shed, not on the lawn', zone_id: null,
-    preferred: { any: true }, name: `Wade R. (SAMPLE)`, phone: `709-555-${String(1000 + seq).slice(-4)}`, note: '', ...rest }
-}
-
-async function order(over = {}) {
-  const r = await call('POST', '/api/orders', { body: orderBody(over) })
-  assert.equal(r.status, 201, JSON.stringify(r.body))
-  return r.body
-}
-
-async function scheduled(dealer, over, date) {
-  const o = await order(over)
-  const r = await call('POST', `/api/dealer/orders/${o.id}/schedule`, { token: dealer, body: { date } })
-  assert.equal(r.status, 200, JSON.stringify(r.body))
-  return o
-}
-
-function stock(id) {
-  assert.ok(STATE_DIR, 'STATE_DIR must point at the Worker persist dir (tests/run.mjs sets it)')
-  const dir = path.join(STATE_DIR, 'v3', 'd1', 'miniflare-D1DatabaseObject')
-  const file = readdirSync(dir).find((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite')
-  const db = new DatabaseSync(path.join(dir, file), { readOnly: true })
-  try {
-    return db.prepare('SELECT stock_cu_in, stock_bags FROM products WHERE id = ?').get(id)
-  } finally {
-    db.close()
-  }
-}
-
-function stockMoves(orderId) {
-  const dir = path.join(STATE_DIR, 'v3', 'd1', 'miniflare-D1DatabaseObject')
-  const file = readdirSync(dir).find((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite')
-  const db = new DatabaseSync(path.join(dir, file), { readOnly: true })
-  try {
-    return db.prepare('SELECT product_id, change, reason FROM stock_moves WHERE order_id = ?').all(orderId).map((r) => ({ ...r }))
-  } finally {
-    db.close()
-  }
-}
-
-const uuid = () => crypto.randomUUID()
+import {
+  BASE, call, CORD, order, orderBody, place, reset, scheduled, signin, stock, stockMoves, SUN, T0, TUE, uuid, WED, YARD,
+} from './api-helpers.mjs'
 
 // ---------------- public ----------------
 
@@ -413,20 +325,20 @@ test('stock: unchanged by order, schedule and start; a delivered 16-inch face co
   await reset()
   const dealer = await signin('1357')
   const driver = await signin('2580')
-  const before = stock('p_softwood_dry')
+  const before = (await stock('p_softwood_dry', dealer))
   assert.equal(before.stock_cu_in, 40 * CORD)
   const o = await order({ unit: 'face_cord', qty: 1, place: "King's Point" })
-  assert.deepEqual(stock('p_softwood_dry'), before, 'order')
+  assert.deepEqual((await stock('p_softwood_dry', dealer)), before, 'order')
   await call('POST', `/api/dealer/orders/${o.id}/schedule`, { token: dealer, body: { date: TUE } })
-  assert.deepEqual(stock('p_softwood_dry'), before, 'schedule')
+  assert.deepEqual((await stock('p_softwood_dry', dealer)), before, 'schedule')
   await call('POST', `/api/driver/day/${TUE}/start`, { token: driver })
-  assert.deepEqual(stock('p_softwood_dry'), before, 'start')
+  assert.deepEqual((await stock('p_softwood_dry', dealer)), before, 'start')
   const ck = await call('POST', '/api/driver/checkins', { token: driver,
     body: { op_id: uuid(), order_id: o.id, at: T0, payment: { method: 'cash' } } })
   assert.equal(ck.status, 201, JSON.stringify(ck.body))
-  assert.equal(stock('p_softwood_dry').stock_cu_in, before.stock_cu_in - 73728)
+  assert.equal((await stock('p_softwood_dry', dealer)).stock_cu_in, before.stock_cu_in - 73728)
   assert.deepEqual(stockMoves(o.id), [{ product_id: 'p_softwood_dry', change: -73728, reason: 'delivered' }])
-  assert.equal(stock('p_birch_dry').stock_cu_in, 12 * CORD, 'other products untouched')
+  assert.equal((await stock('p_birch_dry', dealer)).stock_cu_in, 12 * CORD, 'other products untouched')
 })
 
 test('idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409', async () => {
@@ -434,7 +346,7 @@ test('idempotent check-in: same op_id twice → 201 then 200 duplicate; stock an
   const dealer = await signin('1357')
   const driver = await signin('2580')
   const o = await scheduled(dealer, { product_id: 'p_pellets', unit: 'skid', qty: 1 }, TUE)
-  const bags = stock('p_pellets').stock_bags
+  const bags = (await stock('p_pellets', dealer)).stock_bags
   const op = uuid()
   const body = { op_id: op, order_id: o.id, at: T0, payment: { method: 'cash' } }
   const first = await call('POST', '/api/driver/checkins', { token: driver, body })
@@ -443,21 +355,21 @@ test('idempotent check-in: same op_id twice → 201 then 200 duplicate; stock an
   const second = await call('POST', '/api/driver/checkins', { token: driver, body })
   assert.equal(second.status, 200, JSON.stringify(second.body))
   assert.equal(second.body.duplicate, true)
-  assert.equal(stock('p_pellets').stock_bags, bags - 70, 'stock moved once')
+  assert.equal((await stock('p_pellets', dealer)).stock_bags, bags - 70, 'stock moved once')
   assert.equal(stockMoves(o.id).length, 1)
   const detail = await call('GET', `/api/dealer/orders/${o.id}`, { token: dealer })
   assert.equal(detail.body.payments.length, 1, 'one door payment')
   assert.equal(detail.body.payments[0].source, 'door')
   const other = await call('POST', '/api/driver/checkins', { token: driver, body: { ...body, op_id: uuid() } })
   assert.deepEqual([other.status, other.body.code], [409, 'already_delivered'])
-  assert.equal(stock('p_pellets').stock_bags, bags - 70)
+  assert.equal((await stock('p_pellets', dealer)).stock_bags, bags - 70)
 
   // replays at once: still one
   const o2 = await scheduled(dealer, { product_id: 'p_pellets', unit: 'skid', qty: 1 }, WED)
   const body2 = { op_id: uuid(), order_id: o2.id, at: T0, payment: { method: 'owes' } }
   const burst = await Promise.all([1, 2, 3].map(() => call('POST', '/api/driver/checkins', { token: driver, body: body2 })))
   assert.deepEqual(burst.map((r) => r.status).sort(), [200, 200, 201])
-  assert.equal(stock('p_pellets').stock_bags, bags - 140)
+  assert.equal((await stock('p_pellets', dealer)).stock_bags, bags - 140)
 
   const req = await order()
   const bad = await call('POST', '/api/driver/checkins', { token: driver,
