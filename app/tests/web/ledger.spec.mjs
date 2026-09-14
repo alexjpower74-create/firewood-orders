@@ -52,6 +52,25 @@ test('payments and a void move the balance to the cent, and the running balance 
   expect(api1.entries.map((e) => e.balance_cents), 'and = by hand').toEqual([37375, 59800, 54800, 44800])
   await shot(page, testInfo, 'web', 'dealer-ledger')
 
+  // Void the $50.00 made on account from its ledger row, while the $100.00 on the first order is still in the ledger:
+  // the DELETE must name that row's payment_id, the balance goes back up by exactly 5 000 cents, the order's owing stays.
+  const onAccount = api1.entries.find((e) => e.kind === 'payment' && e.order_id === null)
+  expect(onAccount.payment_cents).toBe(5000)
+  const accountRow = page.locator(`#ledger tr[data-payment-id="${onAccount.payment_id}"]`)
+  await expect(accountRow).toContainText('On account')
+  const voided = page.waitForResponse((r) => r.request().method() === 'DELETE' && r.url().includes('/api/dealer/payments/'))
+  await tap(page, accountRow.getByRole('button', { name: /^Void the payment of \$50\.00/ }))
+  await tap(page, page.locator(`#ledger tr[data-confirm-for="${onAccount.payment_id}"]`).getByRole('button', { name: 'Void payment' }))
+  const voidRes = await voided
+  expect(voidRes.status()).toBe(200)
+  expect(new URL(voidRes.url()).pathname, 'the void names the row\'s own payment').toBe(`/api/dealer/payments/${onAccount.payment_id}`)
+  await expect(balance).toHaveText('Balance owing $498.00')
+  await expect(page.locator(`.cust-order[data-order="${first.id}"] .order-owing`)).toHaveText('Owing $273.75')
+  api1 = await ledger()
+  expect(api1.balance_cents).toBe(firstTotal + secondTotal - 10000)
+  expect(api1.entries.map((e) => e.balance_cents), 'by hand, after the void').toEqual([37375, 59800, 49800])
+  expect(await runningCells(), 'running column = the API, after the void').toEqual(api1.entries.map((e) => money(e.balance_cents)))
+
   // Void the $100.00 from the order's detail (where payments have their ids): back up by exactly 10 000.
   await tap(page, page.locator(`.cust-order[data-order="${first.id}"]`).getByRole('button', { name: 'Open' }))
   const payment = page.locator('#detail .payments li', { hasText: '$100.00' })
@@ -62,12 +81,12 @@ test('payments and a void move the balance to the cent, and the running balance 
 
   await tap(page, page.getByRole('tab', { name: 'Customers' }))
   await tap(page, page.locator(`button.customer[data-customer="${customerId}"]`))
-  await expect(balance).toHaveText('Balance owing $548.00')
+  await expect(balance).toHaveText('Balance owing $598.00')
   await expect(page.locator(`.cust-order[data-order="${first.id}"] .order-owing`)).toHaveText('Owing $373.75')
   api1 = await ledger()
-  expect(api1.balance_cents).toBe(54800)
+  expect(api1.balance_cents).toBe(59800)
   expect(await runningCells()).toEqual(api1.entries.map((e) => money(e.balance_cents)))
-  expect(api1.entries.map((e) => e.balance_cents)).toEqual([37375, 59800, 54800])
+  expect(api1.entries.map((e) => e.balance_cents)).toEqual([37375, 59800])
 
   w.expectClean()
   assertNoThirdParty(context)

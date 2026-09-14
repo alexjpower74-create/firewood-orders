@@ -70,7 +70,8 @@ test('Cancel my order while Requested cancels it; once it is scheduled the API\'
   await expect(page.locator('#status')).toHaveText('Cancelled')
   await expect(page.locator('#timeline')).toBeHidden()
   await expect(page.locator('#cancel-card')).toBeHidden()
-  await expect(page.locator('#owing')).toHaveText('Paid in full')
+  // docs/API.md: a cancelled order with nothing paid says "Nothing owing", never "Paid in full".
+  await expect(page.locator('#owing')).toHaveText('Nothing owing')
   const view = await api(request, 'GET', `/api/o/${o.token}`)
   expect(view.body.order.status).toBe('cancelled')
   await shot(page, testInfo, 'web', 'status-cancelled')

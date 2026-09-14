@@ -1,6 +1,6 @@
 // The dealer's Customers tab: everyone who has ordered, most owing first; one customer's balance, their recent and
 // unpaid orders, the ledger with its running balance (the API's numbers), and Record a payment.
-// Payments are voided from an order's detail panel, where each payment has its id (the ledger entries carry none).
+// Each payment row of the ledger has Void (by the row's payment_id), so a payment made on account can be voided too.
 
 import { api } from '/api.js'
 import { esc, money, balanceLabel, METHODS, icon, clearErrors, showError, dollarsToCents } from '/ui.js'
@@ -103,15 +103,13 @@ function render({ customer: c, entries, balance_cents: balance }, board) {
       <h3 class="card-title">Ledger</h3>
       <div class="table-wrap">
         <table id="ledger" class="money-table">
-          <thead><tr><th scope="col">Date</th><th scope="col">What</th><th scope="col" class="num">Charge</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Balance</th></tr></thead>
-          <tbody>${entries.length ? entries.map((e) => `<tr data-kind="${esc(e.kind)}">
-              <td class="date">${esc(e.label)}</td><td class="text">${esc(e.text)}</td>
-              <td class="num charge">${e.charge_cents ? money(e.charge_cents) : ''}</td>
-              <td class="num payment">${e.payment_cents ? money(e.payment_cents) : ''}</td>
-              <td class="num running">${money(e.balance_cents)}</td></tr>`).join('')
-            : '<tr><td colspan="5" class="small">Nothing yet.</td></tr>'}</tbody>
+          <thead><tr><th scope="col">Date</th><th scope="col">What</th><th scope="col" class="num">Charge</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Balance</th><th scope="col"><span class="sr-only">Void</span></th></tr></thead>
+          <tbody>${entries.length ? entries.map(ledgerRow).join('')
+            : '<tr><td colspan="6" class="small">Nothing yet.</td></tr>'}</tbody>
         </table>
       </div>
+      <p class="alert" id="ledger-error" role="alert" hidden></p>
+      <p class="small" id="ledger-done" role="status"></p>
     </section>
 
     <section class="card">
@@ -144,6 +142,43 @@ function render({ customer: c, entries, balance_cents: balance }, board) {
       </form>
     </section>`
   $('#cust-pay-form', root).addEventListener('submit', (ev) => record(ev, c))
+}
+
+function ledgerRow(e) {
+  const payment = e.kind === 'payment' && e.payment_id
+  const onAccount = e.kind === 'payment' && !e.order_id
+  return `<tr data-kind="${esc(e.kind)}"${e.payment_id ? ` data-payment-id="${esc(e.payment_id)}"` : ''}${e.order_id ? ` data-order-id="${esc(e.order_id)}"` : ''}>
+      <td class="date">${esc(e.label)}</td><td class="text">${esc(e.text)}${onAccount ? ' <span class="chip">On account</span>' : ''}</td>
+      <td class="num charge">${e.charge_cents ? money(e.charge_cents) : ''}</td>
+      <td class="num payment">${e.payment_cents ? money(e.payment_cents) : ''}</td>
+      <td class="num running">${money(e.balance_cents)}</td>
+      <td class="act">${payment ? `<button type="button" class="btn btn-ghost btn-small" data-action="void" data-payment="${esc(e.payment_id)}" aria-label="Void the payment of ${money(e.payment_cents)} on ${esc(e.label)}">Void</button>` : ''}</td></tr>
+    ${payment ? `<tr class="confirm-row" data-confirm-for="${esc(e.payment_id)}" hidden><td colspan="6"><div class="confirm">
+      <p><strong>Void this payment of ${money(e.payment_cents)}${onAccount ? ' made on account' : ''}?</strong> It stays on record but no longer counts.</p>
+      <div class="confirm-buttons"><button type="button" class="btn btn-danger" data-action="void-yes" data-payment="${esc(e.payment_id)}">Void payment</button>
+        <button type="button" class="btn btn-ghost" data-action="void-no" data-payment="${esc(e.payment_id)}">Keep it</button></div>
+    </div></td></tr>` : ''}`
+}
+
+/** Void the payment of the row that was confirmed, by that row's own payment_id, then show the ledger the API sends back. */
+async function voidFromLedger(button) {
+  const id = button.dataset.payment
+  const customerId = $('.ledger-head', root).dataset.customer
+  const error = $('#ledger-error', root)
+  error.hidden = true
+  button.disabled = true
+  try {
+    await api.voidPayment(id)
+    await openCustomer(customerId)
+    const done = $('#ledger-done', root)
+    if (done) done.textContent = 'Payment voided.'
+  } catch (e) {
+    button.disabled = false
+    if (e.status !== 401) {
+      error.textContent = e.message
+      error.hidden = false
+    }
+  }
 }
 
 async function record(ev, c) {
@@ -181,4 +216,15 @@ function click(ev) {
   if (b.matches('.customer')) return openCustomer(b.dataset.customer)
   if (b.dataset.action === 'list') return showList()
   if (b.dataset.action === 'open-order') return onOpenOrder(b.dataset.id)
+  const confirmRow = (id) => root.querySelector(`tr[data-confirm-for="${CSS.escape(id)}"]`)
+  if (b.dataset.action === 'void') {
+    $('#ledger-error', root).hidden = true
+    confirmRow(b.dataset.payment).hidden = false
+    return
+  }
+  if (b.dataset.action === 'void-no') {
+    confirmRow(b.dataset.payment).hidden = true
+    return
+  }
+  if (b.dataset.action === 'void-yes') return voidFromLedger(b)
 }
