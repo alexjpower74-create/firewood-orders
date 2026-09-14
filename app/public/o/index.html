@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your order</title>
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/o/status.js"></script>
+</head>
+<body class="status-page">
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header class="topbar" data-sticky-header>
+    <div class="topbar-row">
+      <div class="brand"><span class="dealer-name" data-dealer-name>SAMPLE Wood &amp; Pellets</span> <span class="sample-badge" data-sample>SAMPLE</span></div>
+      <a id="call" class="btn btn-ghost call" href="tel:" hidden></a>
+    </div>
+  </header>
+
+  <main class="page">
+    <p id="loading" class="loading">Loading your order…</p>
+
+    <section id="missing" class="card missing" hidden>
+      <p class="lead">We couldn't find that order. Check the link or call us.</p>
+      <a id="missing-call" class="btn btn-primary wide" href="tel:" hidden></a>
+    </section>
+
+    <div id="view" hidden>
+      <section class="card status-hero">
+        <p class="eyebrow">Your order</p>
+        <p id="status" class="status-pill" data-status=""></p>
+        <p id="delivered-label" class="small" hidden></p>
+        <ol id="timeline" class="timeline" aria-label="Order progress"></ol>
+      </section>
+
+      <section id="photo-card" class="card" hidden>
+        <h2 class="card-title">Delivery photo</h2>
+        <img id="photo" class="photo" alt="Photo the driver took at delivery">
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Your order</h2>
+        <dl id="details" class="kv"></dl>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Money</h2>
+        <div id="money" class="money-rows"></div>
+        <p id="owing" class="owing-big"></p>
+      </section>
+
+      <section id="deposit" class="card deposit"></section>
+
+      <p id="refreshed" class="small center" aria-live="polite"></p>
+    </div>
+  </main>
+</body>
+</html>
