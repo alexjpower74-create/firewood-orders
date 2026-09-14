@@ -58,7 +58,7 @@ cd worker && npm run negative         # 12 Worker negative controls: each breaks
 cd app && npm install && npx playwright install chromium webkit   # first time only
 cd app && npx playwright test         # web + driver + journey: chromium and webkit, 390 and 1280, real taps
 node app/tests/web/negative-capacity-message.mjs   # and the other web controls in app/tests/web/negative-*.mjs
-node app/tests/driver/negative-all.mjs             # 3 driver negative controls
+node app/tests/driver/negative-all.mjs             # 6 driver negative controls
 node app/tests/journey/negative-journey.mjs        # the journey's negative control
 ```
 
@@ -66,7 +66,19 @@ Final numbers (pinned QA worktree): see **Test numbers** below and `docs/build-r
 
 ### Test numbers
 
-_Filled in from the final pinned QA run._
+Final QA from a worktree pinned to `0f8262d`, one run, nothing re-run to get green:
+
+| Suite | Passed | Failed | Skipped |
+|---|---|---|---|
+| Worker unit tests (money, units, route, time, CSV, PNG, sample data) | 34 | 0 | 0 |
+| Worker API tests against `wrangler dev --local` | 76 | 0 | 0 |
+| Playwright web: customer and dealer pages | 106 | 0 | 6 |
+| Playwright driver page and offline queue | 76 | 0 | 0 |
+| Playwright journey: order → schedule → deliver → Delivered | 4 | 0 | 0 |
+
+Playwright runs every spec in chromium and webkit at 390 and 1280 px with real taps and typing; the 6 skips are tests written
+for the other width. **Negative controls: 27 of 27 went red** (12 Worker, 8 web, 6 driver, 1 journey). Each breaks a copy of the
+code, never the shipped code, and proves its check can fail.
 
 ## What deploying needs
 

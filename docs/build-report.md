@@ -6,7 +6,22 @@ Every number below was measured in a QA worktree pinned to the sha shown, never 
 
 ## Final QA
 
-_Filled in from the final pinned run once the last slice rounds are merged._
+**DONE.** Pinned QA worktree at `0f8262d` (main after every slice round was merged), one run, nothing re-run to get green.
+Commits after `0f8262d` are documentation, screenshots and the README only.
+
+| Suite | Command (from the QA worktree) | Passed | Failed | Skipped |
+|---|---|---|---|---|
+| Worker unit | `cd worker && PORT=7709 npm test` | 34 | 0 | 0 |
+| Worker API (`wrangler dev --local`, `TEST_MODE`) | same run | 76 | 0 | 0 |
+| Playwright web | `cd app && E2E_PORT=7709 npx playwright test` | 106 | 0 | 6 |
+| Playwright driver | same run | 76 | 0 | 0 |
+| Playwright journey | same run | 4 | 0 | 0 |
+| Worker negative controls | `cd worker && npm run negative` | 12 red of 12 | | |
+| Web negative controls | `node tests/web/negative-<name>.mjs` × 8 | 8 red of 8 | | |
+| Driver negative controls | `node tests/driver/negative-all.mjs` | 6 red of 6 | | |
+| Journey negative control | `node tests/journey/negative-journey.mjs` | 1 red of 1 | | |
+
+Playwright: chromium-390 (touch), chromium-1280, webkit-390 (iPhone 14), webkit-1280. All 77xx ports were free afterwards.
 
 ## QA history (each milestone was graded before it was merged)
 
