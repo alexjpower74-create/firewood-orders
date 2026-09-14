@@ -80,6 +80,9 @@ Playwright runs every spec in chromium and webkit at 390 and 1280 px with real t
 for the other width. **Negative controls: 27 of 27 went red** (12 Worker, 8 web, 6 driver, 1 journey). Each breaks a copy of the
 code, never the shipped code, and proves its check can fail.
 
+Polish after review (`fbce0f5`): product cards name the unit of their "from" price and the firewood icon is a woodpile; the
+affected specs (order, targets, dealer, journey) passed 70 / 0 / 2 skipped, and a 28th negative control went red.
+
 ## What deploying needs
 
 Not done tonight; Alexander decides. Full checklist in `docs/DEPLOY.md`. In short: a D1 database `firewood-orders` (create, put

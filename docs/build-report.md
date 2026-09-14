@@ -113,3 +113,17 @@ journey fails with Expected "Delivered", Received "Out for delivery".
 - Full-page screenshots of phone screens paint the sticky header (WebKit) or the fixed price bar (Chromium) mid-picture. It is a
   capture artifact: the same screens pass the hit-test sweep at 390 in both engines. `docs/shots/` uses viewport captures.
 - OpenStreetMap's tile servers are for light use; a dealer with real traffic needs a tile provider (Alexander's call).
+
+## Polish after Onyx's review of the running demo (2026-09-14, lead only)
+
+1. **The firewood icon read as a toggle switch** (a rounded pill with a circle) next to real switches. It is now a woodpile seen
+   end-on: three log ends with a ring each. The pellet bag icon is unchanged.
+2. **"Mixed softwood, green, from $220.00" sat above "dry, from $120.00"**, which looked backwards for NL (green wood is cheaper).
+   The SAMPLE prices were already right per cord ($220 green, $300 dry); the "from" prices were different units. Each card now
+   names the unit of its cheapest option: "from $120.00 a face cord", "from $220.00 a cord", "from $7.99 a bag".
+   `order.spec` checks every card's label against the API's cheapest unit and a hand-worked list.
+
+Pinned QA worktree at `fbce0f5`, the specs this touches: `order` 16 / 0 / 0, `targets` 14 / 0 / 2 skipped by width, `dealer`
+36 / 0 / 0, `journey` 4 / 0 / 0 (70 passed, 0 failed, chromium + webkit at 390 and 1280). Negative control (i)
+`negative-from-unit.mjs`: a copy that drops the unit turns the new check red. Customer screenshots retaken from the running demo
+(`docs/shots/phone-order.png`, `docs/shots/desktop-order.png`) and looked at.

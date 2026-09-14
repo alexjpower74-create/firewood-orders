@@ -389,3 +389,55 @@ Running 1 test using 1 worker
   1 failed
     [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API
 
+== negative:from-unit  2026-09-14T11:15:56.943Z
+what: product cards show the from price without its unit
+break: app/public/order/form.js: "</strong> ${esc(UNIT_EACH[from.unit] || '')}</span>" -> "</strong></span>"
+run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/from-unit/worker npx playwright test tests/web/order.spec.mjs --project chromium-390 --grep "each product card names the unit"
+exit 1; expected failure /from \$120\.00 a face cord/; RED (good: the check caught the break)
+--- output (tail) ---
+Running 1 test using 1 worker
+
+[1/1] [chromium-390] › tests/web/order.spec.mjs:186:1 › each product card names the unit its "from" price is for, so green wood does not look dearer than dry
+  1) [chromium-390] › tests/web/order.spec.mjs:186:1 › each product card names the unit its "from" price is for, so green wood does not look dearer than dry 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('button.product[data-product="p_softwood_dry"] .product-price')
+    Expected: "from $120.00 a face cord"
+    Received: "from $120.00"
+    Timeout:  8000ms
+
+    Call log:
+      - Expect "toHaveText" locator('button.product[data-product="p_softwood_dry"] .product-price') with timeout 8000ms
+      - waiting for locator('button.product[data-product="p_softwood_dry"] .product-price')
+        20 × locator resolved to <span class="product-price">…</span>
+           - unexpected value "from $120.00"
+
+
+      202 |     const fromApi = `from $${(cheapest.price_cents / 100).toFixed(2)} ${EACH[cheapest.unit]}`
+      203 |     expect(fromApi, `${p.id}: the API's cheapest unit matches the hand-worked label`).toBe(byHand[p.id])
+    > 204 |     await expect(page.locator(`button.product[data-product="${p.id}"] .product-price`)).toHaveText(byHand[p.id])
+          |                                                                                         ^
+      205 |   }
+      206 |   w.expectClean()
+      207 |   assertNoThirdParty(context)
+        at /home/alexander/Projects/Firewood Orders/.worktrees/qa/app/tests/web/order.spec.mjs:204:89
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .negative/from-unit/results/web-order-each-product-car-adc91-es-not-look-dearer-than-dry-chromium-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .negative/from-unit/results/web-order-each-product-car-adc91-es-not-look-dearer-than-dry-chromium-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .negative/from-unit/results/web-order-each-product-car-adc91-es-not-look-dearer-than-dry-chromium-390/trace.zip
+    Usage:
+
+        npx playwright show-trace .negative/from-unit/results/web-order-each-product-car-adc91-es-not-look-dearer-than-dry-chromium-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium-390] › tests/web/order.spec.mjs:186:1 › each product card names the unit its "from" price is for, so green wood does not look dearer than dry
+
