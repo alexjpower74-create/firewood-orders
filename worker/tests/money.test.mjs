@@ -153,3 +153,16 @@ test('owing to the cent on 300 seeded random ledgers', () => {
     assert.ok(Number.isInteger(customerBalance(orders, payments)))
   }
 })
+
+test('without a pin: goods and stacking only, never a guessed delivery or total; the minimum still applies', () => {
+  const soft = { kind: 'wood', name: 'Mixed softwood, dry', cut_in: 16, stacking_cents_per_cord: 6000,
+    price_cents: { cord: 30000, half_cord: 17000, face_cord: 12000, load: 42000 } }
+  const q = priceOrder({ product: soft, unit: 'cord', qty: 1, stacking: true, lat: null, lng: null }, settings)
+  assert.deepEqual([q.wood_cu_in, q.distance_km, q.goods_cents, q.stacking_cents, q.delivery_cents, q.subtotal_cents, q.hst_cents,
+    q.total_cents], [221184, null, 30000, 6000, null, null, null, null])
+  // a fee override does not make a pin up either
+  const o = priceOrder({ product: soft, unit: 'cord', qty: 1, lat: null, lng: null, delivery_override: 1000 }, settings)
+  assert.deepEqual([o.delivery_cents, o.total_cents], [null, null])
+  assert.throws(() => priceOrder({ product: soft, unit: 'face_cord', qty: 1, lat: null, lng: null },
+    { ...settings, min_order_cents: 12001 }), { code: 'below_minimum' })
+})

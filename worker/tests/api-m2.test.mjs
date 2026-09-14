@@ -630,3 +630,81 @@ test('demo seed: 12 SAMPLE customers, every status, a day at 4.00 of 4.50 cords,
   assert.ok(t.months[0].total_cents > 0 && t.totals.payments_cents > 0 && t.totals.owing_cents > 0)
   assert.equal((await call('POST', '/api/test/seed', { body: { scenario: 'party' } })).body.field, 'scenario')
 })
+
+// ---------------- fo2's cross-review of M1 ----------------
+
+test('quote without a pin: goods and stacking, the money that needs a pin is null; below the minimum still refused', async () => {
+  await reset()
+  const q = (body) => call('POST', '/api/quote', { body })
+  let r = await q({ product_id: 'p_birch_dry', unit: 'face_cord', qty: 3, stacking: true })
+  assert.equal(r.status, 200, JSON.stringify(r.body))
+  assert.deepEqual(r.body, { product_label: 'Birch, dry', qty_label: '3 face cords',
+    explain: 'A face cord: one row 4 feet high and 8 feet long, as deep as the pieces are long (16 inches). That is 0.33 of a full cord.',
+    wood_cu_in: CORD, pellet_bags: 0, distance_km: null, goods_cents: 42000, stacking_cents: 6000, delivery_cents: null,
+    subtotal_cents: null, hst_cents: null, total_cents: null })
+  r = await q({ product_id: 'p_birch_dry', unit: 'face_cord', qty: 3, lat: null, lng: null, delivery_cents: 1000 })
+  assert.deepEqual([r.status, r.body.distance_km, r.body.delivery_cents, r.body.total_cents], [200, null, null, null])
+  r = await q({ product_id: 'p_pellets', unit: 'bag', qty: 13 })
+  assert.deepEqual([r.status, r.body.code, r.body.field], [400, 'below_minimum', 'qty'])
+  r = await q({ product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: 49.5 })
+  assert.deepEqual([r.status, r.body.field], [400, 'pin'], 'half a pin is not no pin')
+  const noPin = orderBody()
+  delete noPin.lat
+  delete noPin.lng
+  r = await call('POST', '/api/orders', { body: noPin })
+  assert.deepEqual([r.status, r.body.field], [400, 'pin'], 'an order still needs the pin')
+})
+
+test('quote with a delivery_cents override skips the band lookup, even past the last band; the override is 0 to 50 000', async () => {
+  await reset()
+  const dealer = await signin('1357')
+  const bu = place('Buchans')
+  const q = (extra) => call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: bu.lat, lng: bu.lng, ...extra } })
+  assert.equal((await q({})).body.code, 'outside_area')
+  let r = await q({ delivery_cents: 1000 })
+  // 300.00 + 10.00 = 310.00; HST 46.50; total 356.50
+  assert.equal(r.status, 200, JSON.stringify(r.body))
+  assert.deepEqual([r.body.delivery_cents, r.body.subtotal_cents, r.body.hst_cents, r.body.total_cents], [1000, 31000, 4650, 35650])
+  assert.ok(r.body.distance_km > 60)
+  const kp = place("King's Point")
+  r = await call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: kp.lat, lng: kp.lng, delivery_cents: 0 } })
+  assert.deepEqual([r.body.delivery_cents, r.body.total_cents], [0, 34500])
+  assert.equal((await q({ delivery_cents: 50000 })).status, 200)
+  r = await q({ delivery_cents: 50001 })
+  assert.deepEqual([r.status, r.body.field, r.body.error], [400, 'delivery_cents', 'Enter a delivery fee from $0.00 to $500.00.'])
+  r = await call('POST', '/api/dealer/orders', { token: dealer, body: orderBody({ place: 'Buchans', delivery_cents: 50001 }) })
+  assert.deepEqual([r.status, r.body.field, r.body.error], [400, 'delivery_cents', 'Enter a delivery fee from $0.00 to $500.00.'])
+  // the public order route ignores an override
+  r = await call('POST', '/api/orders', { body: orderBody({ place: 'Buchans', delivery_cents: 1000 }) })
+  assert.equal(r.body.code, 'outside_area')
+})
+
+test('over-capacity wording names the limit that is exceeded: bags when only pellets are short, cords when wood is (or both are)', async () => {
+  await reset()
+  const dealer = await signin('1357')
+  const schedule = (id, date) => call('POST', `/api/dealer/orders/${id}/schedule`, { token: dealer, body: { date } })
+  // Tuesday: 3 skids, then the truck drops to 2 skids (140 bags). A cord still fits the wood but the day is over on bags.
+  for (let i = 0; i < 3; i++) await scheduled(dealer, { product_id: 'p_pellets', unit: 'skid', qty: 1 }, TUE)
+  assert.equal((await put('/api/dealer/settings', { truck: { ...TR, pellet_skids_per_day: 2 } }, dealer)).status, 200)
+  let r = await schedule((await order()).id, TUE)
+  assert.deepEqual([r.status, r.body.error], [409, "That's more than the truck can carry that day: 210 of 140 bags already planned, this order needs 0."])
+  // Wednesday: 4 cords, then the truck drops to 3 cords. Pellets fit the bags but the day is over on wood.
+  for (let i = 0; i < 4; i++) await scheduled(dealer, {}, WED)
+  assert.equal((await put('/api/dealer/settings', { truck: { ...TR, wood_cords_per_day: 3, pellet_skids_per_day: 2 } }, dealer)).status, 200)
+  const bags = await order({ product_id: 'p_pellets', unit: 'bag', qty: 14 })
+  r = await schedule(bags.id, WED)
+  assert.deepEqual([r.status, r.body.error], [409, "That's more than the truck can carry that day: 4.00 of 3.00 cords already planned, this order needs 0.00."])
+  // both short (no skids at all): cords
+  assert.equal((await put('/api/dealer/settings', { truck: { ...TR, wood_cords_per_day: 3, pellet_skids_per_day: 0 } }, dealer)).status, 200)
+  r = await schedule(bags.id, WED)
+  assert.equal(r.body.error, "That's more than the truck can carry that day: 4.00 of 3.00 cords already planned, this order needs 0.00.")
+})
+
+test('schedule: an unknown order is 404, whatever the date', async () => {
+  await reset()
+  const dealer = await signin('1357')
+  for (const date of [SUN, TUE, 'not-a-date']) {
+    const r = await call('POST', '/api/dealer/orders/o_nope/schedule', { token: dealer, body: { date } })
+    assert.deepEqual([r.status, r.body.code], [404, 'not_found'], date)
+  }
+})

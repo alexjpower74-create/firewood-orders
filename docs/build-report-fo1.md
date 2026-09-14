@@ -270,9 +270,55 @@ M1 controls on the M2 code went red exactly as recorded for M1: (a) capacity, (b
   should not treat that particular 401 as "signed out".
 - `migrations/0002_sample.sql` was regenerated to add `sample: true`. A database migrated before that is still read as the SAMPLE
   dealer, because `loadSettings` treats a missing `sample` as `true`.
-- Not tested here: that `/api/test/*` answer 404 without `TEST_MODE`. That needs a second Worker started without the var. The code path
+- **Verified by the lead** (QA at 8c36e59): a Worker started without `TEST_MODE` answers 404 to `/api/test/reset` and
+  `/api/test/seed` and ignores `X-Test-Now`. I could not run that check myself. **DONE**
+- Previously untested here: that `/api/test/*` answer 404 without `TEST_MODE`. That needs a second Worker started without the var. The code path
   is one `if` in the router.
 
-### Left undone
+The lead accepted every choice above and wrote it into docs/API.md, together with `used_skids` / `cap_skids` to 2 decimals.
+**DONE**
 
-M3 (the driver page) is not started, as asked.
+## fo2's cross-review of M1: fixes (2026-09-14, before M3)
+
+The findings are in fo2's report under "Cross-review of fo1 M1". Each fix has a test in `worker/tests/api-m2.test.mjs`, plus a unit
+test in `money.test.mjs` for #1. These fixes are their own commit.
+
+1. **Quote without a pin: DONE.**
+   - `parseProductInput` takes a `quote` option. Only a quote may leave the pin out, and only whole: `lat` and `lng` both absent or
+     null. Half a pin is still 400 `field: "pin"`, and `POST /api/orders` still requires the pin.
+   - `priceOrder` then returns goods, stacking and volume, with `distance_km`, `delivery_cents`, `subtotal_cents`, `hst_cents` and
+     `total_cents` all `null`. It still raises `below_minimum`. A `delivery_cents` override does not stand in for a pin: still null,
+     as API.md reads.
+   - Tests: the exact body for 3 stacked face cords of birch; null with an override; below the minimum; half a pin; an order with
+     no pin.
+2. **The quote honours `delivery_cents`: DONE.** The quote route parses the override exactly like a phone order: the band lookup is
+   skipped, so Buchans with $10.00 quotes $356.50. The public order route still ignores an override (Buchans stays `outside_area`).
+3. **Override range 0–50 000: DONE.** Error text "Enter a delivery fee from $0.00 to $500.00." It applies to both the quote and the
+   phone order: 50 000 → 200, 50 001 → 400 with that text.
+4. **Over-capacity wording: DONE.** `overCapacity` uses the cords wording when wood is short or both are, and the bags wording when
+   only pellets are. Tests:
+   - A cord on a day over a lowered 2-skid limit: "210 of 140 bags already planned, this order needs 0."
+   - 14 bags on a day over a lowered 3-cord limit: "4.00 of 3.00 cords already planned, this order needs 0.00."
+   - Both short: cords.
+
+   The dealer edit's 409 uses the same function.
+5. **`sample` hard-coded: already fixed by M2.** `sample` lives in settings (`true` after reset) and is returned by `GET /api/info`,
+   the status page and the driver day. M2's settings test checks `sample: false` reaching all three.
+6. **Schedule of an unknown order: DONE.** `schedule()` loads the order before checking the date, so `o_nope` is 404 with a Sunday,
+   a Tuesday or a malformed date.
+7. **Settled in the contract by the lead; no code change.**
+
+Verified: `npm test` unit 33 / 0 / 0, API 74 / 0 / 0.
+
+Negative control for #1:
+
+`negative:nopin`: the copy's `priceOrder` uses the yard as the pin when there is none. **Red** in both tests:
+- Unit: distance 0, delivery 0, subtotal 36 000, HST 5 400, total 41 400, where null was expected.
+- API: `distance_km: 0, delivery_cents: 0, hst_cents: 7200`, where null was expected.
+
+`npm run negative` now runs 12 controls. All 12 went red on this commit's code, with a fresh Worker for all 11 API controls. The log
+is `worker/tests/negative-control.log`; the M2 run is superseded by this one.
+
+## M3: the driver page
+
+In progress: see the next commit.
