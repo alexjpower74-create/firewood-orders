@@ -422,3 +422,131 @@ The 80 `mock-*` shots are `git rm`'d. Not shot, because M2 can't reach them on t
 
 Negative controls (a)–(d): 4 of 4 red. Servers I started (dev Worker on 7701, the e2e and control Workers on 7703 and
 7707) are stopped.
+
+## M3: Customers, Totals, Settings, order changes, Cancel my order (2026-09-14)
+
+Branch fast-forwarded to main first. That brought in fo1 M2 (every remaining Worker route), the lead's `type()` change, and
+the contract notes: partial PUTs, dotted error fields, CSV money cells, the PIN-change 401, and `used_skids` to 2 decimals.
+The yard workaround for a quote before the pin stays, as asked.
+
+### What I built — DONE
+
+- **`api.js`**
+  - Every M3 route.
+  - A 401 on `PUT /api/dealer/pin` with `field: "current_dealer_pin"` does **not** sign the page out; every other dealer
+    401 still does.
+  - CSV downloads fetch with the token and keep the response **bytes** (a `Blob` from `res.blob()`, never re-encoded
+    text), with the file name from `Content-Disposition`.
+- **Customers** (`dealer/customers.js`)
+  - The list sorted by balance, as the API sends it, with each customer's balance label.
+  - One customer's view:
+    - their balance
+    - their recent and unpaid orders, each with its **owing** pill and an **Open** button into the order detail
+    - the ledger table, whose running-balance column shows the API's `balance_cents` per entry
+    - **Record a payment**: on account, or for one of their orders
+- **Voiding a payment.** The detail panel's payments each have **Void**, with an inline confirm (no browser dialogs). See
+  "for the lead" below for why it lives there.
+- **Totals** (`dealer/totals.js`)
+  - A season select, and stat cards for total sales, HST, payments and still owing.
+  - The month table (delivered, goods, stacking, delivery, subtotal, HST, total, payments) with a season row. The table
+    scrolls inside its own box at 390.
+  - **Download CSV** for the season's delivered orders and for its payments.
+- **Settings** (`dealer/settings.js`): one form per group, each saving only its own group (partial PUT):
+  - business, with the SAMPLE switch
+  - season and prices (open/closed, message, first day, minimum order in dollars, HST)
+  - the yard pin on a Leaflet map, with its name
+  - delivery fees: a bands editor and a zones editor, plus the too-far message
+  - the load definition
+  - the truck
+  - delivery weekdays and the planning window
+  - products: add, edit, a price per unit or blank for "not sold", For sale on/off
+  - stock count, set or add
+  - change the dealer or driver PIN
+
+  A number that isn't clean is sent as typed, so the API's own message lands under the field it names (dotted names
+  included).
+- **Order detail**
+  - **Change order**: quantity, unit, stacking, delivery fee, address, notes, name, phone, note. Only changed fields are
+    sent. The amount and price are locked on a delivered order, and the page says why.
+  - **Cancel order** and **Mark not delivered**, each with an inline confirm.
+- **Status page:** **Cancel my order** while Requested, with an inline confirm. The API's refusal ("This order is already
+  on the schedule. Call us to change it.") stays visible after the page reloads.
+
+### Specs (against the real Worker)
+
+- **`ledger.spec`**
+  - Two orders for one customer, worked out by hand: $373.75 + $224.25 = $598.00.
+  - On the page: $50.00 on account moves the balance to $548.00, and no order's owing changes. $100.00 on the first order
+    moves the balance to $448.00 and that order to Owing $273.75.
+  - The running column equals the API's entries **and** `[37375, 59800, 54800, 44800]` by hand.
+  - Void the $100.00 from the order's detail: back to $548.00 and Owing $373.75, running column equal again.
+- **`totals.spec`**
+  - Setup through the API: two deliveries via driver check-ins (1 cord paid cash at the door; 14 bags owing) and a $20.00
+    payment.
+  - The September row on the page equals the API row. The API row equals a hand-worked row: HST 4 875 + 2 053 = $69.28;
+    owing $137.39.
+  - Each **Download CSV**: the saved file's bytes `equals` the bytes of `GET …/orders.csv` and `…/payments.csv`, and the
+    file name is `firewood-orders-2026-<kind>.csv`.
+- **`settings.spec`**
+  - A new load description reaches the order page's load explanation.
+  - Closing the season puts the dealer's message on `/`, with Call and no Next.
+  - A $320.00 cord makes the quote $396.75, worked out by hand.
+  - A band list that isn't farther each time answers 400 `field: "delivery.bands"`. The page shows exactly that `error`
+    under the bands, and `GET` settings is unchanged.
+- **`status.spec` (added)**
+  - Cancel my order → 200, Cancelled, no timeline, no cancel card, "Paid in full".
+  - A second order is scheduled by the API while its page is still open as Requested. The cancel gets 409 with the
+    contract's sentence, shown in `#cancel-error`; the page then says Scheduled, with no Cancel button.
+- **`dealer.spec` (added)**
+  - Change order 1 → 2 cords: the PUT body is exactly `{ qty: 2 }`; $718.75 on the page, and in the API
+    `[2, 71875, 442368]`.
+  - Cancel order: Cancelled, and gone from New.
+  - Mark not delivered after a cash check-in: Scheduled for Tuesday, September 15; Owing $373.75; the door payment Voided;
+    the API agrees.
+- **`targets.spec` (added)**
+  - The 390 sweep now covers the status page and its cancel confirm, Change order, Customers, the ledger, Totals and
+    Settings.
+
+### For the lead — OPEN
+
+1. **Ledger entries carry no payment id** (`GET /api/dealer/customers/:id/ledger` → `entries[]` has `kind`/`text`/amounts
+   only), so a payment can't be voided from the ledger itself. It is voided from the order detail, where
+   `GET /api/dealer/orders/:id` lists payments with ids. **Payments on account (no order) cannot be voided from any page
+   today.** A `payment_id` on payment entries would let the ledger offer Void. Contract question, not changed by me.
+2. **The `visibilitychange` refresh is not tested, on purpose.** I probed it in chromium and webkit-390: opening a second
+   page and `bringToFront()` on each leaves `document.visibilityState` at `"visible"` in headless Playwright, and no
+   `visibilitychange` fires. A test built on that could never fail, so I didn't write one. The 30-second poll is tested.
+3. I kept my `typeIn()`. It is now the same approach as your `type()` (insertText on touch, value check), so either works.
+4. Carried from M2 and still OPEN until you say so: the quote-before-pin yard workaround, and the phone-order total that
+   doesn't include the fee override until `delivery_cents` is on the quote.
+5. A cancelled order with nothing paid shows `owing_label` "Paid in full" on the status page. That is what the contract says for
+   owing 0, but a customer may read it as money changing hands. Wording question for the lead; I show the API's label as is.
+
+### Negative control (M3) and the M2 controls re-run — all five RED
+
+`app/tests/web/negative-control.log` is rewritten from this run, on the M3 code. It proves the four M2 anchors still apply
+exactly once after the M3 edits.
+
+| control | the break in the copy | red output |
+|---|---|---|
+| (a) capacity-message | the picker hides the 409 instead of showing it | `Expected: "That's more than the truck can carry that day: 4.00 of 4.50 cords already planned, this order needs 1.00."` / element not found |
+| (b) status-label | `scheduled` shown as "Requested" | `Expected: "Scheduled for Tuesday, September 15"` / `Received: "Requested"` |
+| (c) send-overlay | transparent cover over Send request | `Received: "<div class=\"send-cover\"></div>"` … `something else is on top` |
+| (d) hst-float | total = subtotal + subtotal × 0.15, unrounded | `Expected: "$157.39"` / `Received: "$157.38"` |
+| **(e) ledger-owing** | `customers.js` order pill uses `o.total_cents` instead of `o.owing_cents` | `Expected: "Owing $273.75"` / `Received: "Owing $373.75"` |
+
+### Final result (M3)
+
+`E2E_PORT=7703 npx playwright test tests/web` on a fresh real Worker (main with fo1 M2), all four projects:
+**106 passed, 0 failed, 6 skipped** — the same by-width skips as M2.
+
+Screenshots: **27 screens × 4 projects = 108**, all from the specs against the real Worker, in `app/tests/web/shots/`:
+- order steps 1–5, outside area, Request sent, season closed
+- status: requested, scheduled, out for delivery, delivered, cancelled, not found
+- dealer: sign-in, Orders, schedule picker, over capacity, order detail, Change order, phone order, Customers, ledger,
+  Totals, Settings
+- Plan: days and route
+
+Both M2 gaps are now shot. All servers I started are stopped (7701 dev, 7703 e2e, 7707 controls).
+
+M3 is DONE apart from the OPEN items above. The driver-queue cross-review waits for the lead's prompt.

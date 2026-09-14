@@ -8,6 +8,9 @@ import {
 } from '/ui.js'
 import { createOrderForm, FIELD_STEP } from '/order/form.js'
 import { initPlan, showPlan } from '/dealer/plan.js'
+import { initCustomers, showCustomers } from '/dealer/customers.js'
+import { initTotals, showTotals } from '/dealer/totals.js'
+import { initSettings, showSettings } from '/dealer/settings.js'
 
 const $ = (sel) => document.querySelector(sel)
 const BUCKETS = [
@@ -16,6 +19,7 @@ const BUCKETS = [
   ['delivered', 'Delivered', icon.done],
   ['owing', 'Owing', icon.dollar],
 ]
+const UNIT_NAMES = { cord: 'Cord', half_cord: 'Half cord', face_cord: 'Face cord', load: 'Load', bag: 'Bag', ton: 'Ton', skid: 'Skid' }
 const EMPTY = {
   new: 'No new orders right now.',
   scheduled: 'Nothing on the schedule yet.',
@@ -58,6 +62,13 @@ async function start() {
   $('#order-list').addEventListener('click', listClick)
   $('#add-phone-order').addEventListener('click', openPhoneOrder)
   initPlan($('#plan'), { dealerInfo: info, onPathChange: (date) => setHash(date ? `plan/${date}` : 'plan') })
+  initCustomers($('#customers'), {
+    dealerInfo: info,
+    onPathChange: (id) => setHash(id ? `customers/${id}` : 'customers'),
+    openOrder: (id) => { openTab('orders'); openOrder(id) },
+  })
+  initTotals($('#totals'))
+  initSettings($('#settings'), { dealerInfo: info, onSaved: refreshInfo })
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && session.get() && !$('#app').hidden) loadBoard()
   })
@@ -131,10 +142,21 @@ function setHash(path) {
   history.replaceState(null, '', `${location.pathname}${location.search}#${path}`)
 }
 
-function openTab(name, date = null) {
+function openTab(name, sub = null) {
   selectTab(name)
-  if (name === 'plan') showPlan(date)
-  else setHash(name)
+  if (name === 'plan') return showPlan(sub)
+  if (name === 'customers') return showCustomers(sub)
+  setHash(name)
+  if (name === 'totals') showTotals()
+  else if (name === 'settings') showSettings()
+}
+
+// After a settings change: the header name, SAMPLE badge and the phone-order form follow the saved settings.
+async function refreshInfo() {
+  try {
+    info = await api.info()
+    showDealer(info)
+  } catch {}
 }
 
 function tabKeys(ev) {
@@ -365,12 +387,24 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
       ${row('Note', esc(o.note))}
       ${row('Came in', `${o.source === 'phone' ? 'Phone order' : 'Online'}, ${esc(o.created_label)}`)}
     </dl>
-    ${canSchedule(o) ? `<div class="detail-actions">
-      <button type="button" class="btn btn-secondary schedule-btn" data-action="schedule" aria-expanded="false">${o.status === 'requested' ? 'Schedule' : 'Change day'}</button>
+    <div class="detail-actions">
+      ${canSchedule(o) ? `<button type="button" class="btn btn-secondary schedule-btn" data-action="schedule" aria-expanded="false">${o.status === 'requested' ? 'Schedule' : 'Change day'}</button>` : ''}
       ${o.status === 'scheduled' ? '<button type="button" class="btn btn-ghost" data-action="unschedule">Take off the schedule</button>' : ''}
+      ${o.status !== 'cancelled' ? '<button type="button" class="btn btn-secondary" data-action="edit" aria-expanded="false">Change order</button>' : ''}
+      ${canSchedule(o) ? '<button type="button" class="btn btn-ghost" data-action="cancel">Cancel order</button>' : ''}
+      ${o.status === 'delivered' ? '<button type="button" class="btn btn-ghost" data-action="undeliver">Mark not delivered</button>' : ''}
+    </div>
+    <div class="confirm" data-confirm="cancel" hidden>
+      <p><strong>Cancel this order?</strong> It comes off the schedule and nothing is charged for it${o.paid_cents > 0 ? `; the ${money(o.paid_cents)} already paid becomes a credit` : ''}.</p>
+      <div class="confirm-buttons"><button type="button" class="btn btn-danger" data-action="cancel-yes">Yes, cancel it</button><button type="button" class="btn btn-ghost" data-action="confirm-no">Keep it</button></div>
+    </div>
+    <div class="confirm" data-confirm="undeliver" hidden>
+      <p><strong>Mark this order not delivered?</strong> The stock goes back, and a payment taken at the door is voided.</p>
+      <div class="confirm-buttons"><button type="button" class="btn btn-danger" data-action="undeliver-yes">Yes, mark not delivered</button><button type="button" class="btn btn-ghost" data-action="confirm-no">Keep it delivered</button></div>
     </div>
     <p class="alert" data-error-for="unschedule" role="alert" hidden></p>
-    <div class="picker-slot detail-picker"></div>` : ''}
+    <div class="edit-slot"></div>
+    <div class="picker-slot detail-picker"></div>
   </section>
 
   <section class="detail-sec">
@@ -389,9 +423,15 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
 
   <section class="detail-sec">
     <h3>Payments</h3>
-    ${payments.length ? `<ul class="payments">${payments.map((p) => `<li data-voided="${!!p.voided}">
-        <span>${esc(p.date)} · ${esc(METHODS[p.method] || p.method)}${p.source === 'door' ? ' at the door' : ''}${p.note ? ` · ${esc(p.note)}` : ''}${p.voided ? ' · Voided' : ''}</span>
-        <strong>${money(p.amount_cents)}</strong></li>`).join('')}</ul>` : '<p class="small">No payments on this order yet.</p>'}
+    ${payments.length ? `<ul class="payments">${payments.map((p) => `<li data-voided="${!!p.voided}" data-payment="${esc(p.id)}">
+        <span class="payment-main">${esc(p.date)} · ${esc(METHODS[p.method] || p.method)}${p.source === 'door' ? ' at the door' : ''}${p.note ? ` · ${esc(p.note)}` : ''}${p.voided ? ' · Voided' : ''}</span>
+        <strong>${money(p.amount_cents)}</strong>
+        ${p.voided ? '' : `<button type="button" class="btn btn-ghost btn-small" data-action="void" data-payment="${esc(p.id)}">Void</button>
+        <div class="confirm" data-confirm-payment="${esc(p.id)}" hidden>
+          <p><strong>Void this payment of ${money(p.amount_cents)}?</strong> It stays on record but no longer counts.</p>
+          <div class="confirm-buttons"><button type="button" class="btn btn-danger" data-action="void-yes" data-payment="${esc(p.id)}">Void payment</button><button type="button" class="btn btn-ghost" data-action="void-no" data-payment="${esc(p.id)}">Keep it</button></div>
+        </div>`}</li>`).join('')}</ul>` : '<p class="small">No payments on this order yet.</p>'}
+    <p class="alert" data-error-for="void" role="alert" hidden></p>
     <form class="pay-form" id="pay-form" novalidate>
       <h4>Record a payment</h4>
       <p class="small">For money you already have. This page takes no payments.</p>
@@ -432,6 +472,20 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
     if (action === 'back') closeDetail()
     else if (action === 'copy-link') copyButton(b, statusLink)
     else if (action === 'copy-text') copyButton(b, messages[Number(b.dataset.i)].text)
+    else if (action === 'void') {
+      clearErrors(root)
+      root.querySelector(`[data-confirm-payment="${CSS.escape(b.dataset.payment)}"]`).hidden = false
+    } else if (action === 'void-no') {
+      root.querySelector(`[data-confirm-payment="${CSS.escape(b.dataset.payment)}"]`).hidden = true
+    } else if (action === 'void-yes') await act(b, () => api.voidPayment(b.dataset.payment), 'Payment voided', 'void')
+    else if (action === 'cancel' || action === 'undeliver') {
+      clearErrors(root)
+      for (const x of root.querySelectorAll('[data-confirm]')) x.hidden = x.dataset.confirm !== action
+    } else if (action === 'confirm-no') {
+      for (const x of root.querySelectorAll('[data-confirm]')) x.hidden = true
+    } else if (action === 'cancel-yes') await act(b, () => api.cancelOrder(o.id), 'Order cancelled', 'unschedule')
+    else if (action === 'undeliver-yes') await act(b, () => api.undeliver(o.id), 'Marked not delivered', 'unschedule')
+    else if (action === 'edit') toggleEdit(root.querySelector('.edit-slot'), o, root.querySelector('.detail-actions [data-action="edit"]'))
     else if (action === 'schedule') togglePicker(root.querySelector('.detail-picker'), o, b)
     else if (action === 'unschedule') {
       clearErrors(root)
@@ -448,6 +502,104 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
     }
   }
   root.querySelector('#pay-form').addEventListener('submit', (ev) => recordPayment(ev, o, c))
+}
+
+/** A detail-panel action: call the API, then show the new state; a refusal shows the API's words under the actions. */
+async function act(button, fn, done, errorField) {
+  const root = detailEl()
+  clearErrors(root)
+  button.disabled = true
+  try {
+    await fn()
+    toast(done)
+    await refresh()
+  } catch (e) {
+    button.disabled = false
+    if (e.status !== 401) showError(root, errorField, e.message)
+  }
+}
+
+function toggleEdit(slot, o, button) {
+  if (slot.firstElementChild) {
+    slot.innerHTML = ''
+    button?.setAttribute('aria-expanded', 'false')
+    return
+  }
+  button?.setAttribute('aria-expanded', 'true')
+  const product = info?.products.find((p) => p.id === o.product_id)
+  const units = product ? product.units.map((u) => u.unit) : []
+  if (!units.includes(o.unit)) units.unshift(o.unit)
+  const locked = o.status === 'delivered'
+  const off = locked ? ' disabled' : ''
+  const stackable = o.kind === 'wood' && product && product.stacking_cents_per_cord !== null && product.stacking_cents_per_cord !== undefined
+  const field = (id, key, label, value, extra = '') => `<label class="field"><span class="field-label">${label}</span>
+    <input id="${id}" class="input" data-field="${key}" value="${esc(value ?? '')}" ${extra}><p class="error" data-error-for="${key}" role="alert" hidden></p></label>`
+  slot.innerHTML = `<form class="pay-form edit-form" id="edit-form" novalidate>
+    <h4>Change order</h4>
+    <p class="small">${locked ? 'This order was delivered, so the amount and the price stay as they are. Mark it not delivered to change them.'
+      : "Changing the amount or the fee works the price out again with today's prices."}</p>
+    <div class="pay-grid">
+      ${field('edit-qty', 'qty', 'How many', o.qty, `inputmode="numeric" autocomplete="off"${off}`)}
+      <label class="field"><span class="field-label">Unit</span><select id="edit-unit" class="input" data-field="unit"${off}>
+        ${units.map((u) => `<option value="${esc(u)}"${u === o.unit ? ' selected' : ''}>${UNIT_NAMES[u] || esc(u)}</option>`).join('')}</select>
+        <p class="error" data-error-for="unit" role="alert" hidden></p></label>
+      <label class="field"><span class="field-label">Delivery fee</span><span class="money-input"><span aria-hidden="true">$</span>
+        <input id="edit-fee" class="input" inputmode="decimal" autocomplete="off" data-field="delivery_cents" value="${money(o.delivery_cents).slice(1)}"${off}></span>
+        <p class="error" data-error-for="delivery_cents" role="alert" hidden></p></label>
+      ${stackable ? `<label class="check-row"><input type="checkbox" id="edit-stacking" data-field="stacking"${o.stacking ? ' checked' : ''}${off}><span class="check-text"><strong>Stacked</strong></span></label>` : ''}
+      ${field('edit-address', 'address', 'Address or directions', o.address, 'maxlength="120"')}
+      ${field('edit-dump-notes', 'dump_notes', 'Dump spot notes', o.dump_notes, 'maxlength="200"')}
+      ${field('edit-name', 'name', 'Customer name', o.name, 'maxlength="80" autocomplete="off"')}
+      ${field('edit-phone', 'phone', 'Phone number', o.phone, 'type="tel" maxlength="32" autocomplete="off"')}
+      ${field('edit-note', 'note', 'Note', o.note, 'maxlength="280"')}
+    </div>
+    <p class="alert" data-error-for="form" role="alert" hidden></p>
+    <div class="confirm-buttons"><button type="submit" class="btn btn-primary" id="edit-save">Save changes</button>
+      <button type="button" class="btn btn-ghost" data-action="edit">Close</button></div>
+  </form>`
+  slot.querySelector('#edit-form').addEventListener('submit', (ev) => saveEdit(ev, o))
+}
+
+async function saveEdit(ev, o) {
+  ev.preventDefault()
+  const form = ev.currentTarget
+  clearErrors(form)
+  const el = (sel) => form.querySelector(sel)
+  const body = {}
+  if (!el('#edit-qty').disabled) {
+    const qtyText = el('#edit-qty').value.trim()
+    const qty = /^\d+$/.test(qtyText) ? Number(qtyText) : qtyText
+    if (qty !== o.qty) body.qty = qty
+    if (el('#edit-unit').value !== o.unit) body.unit = el('#edit-unit').value
+    const stacking = el('#edit-stacking')
+    if (stacking && stacking.checked !== o.stacking) body.stacking = stacking.checked
+    const feeText = el('#edit-fee').value.trim()
+    const fee = feeText === '' ? o.delivery_cents : dollarsToCents(feeText)
+    if (fee === null) {
+      showError(form, 'delivery_cents', 'Enter the fee in dollars, like 25.00, or leave it blank.')
+      return
+    }
+    if (fee !== o.delivery_cents) body.delivery_cents = fee
+  }
+  for (const [sel, key] of [['#edit-address', 'address'], ['#edit-dump-notes', 'dump_notes'], ['#edit-name', 'name'], ['#edit-phone', 'phone'], ['#edit-note', 'note']]) {
+    const value = el(sel).value.trim()
+    if (value !== (o[key] ?? '')) body[key] = value
+  }
+  if (!Object.keys(body).length) {
+    toggleEdit(form.parentElement, o, detailEl().querySelector('.detail-actions [data-action="edit"]'))
+    return
+  }
+  const button = el('#edit-save')
+  button.disabled = true
+  try {
+    await api.editOrder(o.id, body)
+    toast('Order changed')
+    await refresh()
+  } catch (e) {
+    button.disabled = false
+    if (e.status === 401) return
+    if (!showError(form, e.field, e.message)) showError(form, 'form', e.message)
+  }
 }
 
 async function recordPayment(ev, o, c) {

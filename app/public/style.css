@@ -72,7 +72,11 @@ h1, h2, h3, h4 { text-wrap: balance; }
 .btn-primary { background: linear-gradient(135deg, var(--primary-from), var(--primary-to)); color: var(--on-primary); box-shadow: 0 6px 18px rgba(249, 115, 22, 0.25); }
 .btn-secondary { border-color: var(--line-strong); background: var(--raised); }
 .btn-ghost { border-color: var(--line); background: transparent; }
+.btn-danger { background: var(--act-owes); color: var(--on-act); }
 .btn:disabled { opacity: 0.6; cursor: default; }
+.confirm { margin-top: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.confirm p { margin: 0 0 10px; }
+.confirm-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn.wide { width: 100%; margin-top: 6px; }
 .call { padding: 8px 14px; font-size: 15px; }
 

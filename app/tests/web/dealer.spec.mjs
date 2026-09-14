@@ -1,7 +1,7 @@
 // The dealer page against the real Worker: sign-in, the board, scheduling with the truck's capacity, payments, Copy text
 // and a phone order. Setup goes through the API; everything under test is tapped and typed on the page.
 import { test, expect } from '@playwright/test'
-import { api, assertNoThirdParty, bearer, dealerToken, fresh, orderViaApi, shot, tap } from '../helpers.mjs'
+import { api, assertNoThirdParty, bearer, dealerToken, driverToken, fresh, NOW, orderViaApi, shot, tap } from '../helpers.mjs'
 import { fillDay, hstOf, pinAt, scheduleViaApi, signInDealer, typeIn, watch } from './web-helpers.mjs'
 
 const DAY = '2026-09-15'
@@ -144,6 +144,78 @@ test('Copy text puts the API\'s exact scheduled message on the clipboard', async
   } else {
     testInfo.annotations.push({ type: 'clipboard read skipped', description: 'Playwright cannot grant clipboard-read to WebKit, so the page\'s "Copied" is checked and the clipboard itself is read in chromium only.' })
   }
+  w.expectClean()
+  assertNoThirdParty(context)
+})
+
+test('Change order: 1 cord to 2 works the price out again, equal to the API and to the hand-worked total', async ({ page, context, request }, testInfo) => {
+  await fresh(context, request)
+  const w = watch(page)
+  const token = await dealerToken(request)
+  const o = await orderViaApi(request)
+  await signInDealer(page)
+  await tap(page, newCard(page, o.id).locator('.card-open'))
+  await tap(page, page.locator('#detail').getByRole('button', { name: 'Change order' }))
+  await typeIn(page, page.locator('#edit-qty'), '2', { clear: true })
+  await shot(page, testInfo, 'web', 'dealer-order-edit')
+  const saved = page.waitForResponse((r) => r.url().endsWith(`/api/dealer/orders/${o.id}`) && r.request().method() === 'PUT')
+  await tap(page, page.locator('#edit-save'))
+  const res = await saved
+  expect(res.status()).toBe(200)
+  expect(JSON.parse(res.request().postData())).toEqual({ qty: 2 })
+  // By hand: 2 × 30 000 + 2 500 = 62 500, HST 9 375 → 71 875.
+  expect(62500 + hstOf(62500)).toBe(71875)
+  await expect(page.locator('#detail .money-rows .row.total')).toContainText('$718.75')
+  await expect(page.locator('#detail-owing')).toHaveText('Owing $718.75')
+  await expect(page.locator('#detail')).toContainText('2 cords')
+  const after = (await api(request, 'GET', `/api/dealer/orders/${o.id}`, undefined, bearer(token))).body.order
+  expect([after.qty, after.total_cents, after.wood_cu_in]).toEqual([2, 71875, 442368])
+  w.expectClean()
+  assertNoThirdParty(context)
+})
+
+test('Cancel order takes it off New and shows Cancelled', async ({ page, context, request }) => {
+  await fresh(context, request)
+  const w = watch(page)
+  const token = await dealerToken(request)
+  const o = await orderViaApi(request)
+  await signInDealer(page)
+  await tap(page, newCard(page, o.id).locator('.card-open'))
+  await tap(page, page.locator('#detail').getByRole('button', { name: 'Cancel order' }))
+  await tap(page, page.locator('#detail').getByRole('button', { name: 'Yes, cancel it' }))
+  await expect(page.locator('#detail .detail-title .pill')).toHaveText('Cancelled')
+  await expect(page.locator('#detail').getByRole('button', { name: 'Cancel order' })).toHaveCount(0)
+  await backToList(page)
+  await expect(newCard(page, o.id)).toHaveCount(0)
+  expect((await api(request, 'GET', `/api/dealer/orders/${o.id}`, undefined, bearer(token))).body.order.status).toBe('cancelled')
+  w.expectClean()
+  assertNoThirdParty(context)
+})
+
+test('Mark not delivered puts a delivered order back on its day and voids the door payment', async ({ page, context, request }, testInfo) => {
+  await fresh(context, request)
+  const w = watch(page)
+  const token = await dealerToken(request)
+  const driver = await driverToken(request)
+  const o = await orderViaApi(request)
+  await scheduleViaApi(request, token, o.id, DAY)
+  const checkin = await api(request, 'POST', '/api/driver/checkins',
+    { op_id: `undeliver-${testInfo.project.name}`, order_id: o.id, at: NOW, payment: { method: 'cash' }, note: '' }, bearer(driver))
+  expect(checkin.status, JSON.stringify(checkin.body)).toBe(201)
+
+  await signInDealer(page)
+  await tap(page, page.locator('.stat[data-bucket="delivered"]'))
+  await tap(page, page.locator(`.order-card[data-order="${o.id}"] .card-open`))
+  await expect(page.locator('#detail-owing')).toHaveText('Paid in full')
+  await tap(page, page.locator('#detail').getByRole('button', { name: 'Mark not delivered' }))
+  const undone = page.waitForResponse((r) => r.url().endsWith(`/api/dealer/orders/${o.id}/undeliver`))
+  await tap(page, page.locator('#detail').getByRole('button', { name: 'Yes, mark not delivered' }))
+  expect((await undone).status()).toBe(200)
+  await expect(page.locator('#detail .detail-title .pill')).toHaveText('Scheduled for Tuesday, September 15')
+  await expect(page.locator('#detail-owing')).toHaveText('Owing $373.75')
+  await expect(page.locator('#detail .payments li')).toContainText('Voided')
+  const after = (await api(request, 'GET', `/api/dealer/orders/${o.id}`, undefined, bearer(token))).body.order
+  expect([after.status, after.owing_cents]).toEqual(['scheduled', 37375])
   w.expectClean()
   assertNoThirdParty(context)
 })

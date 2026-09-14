@@ -51,7 +51,7 @@ test('the primary buttons have contrast of at least 4.5', async ({ page, context
 
 test('390: every button and tab on every screen is at least 44 px and hit-tests to itself, with no sideways scroll', async ({ page, context, request }, testInfo) => {
   test.skip(!phone(testInfo), 'Tap targets and sideways scroll are checked at phone width (390).')
-  test.setTimeout(240_000)
+  test.setTimeout(420_000)
   await fresh(context, request)
   const w = watch(page)
   const info = (await api(request, 'GET', '/api/info')).body
@@ -79,13 +79,14 @@ test('390: every button and tab on every screen is at least 44 px and hit-tests 
   await expect(page.locator('#send')).toBeVisible()
   await checkScreen(page, '/ step 5')
 
-  // Status page.
+  // Status page, with the cancel confirm open (and then kept).
   await page.goto(o.status_url)
   await expect(page.locator('#status')).toHaveText('Requested')
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  expect(overflow, '/o/: sideways scroll').toBeLessThanOrEqual(0)
-  const call = page.locator('#call')
-  await expectTapTarget(page, call, 44, '/o/: Call')
+  await expectTapTarget(page, page.locator('#call'), 44, '/o/: Call')
+  await checkScreen(page, '/o/ Requested')
+  await tap(page, page.getByRole('button', { name: 'Cancel my order' }))
+  await checkScreen(page, '/o/ cancel confirm')
+  await tap(page, page.getByRole('button', { name: 'Keep my order' }))
 
   // Dealer page.
   await page.goto('/dealer/')
@@ -100,6 +101,9 @@ test('390: every button and tab on every screen is at least 44 px and hit-tests 
   await tap(page, page.locator(`.order-card[data-order="${o.id}"] .card-open`))
   await expect(page.locator('#detail-owing')).toBeVisible()
   await checkScreen(page, '/dealer/ order detail')
+  await tap(page, page.locator('#detail').getByRole('button', { name: 'Change order' }))
+  await expect(page.locator('#edit-form')).toBeVisible()
+  await checkScreen(page, '/dealer/ change order')
   await tap(page, page.locator('#detail .back'))
   await tap(page, page.locator('#add-phone-order'))
   await expect(page.locator('#save-phone-order')).toBeVisible()
@@ -111,6 +115,18 @@ test('390: every button and tab on every screen is at least 44 px and hit-tests 
   await tap(page, page.locator('button.plan-day[data-date="2026-09-15"]'))
   await expect(page.locator('#stops .stop')).toHaveCount(2)
   await checkScreen(page, '/dealer/ Plan route')
+  await tap(page, page.getByRole('tab', { name: 'Customers' }))
+  await expect(page.locator('button.customer').first()).toBeVisible()
+  await checkScreen(page, '/dealer/ Customers')
+  await tap(page, page.locator('button.customer').first())
+  await expect(page.locator('#ledger')).toBeVisible()
+  await checkScreen(page, '/dealer/ ledger')
+  await tap(page, page.getByRole('tab', { name: 'Totals' }))
+  await expect(page.locator('#totals-table')).toBeVisible()
+  await checkScreen(page, '/dealer/ Totals')
+  await tap(page, page.getByRole('tab', { name: 'Settings' }))
+  await expect(page.locator('form[data-group="pin"]')).toBeVisible()
+  await checkScreen(page, '/dealer/ Settings')
 
   w.expectClean()
   assertNoThirdParty(context)

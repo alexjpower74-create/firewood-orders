@@ -1,4 +1,4 @@
-== negative:capacity-message  2026-09-14T09:38:29.069Z
+== negative:capacity-message  2026-09-14T10:08:32.282Z
 what: the schedule picker hides the API's refusal instead of showing it in role=alert
 break: app/public/dealer/dealer.js: "      alert.textContent = e.message\n      alert.hidden = false\n" -> "      alert.hidden = true\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/capacity-message/worker npx playwright test tests/web/dealer.spec.mjs --project chromium-390 --grep "capacity: with the day at 4.00 cords"
@@ -11,14 +11,14 @@ Running 1 test using 1 worker
 
     Error: expect(locator).toHaveText(expected) failed
 
-    Locator: locator('#order-list[data-bucket="new"] .order-card[data-order="o_3c6ea26cf984225b"]').getByRole('alert')
+    Locator: locator('#order-list[data-bucket="new"] .order-card[data-order="o_7625261789143183"]').getByRole('alert')
     Expected: "That's more than the truck can carry that day: 4.00 of 4.50 cords already planned, this order needs 1.00."
     Timeout: 8000ms
     Error: element(s) not found
 
     Call log:
-      - Expect "toHaveText" locator('#order-list[data-bucket="new"] .order-card[data-order="o_3c6ea26cf984225b"]').getByRole('alert') with timeout 8000ms
-      - waiting for locator('#order-list[data-bucket="new"] .order-card[data-order="o_3c6ea26cf984225b"]').getByRole('alert')
+      - Expect "toHaveText" locator('#order-list[data-bucket="new"] .order-card[data-order="o_7625261789143183"]').getByRole('alert') with timeout 8000ms
+      - waiting for locator('#order-list[data-bucket="new"] .order-card[data-order="o_7625261789143183"]').getByRole('alert')
 
 
       78 |   // The page shows the API's own words, and those are the contract's words.
@@ -48,7 +48,7 @@ Running 1 test using 1 worker
   1 failed
     [chromium-390] › tests/web/dealer.spec.mjs:62:1 › capacity: with the day at 4.00 cords a 1-cord order shows the API message in role=alert and stays under New
 
-== negative:status-label  2026-09-14T09:38:42.763Z
+== negative:status-label  2026-09-14T10:08:45.769Z
 what: the status page maps scheduled to "Requested"
 break: app/public/o/status.js: "  pill.textContent = o.status_label\n" -> "  pill.textContent = o.status === 'scheduled' ? 'Requested' : o.status_label\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/status-label/worker npx playwright test tests/web/status.spec.mjs --project chromium-390 --grep "each status label as the API moves the order"
@@ -100,7 +100,7 @@ exit 1; expected failure /Scheduled for Tuesday, September 15/; RED (good: the c
   1 failed
     [chromium-390] › tests/web/status.spec.mjs:7:1 › each status label as the API moves the order, with the photo once delivered
 
-== negative:send-overlay  2026-09-14T09:38:57.454Z
+== negative:send-overlay  2026-09-14T10:09:00.067Z
 what: a transparent element lies over Send request; it looks the same, but a tap would not reach the button
 break: app/public/index.html: "<button type=\"button\" id=\"send\" class=\"btn btn-primary\" hidden>Send request</button>" -> "<button type=\"button\" id=\"send\" class=\"btn btn-primary\" hidden>Send request</button><div class=\"send-cover\"></div>"
 break: app/public/index.html: "</head>" -> "<style>.bar-actions{position:relative}.send-cover{display:none}#send:not([hidden])~.send-cover{display:block;position:absolute;inset:0;z-index:5;background:transparent}</style></head>"
@@ -153,7 +153,7 @@ exit 1; expected failure /tap\(locator\('#send'\)\) hit-test[\s\S]*something els
   1 failed
     [chromium-390] › tests/web/order.spec.mjs:20:1 › five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested
 
-== negative:hst-float  2026-09-14T09:39:09.402Z
+== negative:hst-float  2026-09-14T10:09:11.207Z
 what: the price bar total = subtotal + subtotal * 0.15 (float, unrounded) instead of the API total
 break: app/public/order/form.js: "      if (pinned) total = money(q.total_cents)\n" -> "      if (pinned) total = money(q.subtotal_cents + q.subtotal_cents * 0.15)\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/hst-float/worker npx playwright test tests/web/order.spec.mjs --project chromium-390 --grep "not whole cents"
@@ -204,4 +204,56 @@ Running 1 test using 1 worker
 
   1 failed
     [chromium-390] › tests/web/order.spec.mjs:108:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39
+
+== negative:ledger-owing  2026-09-14T10:09:27.486Z
+what: the customer's order list shows each order's total_cents as its owing
+break: app/public/dealer/customers.js: "  const cents = o.owing_cents\n" -> "  const cents = o.total_cents\n"
+run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/ledger-owing/worker npx playwright test tests/web/ledger.spec.mjs --project chromium-390 --grep "payments and a void move the balance"
+exit 1; expected failure /order-owing[\s\S]*Owing \$273\.75/; RED (good: the check caught the break)
+--- output (tail) ---
+Running 1 test using 1 worker
+
+[1/1] [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API
+  1) [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('.cust-order[data-order="o_8a31aeeb78873ab0"] .order-owing')
+    Expected: "Owing $273.75"
+    Received: "Owing $373.75"
+    Timeout:  8000ms
+
+    Call log:
+      - Expect "toHaveText" locator('.cust-order[data-order="o_8a31aeeb78873ab0"] .order-owing') with timeout 8000ms
+      - waiting for locator('.cust-order[data-order="o_8a31aeeb78873ab0"] .order-owing')
+        20 × locator resolved to <span data-kind="owing" class="pill order-owing">Owing $373.75</span>
+           - unexpected value "Owing $373.75"
+
+
+      45 |   await tap(page, page.locator('#cust-pay-submit'))
+      46 |   await expect(balance).toHaveText('Balance owing $448.00')
+    > 47 |   await expect(page.locator(`.cust-order[data-order="${first.id}"] .order-owing`)).toHaveText('Owing $273.75')
+         |                                                                                    ^
+      48 |   await expect(page.locator(`.cust-order[data-order="${second.id}"] .order-owing`)).toHaveText('Owing $224.25')
+      49 |   let api1 = await ledger()
+      50 |   expect(api1.balance_cents).toBe(firstTotal + secondTotal - 5000 - 10000)
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/ledger.spec.mjs:47:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .negative/ledger-owing/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .negative/ledger-owing/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .negative/ledger-owing/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/trace.zip
+    Usage:
+
+        npx playwright show-trace .negative/ledger-owing/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API
 

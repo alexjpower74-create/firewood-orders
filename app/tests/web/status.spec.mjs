@@ -1,7 +1,7 @@
 // The customer's status page against the real Worker: each status label as the API moves the order (the page's own
 // 30-second poll brings the change, fast-forwarded with page.clock), the photo when delivered, and a bad link.
 import { test, expect } from '@playwright/test'
-import { api, assertNoThirdParty, bearer, dealerToken, driverToken, fresh, NOW, orderViaApi, samplePhotoPng, shot } from '../helpers.mjs'
+import { api, assertNoThirdParty, bearer, dealerToken, driverToken, fresh, NOW, orderViaApi, samplePhotoPng, shot, tap } from '../helpers.mjs'
 import { watch } from './web-helpers.mjs'
 
 test('each status label as the API moves the order, with the photo once delivered', async ({ page, context, request }, testInfo) => {
@@ -49,6 +49,48 @@ test('each status label as the API moves the order, with the photo once delivere
   await expect.poll(() => page.locator('#photo').evaluate((img) => img.complete && img.naturalWidth), 'the photo loaded').toBe(320)
   await expect(page.locator('#owing')).toHaveText('Balance owing $373.75')
   await shot(page, testInfo, 'web', 'status-delivered')
+
+  w.expectClean()
+  assertNoThirdParty(context)
+})
+
+test('Cancel my order while Requested cancels it; once it is scheduled the API\'s refusal shows', async ({ page, context, request }, testInfo) => {
+  await fresh(context, request)
+  const w = watch(page)
+  const dealer = await dealerToken(request)
+  const o = await orderViaApi(request)
+
+  await page.goto(o.status_url)
+  await expect(page.locator('#status')).toHaveText('Requested')
+  await tap(page, page.getByRole('button', { name: 'Cancel my order' }))
+  await expect(page.getByText('Cancel this order?')).toBeVisible()
+  const cancelled = page.waitForResponse((r) => r.url().endsWith(`/api/o/${o.token}/cancel`) && r.request().method() === 'POST')
+  await tap(page, page.getByRole('button', { name: 'Yes, cancel it' }))
+  expect((await cancelled).status()).toBe(200)
+  await expect(page.locator('#status')).toHaveText('Cancelled')
+  await expect(page.locator('#timeline')).toBeHidden()
+  await expect(page.locator('#cancel-card')).toBeHidden()
+  await expect(page.locator('#owing')).toHaveText('Paid in full')
+  const view = await api(request, 'GET', `/api/o/${o.token}`)
+  expect(view.body.order.status).toBe('cancelled')
+  await shot(page, testInfo, 'web', 'status-cancelled')
+
+  // A second order is scheduled by the dealer while its page is still open as Requested.
+  const second = await orderViaApi(request, { name: 'Glenda M. (SAMPLE)', phone: '709-555-0199' })
+  await page.goto(second.status_url)
+  await expect(page.locator('#status')).toHaveText('Requested')
+  expect((await api(request, 'POST', `/api/dealer/orders/${second.id}/schedule`, { date: '2026-09-15' }, bearer(dealer))).status).toBe(200)
+  await tap(page, page.getByRole('button', { name: 'Cancel my order' }))
+  const refused = page.waitForResponse((r) => r.url().endsWith(`/api/o/${second.token}/cancel`))
+  await tap(page, page.getByRole('button', { name: 'Yes, cancel it' }))
+  const res = await refused
+  expect(res.status()).toBe(409)
+  const body = await res.json()
+  expect(body.error).toBe('This order is already on the schedule. Call us to change it.')
+  await expect(page.locator('#cancel-error')).toHaveText(body.error)
+  await expect(page.locator('#cancel-error')).toBeVisible()
+  await expect(page.locator('#status')).toHaveText('Scheduled for Tuesday, September 15')
+  await expect(page.getByRole('button', { name: 'Cancel my order' })).toBeHidden()
 
   w.expectClean()
   assertNoThirdParty(context)
