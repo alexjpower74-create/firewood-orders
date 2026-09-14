@@ -154,6 +154,10 @@ next 14 delivery weekdays starting **tomorrow**.
 `POST /api/quote` — same body as `POST /api/orders` minus name/phone/address/notes/preferred; nothing is written.
 → `200 { "product_label", "qty_label", "explain", "wood_cu_in", "pellet_bags", "distance_km", "goods_cents", "stacking_cents",
 "delivery_cents", "subtotal_cents", "hst_cents", "total_cents" }` or the 400s above. No rate guard.
+(Added after M1, fo2's questions.) **Without a pin** (`lat`/`lng` absent or null) the quote still answers 200 with goods and
+stacking and still raises `below_minimum`, but `distance_km`, `delivery_cents`, `subtotal_cents`, `hst_cents` and `total_cents` are
+`null` (never a guess). An optional `delivery_cents` (0–50 000) in the body skips the band lookup exactly as on a dealer phone
+order, so the phone-order form can show the real total before saving. `POST /api/orders` still requires the pin.
 
 `POST /api/orders`
 ```json

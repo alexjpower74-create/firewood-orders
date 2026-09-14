@@ -48,3 +48,9 @@ Newest at the bottom.
     reloads with no signal.
 21. **`.rig/` is not committed.** `rig init` marks it machine state; LEAD-RULES says "commit" after init, which here means the
     plan and the rest of the setup.
+22. **A quote works without a pin** and answers `null` for distance, delivery, HST and total rather than quoting at the yard, and
+    it takes an optional `delivery_cents` like a phone order (fo2's M1 questions). The page never works a price out itself.
+23. **Page-written messages** for checks made before any API call are fo2's wording, signed off by the lead: "Choose what you would
+    like.", "Tell us where to find the place, like the road and what it is near.", "Pick the days that suit you, or Any day.",
+    "Pick your area.", "Enter the amount in dollars, like 100.00.", "Enter the fee in dollars, like 25.00, or leave it blank.",
+    "That's the driver PIN. The dealer page needs the dealer PIN."

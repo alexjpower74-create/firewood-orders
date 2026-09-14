@@ -128,6 +128,17 @@ export async function tapMap(page, mapLocator, fx = 0.5, fy = 0.5) {
     return t && el.contains(t) && !t.closest('.leaflet-control') ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
   }, [x, y])
   expect(hit, `tapMap at ${Math.round(x)},${Math.round(y)}: not the map`).toBe('')
+  // WebKit's touch adjustment moves a tap that lands a few px beside a control onto the control (fo2 M1: a pin 3 px from
+  // the zoom-out button zoomed the map instead). elementFromPoint cannot see that, so refuse points that close.
+  const near = await mapLocator.evaluate((el, [px, py]) => {
+    const M = 16
+    for (const c of el.querySelectorAll('.leaflet-control')) {
+      const r = c.getBoundingClientRect()
+      if (r.width && px > r.left - M && px < r.right + M && py > r.top - M && py < r.bottom + M) return String(c.className)
+    }
+    return ''
+  }, [x, y])
+  expect(near, `tapMap at ${Math.round(x)},${Math.round(y)}: within 16 px of a map control, where WebKit would send the tap`).toBe('')
   if (await isCoarse(page)) await page.touchscreen.tap(x, y)
   else await page.mouse.click(x, y)
 }
@@ -217,10 +228,14 @@ export async function shot(page, testInfo, dir, name) {
       await page.mouse.wheel(0, -4000)
       await page.waitForTimeout(120)
     }
-  } else {
-    // Touch projects have no wheel in Playwright; screenshot staging only, after every check.
-    await page.evaluate(() => window.scrollTo(0, 0))
-    await page.waitForTimeout(120)
   }
+  // Touch projects have no wheel in Playwright, and smooth scrolling can still be moving after the wheel: screenshot
+  // staging only, after every check, jump to the top and wait until the page is really there. A full-page capture taken
+  // while scrolled paints sticky headers halfway down the picture (fo2 M1 shots).
+  if ((await page.evaluate(() => window.scrollY)) !== 0) {
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }))
+  }
+  await page.waitForFunction(() => window.scrollY === 0, null, { timeout: 3000 })
+  await page.waitForTimeout(60)
   await page.screenshot({ path: path.join(out, `${testInfo.project.name}-${name}.png`), fullPage: true, animations: 'disabled' })
 }

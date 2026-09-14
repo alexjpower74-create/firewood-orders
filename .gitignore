@@ -10,3 +10,4 @@ playwright-report/
 .negative/
 app/tests/results/
 .rig/
+node_modules
