@@ -7,6 +7,7 @@ import {
   esc, money, cords, volumeText, balanceLabel, METHODS, icon, showDealer, copyButton, clearErrors, showError, dollarsToCents,
 } from '/ui.js'
 import { createOrderForm, FIELD_STEP } from '/order/form.js'
+import { initPlan, showPlan } from '/dealer/plan.js'
 
 const $ = (sel) => document.querySelector(sel)
 const BUCKETS = [
@@ -46,7 +47,7 @@ async function start() {
   window.addEventListener(SIGNED_OUT, (ev) => showSignin(ev.detail))
   $('#signin-form').addEventListener('submit', signin)
   $('#signout').addEventListener('click', signout)
-  $('#tabs').addEventListener('click', (ev) => { const t = ev.target.closest('[role="tab"]'); if (t) selectTab(t.dataset.tab) })
+  $('#tabs').addEventListener('click', (ev) => { const t = ev.target.closest('[role="tab"]'); if (t) openTab(t.dataset.tab) })
   $('#tabs').addEventListener('keydown', tabKeys)
   $('#stats').addEventListener('click', (ev) => {
     const b = ev.target.closest('.stat')
@@ -56,6 +57,7 @@ async function start() {
   })
   $('#order-list').addEventListener('click', listClick)
   $('#add-phone-order').addEventListener('click', openPhoneOrder)
+  initPlan($('#plan'), { dealerInfo: info, onPathChange: (date) => setHash(date ? `plan/${date}` : 'plan') })
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && session.get() && !$('#app').hidden) loadBoard()
   })
@@ -107,9 +109,10 @@ function showApp() {
   $('#signin').hidden = true
   $('#app').hidden = false
   $('#signout').hidden = false
-  selectTab('orders')
   closeDetail()
   loadBoard()
+  const [tab, date] = location.hash.slice(1).split('/')
+  openTab(TABS.includes(tab) ? tab : 'orders', date || null)
 }
 
 function selectTab(name) {
@@ -121,6 +124,19 @@ function selectTab(name) {
   }
 }
 
+const TABS = ['orders', 'plan', 'customers', 'totals', 'settings']
+
+// The open tab (and the Plan tab's open day) live in the URL hash, so a reload comes back to the same place.
+function setHash(path) {
+  history.replaceState(null, '', `${location.pathname}${location.search}#${path}`)
+}
+
+function openTab(name, date = null) {
+  selectTab(name)
+  if (name === 'plan') showPlan(date)
+  else setHash(name)
+}
+
 function tabKeys(ev) {
   const tabs = [...document.querySelectorAll('[role="tab"]')]
   const i = tabs.indexOf(document.activeElement)
@@ -130,7 +146,7 @@ function tabKeys(ev) {
   ev.preventDefault()
   const t = tabs[(next + tabs.length) % tabs.length]
   t.focus()
-  selectTab(t.dataset.tab)
+  openTab(t.dataset.tab)
 }
 
 /* ---------- board ---------- */

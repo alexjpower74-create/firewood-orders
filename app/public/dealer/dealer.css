@@ -136,6 +136,73 @@
 /* A passing note under the header. It never takes a tap: taps go through to whatever is beneath. */
 .toast { position: fixed; top: calc(var(--topbar-h, 61px) + 8px); left: 50%; z-index: 2000; max-width: calc(100vw - 32px); padding: 10px 16px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--raised); box-shadow: var(--shadow); font-weight: 650; transform: translateX(-50%); pointer-events: none; }
 
+/* ---------- Plan ---------- */
+.plan-intro { margin: 0 0 12px; }
+.plan-days { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin: 0; padding: 0; }
+.plan-day {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.plan-day:hover { border-color: var(--line-strong); }
+.plan-day[data-over="true"] { border-color: var(--danger); box-shadow: inset 4px 0 0 var(--danger); }
+.plan-day.off { border-style: dashed; background: transparent; color: var(--muted); cursor: default; }
+.plan-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.cap-text { color: var(--text); }
+.plan-day .bar { height: 7px; }
+
+.route-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px 14px; margin-bottom: 12px; }
+.route-title { margin: 0; font-size: 22px; }
+.route-title:focus { outline: none; }
+.route-meta { grid-column: 1 / -1; margin: 0; }
+.route-meta strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+.route-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, 1fr); align-items: start; gap: 16px; }
+.route-map-wrap { position: sticky; top: calc(var(--topbar-h, 61px) + 20px); overflow: hidden; border: 1px solid var(--line-strong); border-radius: var(--radius); }
+#route-map { height: 520px; background: #1e293b; }
+.stop-marker span { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid #1a0e02; border-radius: 50%; background: #38bdf8; color: #06121f; font-size: 14px; font-weight: 800; }
+.stop-marker span[data-status="delivered"] { background: #4ade80; }
+.stop-marker span[data-status="out_for_delivery"] { background: #a78bfa; }
+
+.stops { list-style: none; display: grid; gap: 8px; margin: 0; padding: 0; }
+.stop {
+  display: grid;
+  grid-template-columns: 44px 32px 1fr;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--c);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.stop[data-status="scheduled"] { --c: var(--scheduled); }
+.stop.dragging { position: relative; z-index: 5; border-color: var(--accent); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45); }
+.drag-handle { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: grab; touch-action: none; }
+.drag-handle:hover { background: var(--raised); color: var(--text); }
+.stop.dragging .drag-handle { cursor: grabbing; }
+.drag-space { width: 44px; }
+.stop-num { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: color-mix(in srgb, var(--c) var(--tint), transparent); color: var(--c); font-weight: 800; font-variant-numeric: tabular-nums; }
+.stop-body { display: grid; gap: 1px; min-width: 0; }
+.stop-body .pill { justify-self: start; margin-top: 4px; }
+.stop-name { font-size: 16px; }
+.stop-moves { display: flex; grid-column: 3; gap: 8px; }
+.stop-moves .btn { padding: 8px 12px; font-size: 14px; }
+
+@media (max-width: 1100px) {
+  .route-layout { grid-template-columns: 1fr; }
+  .route-map-wrap { position: static; }
+  #route-map { height: 360px; }
+}
+
 @media (max-width: 1100px) and (min-width: 900px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .orders-layout { grid-template-columns: minmax(300px, 360px) 1fr; }
@@ -171,4 +238,11 @@
   .detail { position: static; max-height: none; overflow: visible; padding: 14px; }
   .detail .back { display: inline-flex; }
   .pay-grid { grid-template-columns: 1fr; }
+  .route-head { grid-template-columns: 1fr; }
+  .route-head .btn { justify-self: start; }
+  #route-map { height: 300px; }
+  .plan-days { grid-template-columns: 1fr; }
+  .stop { grid-template-columns: 44px 30px minmax(0, 1fr); }
+  .stop-moves { grid-column: 1 / -1; }
+  .stop-moves .btn { flex: 1; }
 }

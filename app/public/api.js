@@ -86,5 +86,8 @@ export const api = {
   schedule: (id, date) => call('POST', `${order(id)}/schedule`, { date }),
   unschedule: (id) => call('POST', `${order(id)}/unschedule`, {}),
   days: () => call('GET', '/api/dealer/days'),
+  route: (date) => call('GET', `/api/dealer/days/${q(date)}/route`),
+  optimize: (date) => call('POST', `/api/dealer/days/${q(date)}/route/optimize`, {}),
+  putRoute: (date, ids) => call('PUT', `/api/dealer/days/${q(date)}/route`, { order_ids: ids }),
   recordPayment: (body) => call('POST', '/api/dealer/payments', body),
 }
