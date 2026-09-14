@@ -161,7 +161,9 @@
 .cust-order { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px; border-left: 4px solid var(--c); border-radius: 10px; background: var(--raised); }
 .cust-order-main { display: grid; flex: 1 1 14rem; gap: 2px; }
 
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+/* position: relative keeps absolutely placed pieces inside (the ledger's screen-reader "Void" label escaped an unpositioned
+   wrapper and widened the whole page by 153 px at 390). */
+.table-wrap { position: relative; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
 .money-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
 .money-table th, .money-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 .money-table thead th { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -170,6 +172,9 @@
 .money-table tbody tr:last-child td, .money-table tbody tr:last-child th { border-bottom: 0; }
 .money-table tfoot th, .money-table tfoot td { border-top: 2px solid var(--line-strong); border-bottom: 0; font-weight: 800; }
 .money-table tr[data-kind="payment"] .payment { color: var(--ok); }
+.money-table td.act { width: 1%; text-align: right; }
+.money-table tr.confirm-row td { white-space: normal; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---------- Totals ---------- */
 .totals-head { display: flex; flex-wrap: wrap; align-items: end; gap: 4px 20px; }

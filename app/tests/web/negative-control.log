@@ -1,4 +1,136 @@
-== negative:capacity-message  2026-09-14T10:08:32.282Z
+== negative:early-quote-pin  2026-09-14T10:43:26.362Z
+what: the quote before the pin carries the yard lat/lng instead of no pin
+break: app/public/order/form.js: "    if (state.pin) {\n      body.lat = state.pin.lat\n      body.lng = state.pin.lng\n    }\n" -> "    const at = state.pin || info.yard\n    body.lat = at.lat\n    body.lng = at.lng\n"
+run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/early-quote-pin/worker npx playwright test tests/web/order.spec.mjs --project chromium-390 --grep "five steps with real taps"
+exit 1; expected failure /a quote before the pin carries no lat\/lng/; RED (good: the check caught the break)
+--- output (tail) ---
+Running 1 test using 1 worker
+
+[1/1] [chromium-390] › tests/web/order.spec.mjs:21:1 › five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested
+  1) [chromium-390] › tests/web/order.spec.mjs:21:1 › five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested 
+
+    Error: a quote before the pin carries no lat/lng
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "lat"
+    Received array:     ["product_id", "unit", "qty", "stacking", "zone_id", "lat", "lng"]
+
+      49 |   const noPinRes = await noPin
+      50 |   const noPinBody = JSON.parse(noPinRes.request().postData())
+    > 51 |   expect(Object.keys(noPinBody), 'a quote before the pin carries no lat/lng').not.toContain('lat')
+         |                                                                                   ^
+      52 |   expect(Object.keys(noPinBody)).not.toContain('lng')
+      53 |   expect(noPinRes.status()).toBe(200)
+      54 |   const noPinQuote = await noPinRes.json()
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:51:83
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .negative/early-quote-pin/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .negative/early-quote-pin/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .negative/early-quote-pin/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/trace.zip
+    Usage:
+
+        npx playwright show-trace .negative/early-quote-pin/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium-390] › tests/web/order.spec.mjs:21:1 › five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested
+
+== negative:phone-fee-quote  2026-09-14T10:43:34.681Z
+what: the phone-order form does not pass delivery_cents to the quote
+break: app/public/dealer/dealer.js: "{ info, mode: 'dealer', onChange: renderPrice, deliveryOverride: override }" -> "{ info, mode: 'dealer', onChange: renderPrice }"
+run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/phone-fee-quote/worker npx playwright test tests/web/dealer.spec.mjs --project chromium-390 --grep "a phone order through the dealer form"
+exit 1; expected failure /delivery_cents === 1000|waitForResponse|Test timeout|\$241\.50/; RED (good: the check caught the break)
+--- output (tail) ---
+Running 1 test using 1 worker
+
+[1/1] [chromium-390] › tests/web/dealer.spec.mjs:223:1 › a phone order through the dealer form appears under New with source phone
+  1) [chromium-390] › tests/web/dealer.spec.mjs:223:1 › a phone order through the dealer form appears under New with source phone 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.waitForResponse: Test timeout of 60000ms exceeded.
+
+      240 |   // The quote now takes the dealer's fee: the total shown before saving already includes it.
+      241 |   // By hand: birch half cord 20 000 + the $10.00 fee = 21 000, HST 3 150 → $241.50 (the distance fee would make $270.25).
+    > 242 |   const feeQuote = page.waitForResponse((r) => r.url().endsWith('/api/quote') && r.request().method() === 'POST' &&
+          |                         ^
+      243 |     JSON.parse(r.request().postData() || '{}').delivery_cents === 1000)
+      244 |   await typeIn(page, page.locator('#delivery-fee'), '10.00')
+      245 |   const feeRes = await feeQuote
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/dealer.spec.mjs:242:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .negative/phone-fee-quote/results/web-dealer-a-phone-order-t-d9308-under-New-with-source-phone-chromium-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .negative/phone-fee-quote/results/web-dealer-a-phone-order-t-d9308-under-New-with-source-phone-chromium-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .negative/phone-fee-quote/results/web-dealer-a-phone-order-t-d9308-under-New-with-source-phone-chromium-390/trace.zip
+    Usage:
+
+        npx playwright show-trace .negative/phone-fee-quote/results/web-dealer-a-phone-order-t-d9308-under-New-with-source-phone-chromium-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium-390] › tests/web/dealer.spec.mjs:223:1 › a phone order through the dealer form appears under New with source phone
+
+== negative:ledger-void-id  2026-09-14T10:44:41.873Z
+what: the ledger's Void voids the first payment made on an order, not the row's payment_id
+break: app/public/dealer/customers.js: "  const id = button.dataset.payment\n" -> "  const id = root.querySelector('#ledger tr[data-payment-id][data-order-id]')?.dataset.paymentId || button.dataset.payment\n"
+run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/ledger-void-id/worker npx playwright test tests/web/ledger.spec.mjs --project chromium-390 --grep "payments and a void move the balance"
+exit 1; expected failure /the void names the row's own payment|Balance owing \$498\.00/; RED (good: the check caught the break)
+--- output (tail) ---
+Running 1 test using 1 worker
+
+[1/1] [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API
+  1) [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API 
+
+    Error: the void names the row's own payment
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "/api/dealer/payments/pay_df0614b84e954965"
+    Received: "/api/dealer/payments/pay_b948b18f8e0acd10"
+
+      64 |   const voidRes = await voided
+      65 |   expect(voidRes.status()).toBe(200)
+    > 66 |   expect(new URL(voidRes.url()).pathname, 'the void names the row\'s own payment').toBe(`/api/dealer/payments/${onAccount.payment_id}`)
+         |                                                                                    ^
+      67 |   await expect(balance).toHaveText('Balance owing $498.00')
+      68 |   await expect(page.locator(`.cust-order[data-order="${first.id}"] .order-owing`)).toHaveText('Owing $273.75')
+      69 |   api1 = await ledger()
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/ledger.spec.mjs:66:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .negative/ledger-void-id/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .negative/ledger-void-id/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .negative/ledger-void-id/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/trace.zip
+    Usage:
+
+        npx playwright show-trace .negative/ledger-void-id/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium-390] › tests/web/ledger.spec.mjs:8:1 › payments and a void move the balance to the cent, and the running balance column equals the API
+
+== negative:capacity-message  2026-09-14T10:44:51.160Z
 what: the schedule picker hides the API's refusal instead of showing it in role=alert
 break: app/public/dealer/dealer.js: "      alert.textContent = e.message\n      alert.hidden = false\n" -> "      alert.hidden = true\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/capacity-message/worker npx playwright test tests/web/dealer.spec.mjs --project chromium-390 --grep "capacity: with the day at 4.00 cords"
@@ -11,14 +143,14 @@ Running 1 test using 1 worker
 
     Error: expect(locator).toHaveText(expected) failed
 
-    Locator: locator('#order-list[data-bucket="new"] .order-card[data-order="o_7625261789143183"]').getByRole('alert')
+    Locator: locator('#order-list[data-bucket="new"] .order-card[data-order="o_07f64931ef61f724"]').getByRole('alert')
     Expected: "That's more than the truck can carry that day: 4.00 of 4.50 cords already planned, this order needs 1.00."
     Timeout: 8000ms
     Error: element(s) not found
 
     Call log:
-      - Expect "toHaveText" locator('#order-list[data-bucket="new"] .order-card[data-order="o_7625261789143183"]').getByRole('alert') with timeout 8000ms
-      - waiting for locator('#order-list[data-bucket="new"] .order-card[data-order="o_7625261789143183"]').getByRole('alert')
+      - Expect "toHaveText" locator('#order-list[data-bucket="new"] .order-card[data-order="o_07f64931ef61f724"]').getByRole('alert') with timeout 8000ms
+      - waiting for locator('#order-list[data-bucket="new"] .order-card[data-order="o_07f64931ef61f724"]').getByRole('alert')
 
 
       78 |   // The page shows the API's own words, and those are the contract's words.
@@ -48,7 +180,7 @@ Running 1 test using 1 worker
   1 failed
     [chromium-390] › tests/web/dealer.spec.mjs:62:1 › capacity: with the day at 4.00 cords a 1-cord order shows the API message in role=alert and stays under New
 
-== negative:status-label  2026-09-14T10:08:45.769Z
+== negative:status-label  2026-09-14T10:45:05.919Z
 what: the status page maps scheduled to "Requested"
 break: app/public/o/status.js: "  pill.textContent = o.status_label\n" -> "  pill.textContent = o.status === 'scheduled' ? 'Requested' : o.status_label\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/status-label/worker npx playwright test tests/web/status.spec.mjs --project chromium-390 --grep "each status label as the API moves the order"
@@ -100,7 +232,7 @@ exit 1; expected failure /Scheduled for Tuesday, September 15/; RED (good: the c
   1 failed
     [chromium-390] › tests/web/status.spec.mjs:7:1 › each status label as the API moves the order, with the photo once delivered
 
-== negative:send-overlay  2026-09-14T10:09:00.067Z
+== negative:send-overlay  2026-09-14T10:45:19.278Z
 what: a transparent element lies over Send request; it looks the same, but a tap would not reach the button
 break: app/public/index.html: "<button type=\"button\" id=\"send\" class=\"btn btn-primary\" hidden>Send request</button>" -> "<button type=\"button\" id=\"send\" class=\"btn btn-primary\" hidden>Send request</button><div class=\"send-cover\"></div>"
 break: app/public/index.html: "</head>" -> "<style>.bar-actions{position:relative}.send-cover{display:none}#send:not([hidden])~.send-cover{display:block;position:absolute;inset:0;z-index:5;background:transparent}</style></head>"
@@ -122,18 +254,18 @@ exit 1; expected failure /tap\(locator\('#send'\)\) hit-test[\s\S]*something els
       107 |   else await page.mouse.click(x, y)
       108 | }
         at tap (/home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/helpers.mjs:105:104)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:86:3
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:108:3
 
     Error: page.waitForResponse: Test ended.
 
-      83 |   await typeIn(page, page.locator('#phone'), '709-555-0107')
-      84 |   await shot(page, testInfo, 'web', 'order-5-you')
-    > 85 |   const placed = page.waitForResponse((r) => r.url().endsWith('/api/orders') && r.request().method() === 'POST')
-         |                       ^
-      86 |   await tap(page, page.locator('#send'))
-      87 |   const placedRes = await placed
-      88 |   expect(placedRes.status()).toBe(201)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:85:23
+      105 |   await typeIn(page, page.locator('#phone'), '709-555-0107')
+      106 |   await shot(page, testInfo, 'web', 'order-5-you')
+    > 107 |   const placed = page.waitForResponse((r) => r.url().endsWith('/api/orders') && r.request().method() === 'POST')
+          |                       ^
+      108 |   await tap(page, page.locator('#send'))
+      109 |   const placedRes = await placed
+      110 |   expect(placedRes.status()).toBe(201)
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:107:23
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/send-overlay/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/test-failed-1.png
@@ -151,9 +283,9 @@ exit 1; expected failure /tap\(locator\('#send'\)\) hit-test[\s\S]*something els
 
 
   1 failed
-    [chromium-390] › tests/web/order.spec.mjs:20:1 › five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested
+    [chromium-390] › tests/web/order.spec.mjs:21:1 › five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested
 
-== negative:hst-float  2026-09-14T10:09:11.207Z
+== negative:hst-float  2026-09-14T10:45:29.011Z
 what: the price bar total = subtotal + subtotal * 0.15 (float, unrounded) instead of the API total
 break: app/public/order/form.js: "      if (pinned) total = money(q.total_cents)\n" -> "      if (pinned) total = money(q.subtotal_cents + q.subtotal_cents * 0.15)\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/hst-float/worker npx playwright test tests/web/order.spec.mjs --project chromium-390 --grep "not whole cents"
@@ -161,8 +293,8 @@ exit 1; expected failure /#quote-total[\s\S]*\$157\.39/; RED (good: the check ca
 --- output (tail) ---
 Running 1 test using 1 worker
 
-[1/1] [chromium-390] › tests/web/order.spec.mjs:108:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39
-  1) [chromium-390] › tests/web/order.spec.mjs:108:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39 
+[1/1] [chromium-390] › tests/web/order.spec.mjs:130:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39
+  1) [chromium-390] › tests/web/order.spec.mjs:130:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39 
 
     Error: expect(locator).toHaveText(expected) failed
 
@@ -178,14 +310,14 @@ Running 1 test using 1 worker
            - unexpected value "$157.38"
 
 
-      124 |   expect(hstOf(subtotal)).toBe(2053)
-      125 |   await expect(page.locator('#quote-hst')).toContainText('$20.53')
-    > 126 |   await expect(page.locator('#quote-total')).toHaveText('$157.39')
+      146 |   expect(hstOf(subtotal)).toBe(2053)
+      147 |   await expect(page.locator('#quote-hst')).toContainText('$20.53')
+    > 148 |   await expect(page.locator('#quote-total')).toHaveText('$157.39')
           |                                              ^
-      127 |   w.expectClean()
-      128 |   assertNoThirdParty(context)
-      129 | })
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:126:46
+      149 |   w.expectClean()
+      150 |   assertNoThirdParty(context)
+      151 | })
+        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:148:46
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/hst-float/results/web-order-an-HST-that-is-n-62cbb-s-to-King-s-Point-is-157-39-chromium-390/test-failed-1.png
@@ -203,9 +335,9 @@ Running 1 test using 1 worker
 
 
   1 failed
-    [chromium-390] › tests/web/order.spec.mjs:108:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39
+    [chromium-390] › tests/web/order.spec.mjs:130:1 › an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39
 
-== negative:ledger-owing  2026-09-14T10:09:27.486Z
+== negative:ledger-owing  2026-09-14T10:45:43.931Z
 what: the customer's order list shows each order's total_cents as its owing
 break: app/public/dealer/customers.js: "  const cents = o.owing_cents\n" -> "  const cents = o.total_cents\n"
 run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/ledger-owing/worker npx playwright test tests/web/ledger.spec.mjs --project chromium-390 --grep "payments and a void move the balance"
@@ -218,14 +350,14 @@ Running 1 test using 1 worker
 
     Error: expect(locator).toHaveText(expected) failed
 
-    Locator:  locator('.cust-order[data-order="o_8a31aeeb78873ab0"] .order-owing')
+    Locator:  locator('.cust-order[data-order="o_e9c246c300f3c123"] .order-owing')
     Expected: "Owing $273.75"
     Received: "Owing $373.75"
     Timeout:  8000ms
 
     Call log:
-      - Expect "toHaveText" locator('.cust-order[data-order="o_8a31aeeb78873ab0"] .order-owing') with timeout 8000ms
-      - waiting for locator('.cust-order[data-order="o_8a31aeeb78873ab0"] .order-owing')
+      - Expect "toHaveText" locator('.cust-order[data-order="o_e9c246c300f3c123"] .order-owing') with timeout 8000ms
+      - waiting for locator('.cust-order[data-order="o_e9c246c300f3c123"] .order-owing')
         20 × locator resolved to <span data-kind="owing" class="pill order-owing">Owing $373.75</span>
            - unexpected value "Owing $373.75"
 

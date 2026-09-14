@@ -658,3 +658,50 @@ The yard workaround is removed.
   would have failed. Neither is re-proved with a copy this turn, because QA holds 7707. The standing controls (a)–(e) were
   last red at 6dc24ce.
 - **Servers:** the dev Worker on 7701 and the e2e Worker on 7703 are stopped.
+
+## Final round: ledger Void, "Nothing owing", controls (f)–(h) (2026-09-14)
+
+The branch was fast-forwarded to main at 76161d3, which includes fo1's ledger ids and "Nothing owing" (93ddb4a).
+
+### DONE
+- **Void on the Customers ledger.** Every payment row has **Void**, and payments made on account are marked "On account".
+  Void opens an inline confirm and sends `DELETE /api/dealer/payments/<the row's payment_id>`, then redraws from the API's
+  ledger. A refusal appears in `#ledger-error` with the API's words.
+- **`ledger.spec`.** The $50.00 on-account payment is voided from its ledger row while the $100.00 order payment is still
+  in the ledger. Checks:
+  - the DELETE path is exactly that row's `payment_id`;
+  - the balance goes $448.00 → **$498.00**;
+  - the first order still owes $273.75;
+  - the running column equals the API **and** `[37375, 59800, 49800]` by hand.
+
+  Voiding the $100.00 from the order detail then ends at $598.00 and `[37375, 59800]`.
+- **`status.spec`.** A cancelled order with nothing paid shows **"Nothing owing"**.
+
+### Caught by the suite and fixed
+- **The ledger scrolled sideways by 153 px at 390, in both engines.** The new column's screen-reader label (`.sr-only`,
+  `position: absolute`) escaped the ledger's unpositioned scrolling wrapper and widened the page. `targets.spec` found it
+  ("/dealer/ ledger: the page scrolls sideways by 153 px"). In chromium-390 the shift also put a ledger cell over the amount
+  field, which `tap()`'s hit-test caught. Fixed: `.table-wrap { position: relative }`.
+- **That first run's (e) and (h) results were void, not green.** Their ledger test had already failed at that hit-test,
+  before reaching the checks the controls target, and the library reported NOT RED. After the fix, all eight controls were
+  run again from a cleared log.
+
+### Negative controls — 8 of 8 RED on the final code
+
+`app/tests/web/negative-control.log`, port 7707:
+
+| control | the break in the copy | red output |
+|---|---|---|
+| **(f) early-quote-pin** | the order form sends `info.yard` lat/lng on the quote before the pin | `a quote before the pin carries no lat/lng` / received keys `[…, "lat", "lng"]` |
+| **(g) phone-fee-quote** | the phone-order form leaves `deliveryOverride` off the quote | `page.waitForResponse: Test timeout of 60000ms exceeded` (no quote ever carried `delivery_cents: 1000`) |
+| **(h) ledger-void-id** | the ledger Void sends the first order-payment's id instead of the row's | `Expected: "/api/dealer/payments/pay_df06…"` / `Received: "/api/dealer/payments/pay_b948…"` |
+| (a) capacity-message | the picker hides the 409 | `Expected: "That's more than the truck can carry that day: 4.00 of 4.50 cords…"`, not found |
+| (b) status-label | scheduled shown as "Requested" | `Expected: "Scheduled for Tuesday, September 15"` / `Received: "Requested"` |
+| (c) send-overlay | transparent cover over Send | `Received: "<div class=\"send-cover\"></div>"` … something else is on top |
+| (d) hst-float | float HST, unrounded | `Expected: "$157.39"` / `Received: "$157.38"` |
+| (e) ledger-owing | the order pill shows total, not owing | `Expected: "Owing $273.75"` / `Received: "Owing $373.75"` |
+
+### Final result
+`E2E_PORT=7703 npx playwright test tests/web` on a fresh real Worker: **106 passed, 0 failed, 6 skipped** (the by-width skips).
+
+Servers stopped: the e2e Worker on 7703 and the control Workers on 7707. Nothing else is open on fo2's side.
