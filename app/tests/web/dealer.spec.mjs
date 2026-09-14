@@ -237,7 +237,15 @@ test('a phone order through the dealer form appears under New with source phone'
   await tap(page, page.locator('#any-day'))
   await typeIn(page, page.locator('#name'), 'Ches B. (SAMPLE)')
   await typeIn(page, page.locator('#phone'), '709-555-0111')
+  // The quote now takes the dealer's fee: the total shown before saving already includes it.
+  // By hand: birch half cord 20 000 + the $10.00 fee = 21 000, HST 3 150 → $241.50 (the distance fee would make $270.25).
+  const feeQuote = page.waitForResponse((r) => r.url().endsWith('/api/quote') && r.request().method() === 'POST' &&
+    JSON.parse(r.request().postData() || '{}').delivery_cents === 1000)
   await typeIn(page, page.locator('#delivery-fee'), '10.00')
+  const feeRes = await feeQuote
+  expect((await feeRes.json()).total_cents).toBe(21000 + hstOf(21000))
+  await expect(page.locator('#detail #quote-total')).toHaveText('$241.50')
+  await expect(page.locator('#detail #quote-delivery')).toContainText('$10.00')
   await shot(page, testInfo, 'web', 'dealer-phone-order')
 
   const created = page.waitForResponse((r) => r.url().endsWith('/api/dealer/orders') && r.request().method() === 'POST')

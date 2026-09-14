@@ -11,10 +11,11 @@ const EXPLAIN = {
   load: 'A load is what our dump truck carries in one trip, dumped in a pile, not stacked. We count a load as 1.5 cords.',
 }
 
-const quoteWithPin = (page, yard) => page.waitForResponse((r) => {
+// The quote the page asks once the map has a pin (before that, the page quotes with no pin at all).
+const quoteWithPin = (page) => page.waitForResponse((r) => {
   if (!r.url().endsWith('/api/quote') || r.request().method() !== 'POST') return false
   const body = JSON.parse(r.request().postData() || '{}')
-  return body.lat !== yard.lat || body.lng !== yard.lng
+  return typeof body.lat === 'number' && typeof body.lng === 'number'
 })
 
 test('five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested', async ({ page, context, request }, testInfo) => {
@@ -39,7 +40,28 @@ test('five steps with real taps: the total is the API quote and the hand-worked 
   await tap(page, page.locator('button.unit[data-unit="cord"]'))
   await expect(explain).toHaveText(EXPLAIN.cord)
   await expect(page.locator('#quote-goods')).toContainText('$300.00')
+
+  // Before the pin the page asks the API with no pin at all, and the API answers goods and stacking with no delivery,
+  // HST or total; the bar shows exactly that. Stacking is switched on here so both numbers show.
+  const noPin = page.waitForResponse((r) => r.url().endsWith('/api/quote') && r.request().method() === 'POST' &&
+    JSON.parse(r.request().postData() || '{}').stacking === true)
+  await tap(page, page.locator('#stacking'))
+  const noPinRes = await noPin
+  const noPinBody = JSON.parse(noPinRes.request().postData())
+  expect(Object.keys(noPinBody), 'a quote before the pin carries no lat/lng').not.toContain('lat')
+  expect(Object.keys(noPinBody)).not.toContain('lng')
+  expect(noPinRes.status()).toBe(200)
+  const noPinQuote = await noPinRes.json()
+  expect([noPinQuote.goods_cents, noPinQuote.stacking_cents, noPinQuote.distance_km, noPinQuote.delivery_cents, noPinQuote.hst_cents, noPinQuote.total_cents])
+    .toEqual([30000, 6000, null, null, null, null])
+  await expect(page.locator('#quote-goods')).toContainText('$300.00')
+  await expect(page.locator('#quote-stacking')).toContainText('$60.00')
+  await expect(page.locator('#quote-delivery')).toContainText('after the map pin')
+  await expect(page.locator('#quote-hst')).toHaveCount(0)
+  await expect(page.locator('#quote-total')).toHaveText('—')
   await shot(page, testInfo, 'web', 'order-2-how-much')
+  await tap(page, page.locator('#stacking'))
+  await expect(page.locator('#quote-stacking')).toHaveCount(0)
   await tap(page, page.locator('#next'))
 
   await expect(page.getByRole('heading', { name: 'Where should we drop it?' })).toBeVisible()
@@ -48,7 +70,7 @@ test('five steps with real taps: the total is the API quote and the hand-worked 
   await expect(attribution).toBeVisible()
   await expect(attribution).toContainText('OpenStreetMap')
 
-  const quoted = quoteWithPin(page, info.yard)
+  const quoted = quoteWithPin(page)
   await pinAt(page, page.locator('#map'), info.yard, "King's Point")
   const quoteRes = await quoted
   const sentBody = JSON.parse(quoteRes.request().postData())
@@ -115,7 +137,7 @@ test('an HST that is not whole cents is rounded half-up per order: 14 bags to Ki
   for (let i = 0; i < 13; i++) await tap(page, page.locator('#qty-plus'), 'One more')
   await expect(page.locator('#qty')).toHaveText('14')
   await tap(page, page.locator('#next'))
-  const quoted = quoteWithPin(page, info.yard)
+  const quoted = quoteWithPin(page)
   await pinAt(page, page.locator('#map'), info.yard, "King's Point")
   await quoted
   // 14 × $7.99 = $111.86, + $25.00 delivery = $136.86. 15 % of that is 2 052.9 cents: half-up per order is $20.53.
