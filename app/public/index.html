@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Order firewood or pellets</title>
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/vendor/leaflet/leaflet.js" defer></script>
+  <script type="module" src="/order/order.js"></script>
+</head>
+<body class="order-page">
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header class="topbar" data-sticky-header>
+    <div class="topbar-row">
+      <div class="brand"><span class="dealer-name" data-dealer-name>SAMPLE Wood &amp; Pellets</span> <span class="sample-badge" data-sample>SAMPLE</span></div>
+    </div>
+    <ol class="progress" id="progress" aria-label="Steps" hidden>
+      <li data-step="1"><span class="num">1</span><span class="word">What</span></li>
+      <li data-step="2"><span class="num">2</span><span class="word">How much</span></li>
+      <li data-step="3"><span class="num">3</span><span class="word">Where</span></li>
+      <li data-step="4"><span class="num">4</span><span class="word">When</span></li>
+      <li data-step="5"><span class="num">5</span><span class="word">You</span></li>
+    </ol>
+  </header>
+
+  <main class="page">
+    <p id="loading" class="loading">Loading…</p>
+
+    <section id="closed" class="closed" hidden>
+      <h1 class="page-title">Order firewood or pellets</h1>
+      <div class="card closed-card">
+        <p id="closed-message" class="lead"></p>
+        <a id="closed-phone" class="btn btn-primary wide" href="tel:"></a>
+      </div>
+    </section>
+
+    <div id="order" hidden>
+      <h1 class="page-title">Order firewood or pellets</h1>
+      <div id="form"></div>
+    </div>
+
+    <section id="sent" class="sent" hidden aria-live="polite"></section>
+  </main>
+
+  <div class="pricebar" id="bar" hidden>
+    <div class="pricebar-inner">
+      <div id="price" class="price"></div>
+      <p class="error" data-error-for="form" role="alert" hidden></p>
+      <div class="bar-actions">
+        <button type="button" id="back" class="btn btn-secondary" hidden>Back</button>
+        <button type="button" id="next" class="btn btn-primary">Next</button>
+        <button type="button" id="send" class="btn btn-primary" hidden>Send request</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

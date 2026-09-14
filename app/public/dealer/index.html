@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dealer</title>
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/dealer/dealer.css">
+  <script src="/vendor/leaflet/leaflet.js" defer></script>
+  <script type="module" src="/dealer/dealer.js"></script>
+</head>
+<body class="dealer-page">
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header class="topbar" id="topbar" data-sticky-header>
+    <div class="topbar-row">
+      <div class="brand"><span class="dealer-name" data-dealer-name>SAMPLE Wood &amp; Pellets</span> <span class="sample-badge" data-sample>SAMPLE</span></div>
+      <button type="button" id="signout" class="btn btn-ghost" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main id="signin" class="page signin" hidden>
+    <form id="signin-form" class="card signin-card" novalidate>
+      <h1 class="page-title">Dealer sign-in</h1>
+      <label class="field">
+        <span class="field-label">Dealer PIN</span>
+        <input id="pin" class="input pin-input" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" data-field="pin">
+        <p class="error" data-error-for="pin" role="alert" hidden></p>
+      </label>
+      <button type="submit" id="signin-btn" class="btn btn-primary wide">Sign in</button>
+    </form>
+  </main>
+
+  <div id="app" class="shell" hidden>
+    <nav id="tabs" class="rail" role="tablist" aria-label="Dealer sections">
+      <button type="button" class="tab" role="tab" id="tab-orders" data-tab="orders" aria-controls="panel-orders" aria-selected="true">Orders</button>
+      <button type="button" class="tab" role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan" aria-selected="false" tabindex="-1">Plan</button>
+      <button type="button" class="tab" role="tab" id="tab-customers" data-tab="customers" aria-controls="panel-customers" aria-selected="false" tabindex="-1">Customers</button>
+      <button type="button" class="tab" role="tab" id="tab-totals" data-tab="totals" aria-controls="panel-totals" aria-selected="false" tabindex="-1">Totals</button>
+      <button type="button" class="tab" role="tab" id="tab-settings" data-tab="settings" aria-controls="panel-settings" aria-selected="false" tabindex="-1">Settings</button>
+    </nav>
+
+    <main class="panels">
+      <section id="panel-orders" class="panel" role="tabpanel" aria-labelledby="tab-orders">
+        <div class="panel-head">
+          <h1 class="page-title">Orders</h1>
+          <button type="button" id="add-phone-order" class="btn btn-primary">Add a phone order</button>
+        </div>
+        <p id="board-error" class="alert" role="alert" hidden></p>
+        <div id="stats" class="stats"></div>
+        <div id="orders-layout" class="orders-layout">
+          <div class="order-list-wrap">
+            <h2 id="list-title" class="list-title">New</h2>
+            <div id="order-list" class="order-list"></div>
+          </div>
+          <aside id="detail" class="detail" aria-live="polite">
+            <p class="detail-empty">Pick an order to see it here.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan" hidden>
+        <h1 class="page-title">Plan</h1>
+        <div class="card"><p class="small">The delivery day planner and the route for each day come in the next part of this build.</p></div>
+      </section>
+      <section id="panel-customers" class="panel" role="tabpanel" aria-labelledby="tab-customers" hidden>
+        <h1 class="page-title">Customers</h1>
+        <div class="card"><p class="small">Customers, their balances and payment ledgers come in a later part of this build.</p></div>
+      </section>
+      <section id="panel-totals" class="panel" role="tabpanel" aria-labelledby="tab-totals" hidden>
+        <h1 class="page-title">Totals</h1>
+        <div class="card"><p class="small">Month and season totals with HST, and the CSV downloads, come in a later part of this build.</p></div>
+      </section>
+      <section id="panel-settings" class="panel" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <h1 class="page-title">Settings</h1>
+        <div class="card"><p class="small">Products, prices, delivery fees, the truck and PINs come in a later part of this build.</p></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

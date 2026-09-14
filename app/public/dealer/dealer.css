@@ -1,0 +1,174 @@
+/* Dealer page (/dealer/): 1280 a left rail beside the panels, 390 a sticky scrolling tab bar. */
+
+.signin { max-width: 440px; padding-top: 48px; }
+#signout { flex: none; white-space: nowrap; }
+.pin-input { font-size: 24px; letter-spacing: 0.3em; text-align: center; }
+
+.shell { display: grid; grid-template-columns: 210px 1fr; gap: 24px; max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
+.rail { position: sticky; top: calc(var(--topbar-h, 61px) + 20px); display: flex; flex-direction: column; align-self: start; gap: 4px; }
+.tab {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.tab[aria-selected="true"] { border-color: var(--line); background: var(--surface); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+.panels { min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.panel-head .page-title { margin: 0; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.stat {
+  --c: var(--requested);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 12px;
+  min-height: 76px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.stat[data-bucket="scheduled"] { --c: var(--scheduled); }
+.stat[data-bucket="delivered"] { --c: var(--delivered); }
+.stat[data-bucket="owing"] { --c: var(--owing); }
+.stat-icon { display: grid; grid-row: span 2; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: color-mix(in srgb, var(--c) var(--tint), transparent); color: var(--c); }
+.stat-count { font-size: 24px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-label { color: var(--muted); font-size: 14px; font-weight: 600; }
+.stat[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface)); box-shadow: 0 0 0 1px var(--c) inset; }
+
+.orders-layout { display: grid; grid-template-columns: minmax(340px, 430px) 1fr; align-items: start; gap: 20px; }
+.list-title { margin: 0 0 10px; color: var(--muted); font-size: 16px; }
+.order-list { display: grid; gap: 10px; }
+.empty { padding: 24px 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius); color: var(--muted); text-align: center; }
+
+.order-card { overflow: hidden; border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: var(--radius); background: var(--surface); }
+.card-open { display: grid; gap: 6px; width: 100%; min-height: 44px; padding: 12px 14px; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.card-open[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 10%, transparent); }
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.card-name { font-size: 16px; font-weight: 700; }
+.card-when { color: var(--muted); font-size: 14px; }
+.card-money { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-actions { display: flex; gap: 8px; padding: 0 14px 12px; }
+
+.pill { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill.status { background: color-mix(in srgb, var(--c) var(--tint), transparent); color: var(--c); }
+.pill.total { background: var(--raised); color: var(--text); }
+.pill.owing { background: color-mix(in srgb, var(--owing) var(--tint), transparent); color: var(--owing); }
+.pill.paid { background: color-mix(in srgb, var(--ok) var(--tint), transparent); color: var(--ok); }
+.pill.credit { background: color-mix(in srgb, var(--credit) var(--tint), transparent); color: var(--credit); }
+.chip.vol { border-color: transparent; }
+.chip.vol[data-kind="wood"] { background: color-mix(in srgb, var(--wood) var(--tint), transparent); color: var(--wood); }
+.chip.vol[data-kind="pellets"] { background: color-mix(in srgb, var(--pellets) var(--tint), transparent); color: var(--pellets); }
+.chip.source { color: var(--text); }
+
+.picker { padding: 12px 14px 14px; border-top: 1px solid var(--line); background: var(--ground); }
+.detail-picker .picker { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; }
+.picker-head { margin: 0; }
+.days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; margin: 10px 0; }
+.cap-day { align-items: stretch; justify-content: flex-start; gap: 4px; min-height: 84px; padding: 8px 10px; text-align: left; }
+.cap-day:disabled { border-style: dashed; opacity: 0.6; cursor: default; }
+.cap-day[data-over="true"] { border-color: var(--danger); box-shadow: inset 3px 0 0 var(--danger); }
+.cap-day[aria-busy="true"] { opacity: 0.7; }
+.day-head { font-weight: 700; }
+.day-orders { color: var(--muted); font-size: 12px; font-weight: 600; }
+.cap { display: grid; gap: 2px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.bar { height: 5px; overflow: hidden; border-radius: 999px; background: var(--raised); }
+.bar span { display: block; height: 100%; border-radius: inherit; background: var(--wood); }
+.cap.pellets .bar span { background: var(--pellets); }
+.over { color: var(--danger); font-size: 12.5px; font-weight: 700; }
+.reason { color: var(--faint); font-size: 12.5px; }
+
+.detail { position: sticky; top: calc(var(--topbar-h, 61px) + 20px); max-height: calc(100dvh - var(--topbar-h, 61px) - 40px); overflow: auto; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); overscroll-behavior: contain; }
+.detail-empty { padding: 48px 12px; color: var(--muted); text-align: center; }
+.detail-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.detail-head .small { margin: 0; }
+.detail-title { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.detail-title h2 { margin: 0; font-size: 22px; }
+.detail-title h2:focus { outline: none; }
+.detail .back { display: none; align-self: flex-start; }
+.detail-sec { padding: 14px 0; border-top: 1px solid var(--line); }
+.detail-sec h3 { margin: 0 0 10px; color: var(--muted); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.detail-line { margin: 0 0 6px; }
+.tel { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 650; }
+.balance { margin: 0 0 12px; color: var(--owing); font-size: 18px; font-weight: 700; }
+.balance[data-kind="paid"] { color: var(--ok); }
+.balance[data-kind="credit"] { color: var(--credit); }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.detail .owing-big { font-size: 22px; }
+
+.payments { list-style: none; display: grid; gap: 6px; margin: 0 0 12px; padding: 0; }
+.payments li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--raised); font-size: 14px; font-variant-numeric: tabular-nums; }
+.payments li[data-voided="true"] { opacity: 0.7; text-decoration: line-through; }
+.pay-form { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--ground); }
+.pay-form h4 { margin: 0 0 2px; font-size: 16px; }
+.pay-form .small { margin: 0; }
+.pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.pay-grid .field { margin: 10px 0; }
+.money-input { position: relative; display: block; }
+.money-input > span { position: absolute; top: 50%; left: 14px; color: var(--muted); transform: translateY(-50%); }
+.money-input .input { padding-left: 28px; }
+
+.message { margin-bottom: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--ground); }
+.message-label { margin: 0 0 4px; font-weight: 700; }
+.message-text { margin: 0 0 10px; color: var(--muted); font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.phone-form .step { padding-top: 6px; border-top: 1px solid var(--line); }
+.phone-form .step:first-child { border-top: 0; }
+.phone-form .step-title { font-size: 18px; }
+.phone-form .products { gap: 8px; }
+.phone-form #map { height: 300px; }
+.phone-footer { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+/* A passing note under the header. It never takes a tap: taps go through to whatever is beneath. */
+.toast { position: fixed; top: calc(var(--topbar-h, 61px) + 8px); left: 50%; z-index: 2000; max-width: calc(100vw - 32px); padding: 10px 16px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--raised); box-shadow: var(--shadow); font-weight: 650; transform: translateX(-50%); pointer-events: none; }
+
+@media (max-width: 1100px) and (min-width: 900px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .orders-layout { grid-template-columns: minmax(300px, 360px) 1fr; }
+}
+
+@media (max-width: 899px) {
+  .shell { grid-template-columns: 1fr; gap: 0; padding: 0 0 32px; }
+  .rail {
+    top: var(--topbar-h, 61px);
+    z-index: 1050;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+  .tab { flex: none; min-height: 44px; padding: 8px 16px; border-radius: 999px; box-shadow: none; }
+  .tab[aria-selected="true"] { border-color: transparent; background: var(--accent); color: var(--on-primary); box-shadow: none; }
+  .panels { padding: 16px; }
+  .panel-head .btn { flex: 1 1 auto; }
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat { min-height: 64px; padding: 10px 12px; }
+  .orders-layout { grid-template-columns: 1fr; }
+  #panel-orders:not([data-open]) .detail { display: none; }
+  #panel-orders[data-open] .order-list-wrap,
+  #panel-orders[data-open] .stats,
+  #panel-orders[data-open] .panel-head { display: none; }
+  .detail { position: static; max-height: none; overflow: visible; padding: 14px; }
+  .detail .back { display: inline-flex; }
+  .pay-grid { grid-template-columns: 1fr; }
+}
