@@ -1,5 +1,5 @@
 
-=== negative:capacity — 2026-09-14T09:46:45.265Z
+=== negative:capacity — 2026-09-14T10:24:26.674Z
 break: the guard's SUM of the day's current use is replaced by 0 (wood and pellets), so only the order itself is compared to the cap
 patched: src/index.js, src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^capacity (PORT 7705)
@@ -9,7 +9,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^capacity (PORT 7705)
 # fail 2
 not ok 2 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused
   ---
-  duration_ms: 216.905182
+  duration_ms: 198.964741
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:234:1'
   failureType: 'testCodeFailure'
@@ -31,7 +31,7 @@ not ok 2 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half 
   ...
 not ok 3 - capacity for pellets: 3 skids planned, then 1 bag is refused
   ---
-  duration_ms: 127.676334
+  duration_ms: 125.076706
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:262:1'
   failureType: 'testCodeFailure'
@@ -53,7 +53,7 @@ not ok 3 - capacity for pellets: 3 skids planned, then 1 bag is refused
   ...
 RESULT: RED as intended (exit 1); red tests: capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused | capacity for pellets: 3 skids planned, then 1 bag is refused
 
-=== negative:race — 2026-09-14T09:46:48.964Z
+=== negative:race — 2026-09-14T10:24:30.330Z
 break: the one-statement check-and-write is split into SELECT use → await scheduler.wait(25) → UPDATE
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^the race (PORT 7705)
@@ -63,7 +63,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^the race (PORT 7705)
 # fail 1
 not ok 2 - the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
   ---
-  duration_ms: 304.941958
+  duration_ms: 310.682171
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/race/worker/tests/api.test.mjs:305:1'
   failureType: 'testCodeFailure'
@@ -85,7 +85,7 @@ not ok 2 - the race: 8 concurrent schedule calls into an empty day → exactly 4
     -   409,
 RESULT: RED as intended (exit 1); red tests: the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
 
-=== negative:stock — 2026-09-14T09:46:52.646Z
+=== negative:stock — 2026-09-14T10:24:34.173Z
 break: POST /api/orders also runs UPDATE products SET stock_cu_in = stock_cu_in - wood, stock_bags = stock_bags - bags in its batch
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^stock: (PORT 7705)
@@ -95,7 +95,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^stock: (PORT 7705)
 # fail 1
 not ok 2 - stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
   ---
-  duration_ms: 141.439677
+  duration_ms: 151.23029
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/stock/worker/tests/api.test.mjs:324:1'
   failureType: 'testCodeFailure'
@@ -117,7 +117,7 @@ not ok 2 - stock: unchanged by order, schedule and start; a delivered 16-inch fa
   actual:
 RESULT: RED as intended (exit 1); red tests: stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
 
-=== negative:idempotent — 2026-09-14T09:46:56.197Z
+=== negative:idempotent — 2026-09-14T10:24:37.905Z
 break: checkins rows are inserted (and read back) under crypto.randomUUID() instead of op_id, so a replay is never recognised
 patched: src/index.js, src/index.js, src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^idempotent (PORT 7705)
@@ -127,7 +127,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^idempotent (PORT 7705)
 # fail 1
 not ok 2 - idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
   ---
-  duration_ms: 188.416482
+  duration_ms: 173.510039
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:344:1'
   failureType: 'testCodeFailure'
@@ -149,7 +149,7 @@ not ok 2 - idempotent check-in: same op_id twice → 201 then 200 duplicate; sto
   ...
 RESULT: RED as intended (exit 1); red tests: idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
 
-=== negative:time — 2026-09-14T09:46:59.887Z
+=== negative:time — 2026-09-14T10:24:41.627Z
 break: delivered_at = server now, always (the phone's `at` is ignored)
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^original time (PORT 7705)
@@ -159,7 +159,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^original time (PORT 7705)
 # fail 1
 not ok 2 - original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
   ---
-  duration_ms: 149.659019
+  duration_ms: 178.818601
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:385:1'
   failureType: 'testCodeFailure'
@@ -181,7 +181,7 @@ not ok 2 - original time: at = T with server now T + 45 min keeps T; 2 h in the 
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
 RESULT: RED as intended (exit 1); red tests: original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
 
-=== negative:twoopt — 2026-09-14T09:47:03.295Z
+=== negative:twoopt — 2026-09-14T10:24:45.374Z
 break: optimizeRoute returns the nearest-neighbour order without 2-opt
 patched: src/route.js
 run: node tests/run.mjs --fresh --unit-only --unit route.test.mjs (PORT 7705)
@@ -191,7 +191,7 @@ run: node tests/run.mjs --fresh --unit-only --unit route.test.mjs (PORT 7705)
 # fail 2
 not ok 2 - crossing instance: nearest neighbour crosses itself, 2-opt uncrosses it
   ---
-  duration_ms: 1.937702
+  duration_ms: 1.641966
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:34:1'
   failureType: 'testCodeFailure'
@@ -213,7 +213,7 @@ not ok 2 - crossing instance: nearest neighbour crosses itself, 2-opt uncrosses 
   expected:
 not ok 3 - 50 seeded instances: no single segment reversal shortens the result by more than 1 m, and never worse than NN
   ---
-  duration_ms: 0.827938
+  duration_ms: 0.705549
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:61:1'
   failureType: 'testCodeFailure'
@@ -235,7 +235,7 @@ not ok 3 - 50 seeded instances: no single segment reversal shortens the result b
 # Subtest: deterministic: same input, same order, whatever order the stops arrive in
 RESULT: RED as intended (exit 1); red tests: crossing instance: nearest neighbour crosses itself, 2-opt uncrosses it | 50 seeded instances: no single segment reversal shortens the result by more than 1 m, and never worse than NN
 
-=== negative:month — 2026-09-14T09:47:03.492Z
+=== negative:month — 2026-09-14T10:24:45.590Z
 break: nlMonth returns the UTC month of the instant (new Date(instant).toISOString().slice(0, 7)) instead of the NL month
 patched: src/time.js
 run: node tests/run.mjs --fresh --api-only --grep ^totals (PORT 7705)
@@ -245,7 +245,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^totals (PORT 7705)
 # fail 1
 not ok 1 - totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
   ---
-  duration_ms: 359.935486
+  duration_ms: 395.522397
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/month/worker/tests/api-m2.test.mjs:492:1'
   failureType: 'testCodeFailure'
@@ -267,7 +267,7 @@ not ok 1 - totals: HST and totals equal row sums, zero months present, NL month 
           month: '2026-09',
 RESULT: RED as intended (exit 1); red tests: totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
 
-=== negative:csvguard — 2026-09-14T09:47:07.115Z
+=== negative:csvguard — 2026-09-14T10:24:49.602Z
 break: csvCell no longer prefixes ' to text starting with = + - @ tab or CR
 patched: src/csv.js
 run: node tests/run.mjs --fresh --unit csv.test.mjs --grep ^CSV exports (PORT 7705)
@@ -281,7 +281,7 @@ run: node tests/run.mjs --fresh --unit csv.test.mjs --grep ^CSV exports (PORT 77
 # fail 1
 not ok 2 - formula guard: = + - @ tab CR get a leading apostrophe
   ---
-  duration_ms: 0.942247
+  duration_ms: 1.122354
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:19:1'
   failureType: 'testCodeFailure'
@@ -303,7 +303,7 @@ not ok 2 - formula guard: = + - @ tab CR get a leading apostrophe
     Test.run (node:internal/test_runner/test:1402:25)
 not ok 1 - CSV exports: header exact, CRLF, quoting, formula guard, filename, money as 123.45
   ---
-  duration_ms: 235.820571
+  duration_ms: 237.19677
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/api-m2.test.mjs:549:1'
   failureType: 'testCodeFailure'
@@ -313,9 +313,9 @@ not ok 1 - CSV exports: header exact, CRLF, quoting, formula guard, filename, mo
     
       [
         'Order,Delivered,Customer,Phone,Address,Product,Quantity,Goods,Stacking,Delivery,Subtotal,HST,Total,Paid,Owing,Door payment',
-        'o_8b60447f39f6ecf8,2026-09-14,"Smith, ""Junior"" (SAMPLE)",709-555-0161,Up the lane past the church,"Mixed softwood, dry",1 cord,300.00,0.00,25.00,325.00,48.75,373.75,373.75,0.00,Cash',
-    +   'o_b158e186de9ed112,2026-09-14,=SUM(A1) (SAMPLE),709-555-0162,"Up the hill\n' +
-    -   `o_b158e186de9ed112,2026-09-14,'=SUM(A1) (SAMPLE),709-555-0162,"Up the hill\n` +
+        'o_2c2f429df99fa606,2026-09-14,"Smith, ""Junior"" (SAMPLE)",709-555-0161,Up the lane past the church,"Mixed softwood, dry",1 cord,300.00,0.00,25.00,325.00,48.75,373.75,373.75,0.00,Cash',
+    +   'o_887aba2ff5a8f0db,2026-09-14,=SUM(A1) (SAMPLE),709-555-0162,"Up the hill\n' +
+    -   `o_887aba2ff5a8f0db,2026-09-14,'=SUM(A1) (SAMPLE),709-555-0162,"Up the hill\n` +
           'left at the pond","Mixed softwood, dry",1 cord,300.00,0.00,0.00,300.00,45.00,345.00,150.00,195.00,e-Transfer',
         ''
       ]
@@ -325,7 +325,7 @@ not ok 1 - CSV exports: header exact, CRLF, quoting, formula guard, filename, mo
   expected:
 RESULT: RED as intended (exit 1); red tests: formula guard: = + - @ tab CR get a leading apostrophe | CSV exports: header exact, CRLF, quoting, formula guard, filename, money as 123.45
 
-=== negative:void — 2026-09-14T09:47:10.746Z
+=== negative:void — 2026-09-14T10:24:53.577Z
 break: money.counts returns true for every payment, voided or not (the one place every sum asks)
 patched: src/money.js
 run: node tests/run.mjs --fresh --api-only --grep ^voided (PORT 7705)
@@ -335,7 +335,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^voided (PORT 7705)
 # fail 1
 not ok 1 - voided payments leave every sum
   ---
-  duration_ms: 232.289772
+  duration_ms: 321.06756
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/void/worker/tests/api-m2.test.mjs:209:1'
   failureType: 'testCodeFailure'
@@ -357,7 +357,7 @@ not ok 1 - voided payments leave every sum
   expected:
 RESULT: RED as intended (exit 1); red tests: voided payments leave every sum
 
-=== negative:undo — 2026-09-14T09:47:14.214Z
+=== negative:undo — 2026-09-14T10:24:57.927Z
 break: undoDelivery's batch no longer puts the stock back (the UPDATE products statement is removed; the undo move is still written)
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^undeliver (PORT 7705)
@@ -367,7 +367,7 @@ run: node tests/run.mjs --fresh --api-only --grep ^undeliver (PORT 7705)
 # fail 1
 not ok 1 - undeliver and driver undo each put stock back and void the door payment (owing restored to the cent)
   ---
-  duration_ms: 195.095006
+  duration_ms: 285.110859
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:144:1'
   failureType: 'testCodeFailure'
@@ -389,13 +389,13 @@ not ok 1 - undeliver and driver undo each put stock back and void the door payme
     async Test.run (node:internal/test_runner/test:1409:7)
 RESULT: RED as intended (exit 1); red tests: undeliver and driver undo each put stock back and void the door payment (owing restored to the cent)
 
-=== negative:hst — 2026-09-14T09:47:17.615Z
+=== negative:hst — 2026-09-14T10:25:02.311Z
 break: hstCents = Math.floor(subtotal × 15 / 100) (no + 50 half-up)
 patched: src/money.js
 run: node tests/run.mjs --fresh --unit money.test.mjs --grep ^totals (PORT 7705)
 == unit: tests/money.test.mjs
-# tests 10
-# pass 9
+# tests 11
+# pass 10
 # fail 1
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
 # tests 2
@@ -403,7 +403,7 @@ run: node tests/run.mjs --fresh --unit money.test.mjs --grep ^totals (PORT 7705)
 # fail 1
 not ok 5 - HST 15 % half-up per order
   ---
-  duration_ms: 0.707339
+  duration_ms: 1.067055
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:58:1'
   failureType: 'testCodeFailure'
@@ -425,7 +425,7 @@ not ok 5 - HST 15 % half-up per order
     Test.postRun (node:internal/test_runner/test:1542:19)
 not ok 1 - totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
   ---
-  duration_ms: 345.814479
+  duration_ms: 478.060247
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/api-m2.test.mjs:492:1'
   failureType: 'testCodeFailure'
@@ -447,13 +447,13 @@ not ok 1 - totals: HST and totals equal row sums, zero months present, NL month 
           subtotal_cents: 46186,
 RESULT: RED as intended (exit 1); red tests: HST 15 % half-up per order | totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
 
-=== negative:nopin — 2026-09-14T09:47:21.305Z
+=== negative:nopin — 2026-09-14T10:25:07.290Z
 break: priceOrder uses the yard as the pin when there is none, so a quote before the map is tapped shows a guessed delivery and total
 patched: src/money.js
 run: node tests/run.mjs --fresh --unit money.test.mjs --grep ^quote without a pin (PORT 7705)
 == unit: tests/money.test.mjs
-# tests 10
-# pass 9
+# tests 11
+# pass 10
 # fail 1
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
 # tests 2
@@ -461,7 +461,7 @@ run: node tests/run.mjs --fresh --unit money.test.mjs --grep ^quote without a pi
 # fail 1
 not ok 10 - without a pin: goods and stacking only, never a guessed delivery or total; the minimum still applies
   ---
-  duration_ms: 1.113674
+  duration_ms: 7.982575
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/nopin/worker/tests/money.test.mjs:157:1'
   failureType: 'testCodeFailure'
@@ -483,7 +483,7 @@ not ok 10 - without a pin: goods and stacking only, never a guessed delivery or 
     -   null,
 not ok 1 - quote without a pin: goods and stacking, the money that needs a pin is null; below the minimum still refused
   ---
-  duration_ms: 63.728354
+  duration_ms: 85.908871
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/nopin/worker/tests/api-m2.test.mjs:636:1'
   failureType: 'testCodeFailure'

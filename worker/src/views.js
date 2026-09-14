@@ -131,7 +131,7 @@ export function customerOrderView(o, payments, settings) {
       photo_url: o.photo_key ? `/api/photos/${o.token}` : null,
       goods_cents: o.goods_cents, stacking_cents: o.stacking_cents, delivery_cents: o.delivery_cents,
       subtotal_cents: o.subtotal_cents, hst_cents: o.hst_cents, total_cents: o.total_cents,
-      paid_cents: paidCents(o.id, payments), owing_cents: owing, owing_label: owingLabel(owing),
+      paid_cents: paidCents(o.id, payments), owing_cents: owing, owing_label: owingLabel(owing, { cancelled: o.status === 'cancelled' }),
       created_label: dateTimeLabel(o.created_at),
     },
   }

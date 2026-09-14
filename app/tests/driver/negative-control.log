@@ -1,5 +1,5 @@
 
-=== queue-early — 2026-09-14T10:10:09.606Z
+=== queue-early — 2026-09-14T10:24:47.513Z
 break: queue.js removes the item from IndexedDB just before POST /api/driver/checkins, instead of after 200/201
 patched: driver/queue.js
 run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/queue-early/worker npx playwright test tests/driver/offline.spec.mjs --project=chromium-390 --reporter=json -g a 500 from the office
@@ -16,7 +16,7 @@ run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/queue-early/worker npx playwrigh
         - waiting for locator('#stop-count')
 RESULT: RED as intended (exit 1)
 
-=== at-on-send — 2026-09-14T10:10:22.788Z
+=== at-on-send — 2026-09-14T10:25:01.896Z
 break: queue.js sends at: new Date().toISOString() (the phone's time at sending) instead of the saved item.at
 patched: driver/queue.js
 run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/at-on-send/worker npx playwright test tests/driver/offline.spec.mjs --project=chromium-390 --reporter=json -g no signal: two deliveries
@@ -29,7 +29,7 @@ run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/at-on-send/worker npx playwright
       Received: "2026-09-14T13:40:00.000Z"
 RESULT: RED as intended (exit 1)
 
-=== overlay — 2026-09-14T10:10:28.894Z
+=== overlay — 2026-09-14T10:25:09.854Z
 break: index.html puts a transparent absolutely positioned div over the next-stop card, on top of Delivered
 patched: driver/index.html
 run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/overlay/worker npx playwright test tests/driver/driver.spec.mjs --project=chromium-390 --reporter=json -g the status page says Out for delivery

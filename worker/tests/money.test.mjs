@@ -166,3 +166,11 @@ test('without a pin: goods and stacking only, never a guessed delivery or total;
   assert.throws(() => priceOrder({ product: soft, unit: 'face_cord', qty: 1, lat: null, lng: null },
     { ...settings, min_order_cents: 12001 }), { code: 'below_minimum' })
 })
+
+test('owing labels: a cancelled order with nothing paid is "Nothing owing", never "Paid in full"', () => {
+  assert.equal(owingLabel(0, { cancelled: true }), 'Nothing owing')
+  assert.equal(owingLabel(0), 'Paid in full')
+  assert.equal(owingLabel(0, { cancelled: false }), 'Paid in full')
+  assert.equal(owingLabel(-5000, { cancelled: true }), 'Credit $50.00')
+  assert.equal(owingLabel(100, { cancelled: true }), 'Balance owing $1.00')
+})

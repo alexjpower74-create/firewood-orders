@@ -449,3 +449,51 @@ folder with a journey run; the reds above are the specific assertion failures, n
   - the "Not accepted" list with a real 409.
 - The service worker is cache-first with a fixed cache name, so a changed driver page reaches a phone only when `CACHE` is bumped in
   `sw.js`. That is fine for tonight; a deploy step should bump it.
+
+## Round after M3: ledger ids, Nothing owing, the untested driver paths, network-first service worker (2026-09-14)
+
+On top of `git merge --ff-only main` at d4da601, with the contract at ec1030c.
+
+### Worker: DONE
+- **(a) Ledger ids.** Every `GET /api/dealer/customers/:id/ledger` entry now carries `order_id` and `payment_id`. `payment_id` is null on
+  order rows, and `order_id` is null on a payment made on account.
+  - Test: an order, a payment on it and a payment on account give the exact `[kind, order_id, payment_id, charge, payment, balance]`
+    rows. The on-account row's `payment_id` then voids that payment, and the balance moves back to 273.75.
+- **(b) Nothing owing.** `money.owingLabel(owing, { cancelled })` answers "Nothing owing" for a cancelled order with nothing paid. The
+  status page's `owing_label` is the only place the API builds that label, and it passes the flag.
+  - Unit test: the label with and without the flag, a credit, and a balance.
+  - API test: a customer-cancelled order → `0`, "Nothing owing"; a dealer-cancelled order with a 50.00 deposit → "Credit $50.00";
+    a live order paid in full → "Paid in full".
+- `npm test`: unit 34 / 0 / 0, API 76 / 0 / 0. **All 12 worker negative controls red**, each API control against a fresh Worker on
+  7705, with no refusals.
+
+### Driver: DONE
+- **New `queue.spec.mjs`, passing on all four projects:**
+  - **(i) A 401 while deliveries wait.** With no signal, a delivery is saved at 8:50 AM on the phone clock. The dealer changes the
+    driver PIN through the API, which ends the phone's session. When signal returns, sign-in shows "Sign in again. Nothing saved on
+    this phone is lost." and the strip "Sign in again to send them. 1 delivery saved on this phone." The API shows the order not
+    delivered. Signing in with the new PIN → "All sent" and `delivered_at` = the tap time, with the 373.75 cash payment.
+  - **(ii) Undo of a delivery still queued.** With no signal, Undo removes it: "Stop 1 of 2" is back and the strip reads All sent.
+    After signal and a reload the stop is still back, and the API shows `scheduled`, no `delivered_at` and no payment.
+  - **(iii) Not accepted with a real 409.** With no signal, the driver saves Owes; the dealer cancels that order through the API. When
+    signal returns, "Not accepted" lists "Alma P. (SAMPLE): This order was cancelled.", the Worker's own 409 message. "Remove from
+    this phone" clears it, and it stays cleared after a reload.
+  - **(iv) A refused photo is not a refused delivery.** The photo PUT is routed to a 415, with the service worker blocked as in the
+    offline spec. The delivery is saved, the page says "The delivery was saved; the photo couldn't be used.", "Not accepted" stays
+    hidden, and the API shows the order delivered with no photo.
+- **Page change for (iv).** `queue.js` handles a refused photo PUT (413, 415 and other 4xx except 401/429) by removing the item and
+  calling `onPhotoRefused`. It never marks the delivery rejected, because its check-in was already accepted.
+- **Page bug caught by (iii) on WebKit-390**, where the screen is only 664 px tall: the Undo bar sat over "Remove from this phone", so
+  the hit-test failed. Now:
+  - the bar hides once its own delivery is refused (an Undo for it means nothing);
+  - while the bar is open, `html` gets 96 px of bottom scroll padding, so scrolling to a control stops above the bar.
+- **`sw.js` is network-first** with a 3 s timeout. A good answer is served and written to the cache; no answer, a slow one or an error
+  status falls back to the cached copy; `/api/*` is never touched. A changed driver page reaches phones on their next load with signal,
+  without a cache bump. The offline reload test still passes (Chromium; WebKit still skips that one step, as before).
+- `E2E_PORT=7704 npx playwright test tests/driver`: **52 passed, 0 failed** (13 tests × 4 projects). **All 3 driver negative controls
+  red** on this code, with the same failures as before. No other Playwright run shared the output folder this time.
+
+### Not tested
+- That a changed page reaches a phone through the network-first service worker. That needs the served file to change between two loads
+  of the same browser context, and Playwright cannot route requests the service worker makes in every engine. The code path is short
+  and commented in `sw.js`.

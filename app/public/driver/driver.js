@@ -68,6 +68,9 @@ const sender = createSender({
     day.started = true
     for (const s of day.stops) if (s.status === 'scheduled') s.status = 'out_for_delivery'
   }),
+  onPhotoRefused: (item, r) => notice(r.status === 413 || r.status === 415
+    ? "The delivery was saved; the photo couldn't be used."
+    : `The delivery was saved; the photo didn't send: ${r.body?.error || `answer ${r.status}`}`),
   onChange: async () => {
     state.items = await allItems()
     render()
@@ -271,6 +274,8 @@ function renderDay() {
 
 function renderRejected() {
   const bad = state.items.filter((i) => i.state === 'rejected')
+  // An Undo for a delivery the office refused means nothing, and its bar would sit over Remove from this phone.
+  if (state.undo && bad.some((i) => i.op_id === state.undo.op_id)) hideUndo()
   $('rejected').hidden = !bad.length
   $('rejected-list').replaceChildren(...bad.map((it) => {
     const li = document.createElement('li')
@@ -432,12 +437,14 @@ function showUndo(item) {
   state.undo = { op_id: item.op_id, order_id: item.order_id, date: item.date }
   $('undo-text').textContent = `Delivered: ${item.name}`
   $('undo-bar').hidden = false
+  document.documentElement.classList.add('undo-open')
   state.undoTimer = setTimeout(hideUndo, UNDO_MS)
 }
 
 function hideUndo() {
   clearTimeout(state.undoTimer)
   $('undo-bar').hidden = true
+  document.documentElement.classList.remove('undo-open')
   state.undo = null
 }
 

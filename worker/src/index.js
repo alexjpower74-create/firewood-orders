@@ -488,8 +488,8 @@ async function ledger(c) {
   const { results: payments } = await c.db.prepare('SELECT * FROM payments WHERE customer_id = ?').bind(cu.id).all()
   const rows = [
     ...orders.filter((o) => o.status !== 'cancelled').map((o) => ({ date: nlDate(o.created_at), at: o.created_at,
-      kind: 'order', text: `Order: ${qtyLabelOf(o)} of ${o.product_label}`, charge_cents: o.total_cents, payment_cents: 0 })),
-    ...payments.filter(counts).map((p) => ({ date: p.date, at: p.created_at, kind: 'payment',
+      kind: 'order', order_id: o.id, payment_id: null, text: `Order: ${qtyLabelOf(o)} of ${o.product_label}`, charge_cents: o.total_cents, payment_cents: 0 })),
+    ...payments.filter(counts).map((p) => ({ date: p.date, at: p.created_at, kind: 'payment', order_id: p.order_id, payment_id: p.id,
       text: `${p.source === 'door' ? 'Paid at the door' : 'Payment'}: ${METHOD_LABELS[p.method]}${p.note ? ` (${p.note})` : ''}`,
       charge_cents: 0, payment_cents: p.amount_cents })),
   ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.at < b.at ? -1 : a.at > b.at ? 1 : 0))
@@ -497,7 +497,7 @@ async function ledger(c) {
   const entries = rows.map(({ at, ...e }) => {
     running += e.charge_cents - e.payment_cents
     return { date: e.date, label: shortLabel(e.date), kind: e.kind, text: e.text, charge_cents: e.charge_cents,
-      payment_cents: e.payment_cents, balance_cents: running }
+      payment_cents: e.payment_cents, balance_cents: running, order_id: e.order_id, payment_id: e.payment_id }
   })
   const balance = customerBalance(orders, payments)
   return json({ customer: { id: cu.id, name: cu.name, phone: cu.phone, balance_cents: balance }, entries,
