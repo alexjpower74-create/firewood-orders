@@ -179,7 +179,7 @@ async function orderContext(c) {
 async function quote(c) {
   const body = await c.body()
   const { s, products, deliveryDates } = await orderContext(c)
-  const input = parseOrderInput(body, { products, settings: s, deliveryDates, full: false, dealer: false })
+  const input = parseOrderInput(body, { products, settings: s, deliveryDates, full: false, dealer: true, quote: true })
   return json(priceOrder(input, s))
 }
 
@@ -311,7 +311,9 @@ function checkScheduleDate(s, today, date) {
 
 function overCapacity(s, date, use, o) {
   const woodShort = use.wood + o.wood_cu_in > s.cap_cu_in
-  const error = woodShort || o.kind === 'wood'
+  const bagsShort = use.bags + o.pellet_bags > s.cap_bags
+  // Name the limit actually exceeded: cords when wood is short (or both are), bags when only the pellets are.
+  const error = woodShort || (!bagsShort && o.kind === 'wood')
     ? `That's more than the truck can carry that day: ${cordsText(use.wood)} of ${cordsText(s.cap_cu_in)} cords already ` +
       `planned, this order needs ${cordsText(o.wood_cu_in)}.`
     : `That's more than the truck can carry that day: ${use.bags} of ${s.cap_bags} bags already planned, this order ` +
@@ -328,8 +330,8 @@ async function schedule(c) {
   const body = await c.body()
   const date = body?.date
   const s = await loadSettings(c.db)
+  const o = await orderById(c, c.params.id) // an unknown order is 404 whatever the date
   checkScheduleDate(s, c.today, date)
-  const o = await orderById(c, c.params.id)
   const db = c.db
   const nowIso = c.nowIso
   if (o.status !== 'requested' && o.status !== 'scheduled') throw badState("This order can't be put on the schedule now.")

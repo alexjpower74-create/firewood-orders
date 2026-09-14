@@ -270,9 +270,182 @@ M1 controls on the M2 code went red exactly as recorded for M1: (a) capacity, (b
   should not treat that particular 401 as "signed out".
 - `migrations/0002_sample.sql` was regenerated to add `sample: true`. A database migrated before that is still read as the SAMPLE
   dealer, because `loadSettings` treats a missing `sample` as `true`.
-- Not tested here: that `/api/test/*` answer 404 without `TEST_MODE`. That needs a second Worker started without the var. The code path
+- **Verified by the lead** (QA at 8c36e59): a Worker started without `TEST_MODE` answers 404 to `/api/test/reset` and
+  `/api/test/seed` and ignores `X-Test-Now`. I could not run that check myself. **DONE**
+- Previously untested here: that `/api/test/*` answer 404 without `TEST_MODE`. That needs a second Worker started without the var. The code path
   is one `if` in the router.
 
-### Left undone
+The lead accepted every choice above and wrote it into docs/API.md, together with `used_skids` / `cap_skids` to 2 decimals.
+**DONE**
 
-M3 (the driver page) is not started, as asked.
+## fo2's cross-review of M1: fixes (2026-09-14, before M3)
+
+The findings are in fo2's report under "Cross-review of fo1 M1". Each fix has a test in `worker/tests/api-m2.test.mjs`, plus a unit
+test in `money.test.mjs` for #1. These fixes are their own commit.
+
+1. **Quote without a pin: DONE.**
+   - `parseProductInput` takes a `quote` option. Only a quote may leave the pin out, and only whole: `lat` and `lng` both absent or
+     null. Half a pin is still 400 `field: "pin"`, and `POST /api/orders` still requires the pin.
+   - `priceOrder` then returns goods, stacking and volume, with `distance_km`, `delivery_cents`, `subtotal_cents`, `hst_cents` and
+     `total_cents` all `null`. It still raises `below_minimum`. A `delivery_cents` override does not stand in for a pin: still null,
+     as API.md reads.
+   - Tests: the exact body for 3 stacked face cords of birch; null with an override; below the minimum; half a pin; an order with
+     no pin.
+2. **The quote honours `delivery_cents`: DONE.** The quote route parses the override exactly like a phone order: the band lookup is
+   skipped, so Buchans with $10.00 quotes $356.50. The public order route still ignores an override (Buchans stays `outside_area`).
+3. **Override range 0–50 000: DONE.** Error text "Enter a delivery fee from $0.00 to $500.00." It applies to both the quote and the
+   phone order: 50 000 → 200, 50 001 → 400 with that text.
+4. **Over-capacity wording: DONE.** `overCapacity` uses the cords wording when wood is short or both are, and the bags wording when
+   only pellets are. Tests:
+   - A cord on a day over a lowered 2-skid limit: "210 of 140 bags already planned, this order needs 0."
+   - 14 bags on a day over a lowered 3-cord limit: "4.00 of 3.00 cords already planned, this order needs 0.00."
+   - Both short: cords.
+
+   The dealer edit's 409 uses the same function.
+5. **`sample` hard-coded: already fixed by M2.** `sample` lives in settings (`true` after reset) and is returned by `GET /api/info`,
+   the status page and the driver day. M2's settings test checks `sample: false` reaching all three.
+6. **Schedule of an unknown order: DONE.** `schedule()` loads the order before checking the date, so `o_nope` is 404 with a Sunday,
+   a Tuesday or a malformed date.
+7. **Settled in the contract by the lead; no code change.**
+
+Verified: `npm test` unit 33 / 0 / 0, API 74 / 0 / 0.
+
+Negative control for #1:
+
+`negative:nopin`: the copy's `priceOrder` uses the yard as the pin when there is none. **Red** in both tests:
+- Unit: distance 0, delivery 0, subtotal 36 000, HST 5 400, total 41 400, where null was expected.
+- API: `distance_km: 0, delivery_cents: 0, hst_cents: 7200`, where null was expected.
+
+`npm run negative` now runs 12 controls. All 12 went red on this commit's code, with a fresh Worker for all 11 API controls. The log
+is `worker/tests/negative-control.log`; the M2 run is superseded by this one.
+
+## M3: the driver page (2026-09-14)
+
+### What I built: DONE
+
+`app/public/driver/`: `index.html`, `driver.css`, `driver.js`, `driver-api.js`, `queue.js`, `sw.js`. Plain ES modules, no build,
+tokens from `/theme.css`, solid ground with no aurora.
+
+- **Hooks.** Every `/driver/` hook in PLAN.md is kept: `#pin`, `#signin-btn`, `#start-route`, `[data-stop="<order id>"]` (on each stop in
+  the list), `#delivered`, `button.pay[data-method]`, `#amount`, `#take-photo` (label) for `#photo-input`, `#save-delivery`,
+  `#sync-strip`, `#undo`, `#daylight`.
+- **Sign-in.** The token is kept in `localStorage` under `firewood-orders:driver-token`. Wrong PIN → "That PIN is not right." A 401
+  later shows sign-in again ("Nothing saved on this phone is lost") and keeps the queue.
+- **Header.** Dealer name, SAMPLE badge (hidden when `sample: false`), the day's long label, and a Daylight toggle
+  (`<html data-theme="daylight">`, remembered on the phone and applied before first paint). The sync strip sits inside the sticky
+  header, so it is always visible.
+- **The day.** "Today's deliveries" with a Today / Tomorrow switch; "Order is by distance, not road time."; "Start the route".
+  "Stop N of M" and the next stop that is not delivered: name 32 px, address 20 px, dump notes 20 px in an ember-edged box, product
+  and quantity, owing pill. "Open in Maps" is a real link to the API's `maps_url` with `target="_blank"`. Delivered opens the sheet.
+  All stops are listed below with their status and door payment.
+- **Pay sheet.** "How did they pay?" with Cash / e-Transfer / Owes in their `--act-*` colours. The amount is prefilled with the owing
+  and parsed from the text into cents (no floats); it is only sent when changed, so the office works out the owing at that moment.
+  "Take a photo" is optional. Save is enabled once a method is chosen.
+- **After Save.** The next stop shows at once, and an Undo bar stays for 15 s. Undo of a delivery still queued removes it; one already
+  sent calls `DELETE /api/driver/checkins/:op_id`. Undo first waits for the sender, so it never decides while that delivery is on its
+  way.
+- **Offline queue** (`queue.js`):
+  - Every Start and Delivered goes to IndexedDB first, with `op_id` from `crypto.randomUUID()`, `at` = the moment Save was tapped,
+    and the photo downscaled on a canvas to at most 1600 px, JPEG 0.7. Photos are stored as ArrayBuffer + type, because WebKit
+    cannot always keep a Blob in IndexedDB.
+  - The screen is the cached day (`firewood-orders:day:<date>`) with the queue laid over it.
+  - The sender posts oldest first. An item leaves the queue **only** after 200/201, then its photo is PUT and the item removed only
+    after 200.
+  - 400/403/404/409/413/415 move the item to a visible "Not accepted" list with the server's message and a "Remove from this phone"
+    button.
+  - No signal, 429 and 5xx leave it queued, with backoff from 5 s doubling to 60 s.
+  - Triggers: each new item, `online`, `visibilitychange` to visible, and every 20 s while anything is queued.
+- **Service worker** `sw.js` (scope `/driver/`) caches the page, its JS and CSS, and `/theme.css` on install, answers cache-first, and
+  never touches `/api/*`.
+
+### What I verified, and how it could have failed
+
+`E2E_PORT=7704 npx playwright test tests/driver`: **36 passed, 0 failed** on chromium-390, chromium-1280, webkit-390 and webkit-1280.
+One step is skipped on WebKit, described below.
+
+- **`driver.spec.mjs`:**
+  - Wrong PIN: the message is shown **and** the sign-in response is 401 (`waitForResponse`).
+  - Right PIN: stops in exactly the API's route order; "Stop 1 of 3"; the owing pill; the Maps link's `href` and `target`; Tomorrow
+    and back.
+  - Start → fo2's status page says "Out for delivery".
+  - Cash → "Stop 2 of 3", and the API has a 373.75 cash door payment and "Paid in full".
+  - e-Transfer of 120.50 with a generated photo through the real file chooser → owing 253.25 to the cent; `photo_url` returns
+    `image/jpeg` starting FF D8 FF.
+  - Owes → the status page shows "Balance owing $373.75".
+  - Undo on a sent delivery → "Stop 1 of 3" again, stock back to the cubic inch, and the door payment voided.
+- **`offline.spec.mjs`:**
+  - With `page.clock` paused at T and `context.setOffline(true)`, two stops are delivered (one with a photo). The strip reads "No
+    signal. 2 deliveries saved on this phone. They send when signal comes back and keep the time you tapped."
+  - Reload with no signal: the day and the "2 deliveries saved" strip are still there (Chromium).
+  - The API still shows both out for delivery. Then the phone clock is moved +40 min and the server clock +45 min, and signal comes
+    back → "All sent".
+  - Both orders have `delivered_at` = T, the photo is stored, stock moved exactly once each, and the cash payment is 345.00.
+  - Second test: the first check-in routed to a 500 → both stay queued, then "All sent" on the next try (the 20 s timer) with
+    `delivered_at` = T.
+- **`targets.spec.mjs`:** every driver button, the PIN and amount inputs, the pay buttons, the photo label, Save, Cancel and Undo are
+  ≥ 56 px and hit-test to themselves (`expectTapTarget`). Action buttons have contrast ≥ 4.5 in dark and in Daylight; Daylight
+  survives a reload; SAMPLE is visible; no sideways scroll at 390.
+- **Screenshots** via `shot(page, testInfo, 'driver', name)` in `app/tests/driver/shots/`: signin, day, pay-sheet, offline-strip and
+  daylight for each of the four projects (20 files).
+
+What the first runs caught (each fixed, and each checked with a probe before I believed the explanation):
+1. **A race in my own specs.** The strip already reads "All sent" before a Start is saved, so waiting for "All sent" right after tapping
+   Start passed at once. The Start then stayed queued when the signal went. The specs now wait for `#start-route` to hide (the Start
+   is saved) and then for "All sent". **The lead's journey spec has the same shape:** it reloads the status page right after tapping
+   Start and expects "Out for delivery". My page sends at once and it usually wins, but waiting for `#start-route` to hide (or the
+   strip to read All sent) would remove the race.
+2. **Chromium-1280 once got `delivered_at` = the old server clock.** The phone's 20 s timer fired during `fastForward`, while there was
+   no signal. The request it created still carried the old `X-Test-Now`, and in that run it went out once signal came back.
+   A probe showed offline really blocks every request, even through the service worker, and that the new header arrives. The spec
+   now moves the server clock before `fastForward`.
+3. **A real page bug, fixed.** In WebKit under `setOffline(true)`, reading the chosen photo throws `NotReadableError`. `photoChosen`
+   did not catch it, so Save stayed disabled for good. Now any failure clears the busy state and says "That photo can't be used. Try
+   again, or save without it." The offline spec picks the photo while there is still signal and taps Save with none. A real phone
+   reads the file without network.
+4. **WebKit, checked with a probe:**
+   - The page is controlled by the service worker.
+   - `online` does fire on `setOffline(false)`.
+   - **`page.reload()` under `setOffline(true)` fails** ("WebKit encountered an internal error").
+
+   The offline reload step is therefore **skipped on WebKit only**, with that reason in the spec and a test annotation. The rest of
+   the offline test runs on WebKit.
+5. **WebKit and routing.** In WebKit, the 500 test never saw its routed request. It does not need the service worker, so it runs with
+   `serviceWorkers: 'block'`, as Playwright recommends when routing. The service-worker path is covered by the reload test.
+
+### Negative controls (M3)
+
+Run from `app/` with `node tests/driver/negative-all.mjs`; each result is appended to `app/tests/driver/negative-control.log`.
+
+How a control runs:
+1. Copy `worker/` and `app/public/` into `app/.negative/<name>/` (git-ignored).
+2. Break the copy's driver page. If the anchor is not found exactly once, the control exits 2.
+3. Run one spec on chromium-390 with `E2E_PORT=7706` and `E2E_WORKER_DIR` pointing at the copy, and read Playwright's JSON report.
+4. Count the control as red only if the named test failed.
+
+**All three went red; exit 0.**
+
+| control | the break in the copy | what went red (from the log) |
+|---|---|---|
+| (l) queue-early | `queue.js` removes the item just before `POST /api/driver/checkins` | the 500 test: the delivery saved with no signal vanished from the phone at once ("Stop 1 of 2" stayed where "Stop 2 of 2" belongs), so it could never reach the server |
+| (m) at-on-send | the check-in is sent with `at: new Date().toISOString()` instead of the saved `at` | the offline test: `delivered_at` 13:40 (sent 40 minutes later), expected 13:00, the time Save was tapped |
+| (n) overlay | a transparent absolutely positioned div over the next-stop card | the Start/Cash test: `tap(Delivered) hit-test … something else is on top`, naming the div |
+
+Honest note on (l): the brief expected the red at "a delivery never reached the server". With no signal, the copy loses the delivery
+the moment Save is tapped, so the same loss shows one step earlier, on the phone's own screen. That run shared Playwright's output
+folder with a journey run; the reds above are the specific assertion failures, not artifact errors.
+
+### Found outside my slice (for the lead)
+
+- **The journey spec stops before the driver part.** I ran `tests/journey` against this branch on 7704. All four projects fail at line 56:
+  `getByRole('tab', { name: 'New' })`. fo2's dealer page has the tabs Orders, Plan, Customers, Totals and Settings, and "New" is a
+  bucket inside Orders. The journey therefore has not exercised the driver hooks yet. That mismatch is fo2's page or the lead's spec,
+  not mine to change.
+
+### Left undone / not tested
+
+- Driver behaviour that is built but has no Playwright test yet:
+  - a 401 while items are queued (sign-in shown again, queue kept);
+  - Undo of a delivery still queued;
+  - the "Not accepted" list with a real 409.
+- The service worker is cache-first with a fixed cache name, so a changed driver page reaches a phone only when `CACHE` is bumped in
+  `sw.js`. That is fine for tonight; a deploy step should bump it.

@@ -17,7 +17,8 @@ export function validPhone(phone) {
 }
 
 // What is ordered and where: product, unit, qty, stacking, pin, zone, and (dealer only) a delivery fee override.
-export function parseProductInput(body, { products, settings, dealer }) {
+// `quote`: a quote may come before the pin. `dealer` (phone orders and quotes) allows a delivery_cents override.
+export function parseProductInput(body, { products, settings, dealer, quote }) {
   const b = isObj(body) ? body : {}
   const product = products.find((p) => p.id === b.product_id && p.active)
   if (!product) throw bad('product_id', 'Pick what you would like.')
@@ -34,13 +35,15 @@ export function parseProductInput(body, { products, settings, dealer }) {
     throw bad('stacking', "We don't offer stacking for this.")
   }
   const okNum = (v) => typeof v === 'number' && Number.isFinite(v)
-  if (!okNum(b.lat) || !okNum(b.lng) || b.lat < 46.5 || b.lat > 60.5 || b.lng < -67.9 || b.lng > -52.5) {
+  // Only a quote may leave the pin out, and only whole: lat and lng both absent or null.
+  const noPin = !!quote && (b.lat === undefined || b.lat === null) && (b.lng === undefined || b.lng === null)
+  if (!noPin && (!okNum(b.lat) || !okNum(b.lng) || b.lat < 46.5 || b.lat > 60.5 || b.lng < -67.9 || b.lng > -52.5)) {
     throw bad('pin', 'Tap the map where the truck should dump it.')
   }
   let deliveryOverride = null
   if (dealer && b.delivery_cents !== undefined && b.delivery_cents !== null) {
-    if (!Number.isInteger(b.delivery_cents) || b.delivery_cents < 0 || b.delivery_cents > 100000) {
-      throw bad('delivery_cents', 'Enter a delivery fee from $0.00 to $1,000.00.')
+    if (!Number.isInteger(b.delivery_cents) || b.delivery_cents < 0 || b.delivery_cents > 50000) {
+      throw bad('delivery_cents', 'Enter a delivery fee from $0.00 to $500.00.')
     }
     deliveryOverride = b.delivery_cents
   }
@@ -48,10 +51,10 @@ export function parseProductInput(body, { products, settings, dealer }) {
   if (settings.delivery.mode === 'zones') {
     const known = settings.delivery.zones.some((z) => z.id === b.zone_id)
     // With a dealer fee the zone is only a note; without one it sets the fee and is required.
-    if (!known && deliveryOverride === null) throw bad('zone_id', 'Pick your area.')
+    if (!known && deliveryOverride === null && !noPin) throw bad('zone_id', 'Pick your area.')
     zoneId = known ? b.zone_id : null
   }
-  return { product, unit: b.unit, qty: b.qty, stacking, lat: b.lat, lng: b.lng, zone_id: zoneId,
+  return { product, unit: b.unit, qty: b.qty, stacking, lat: noPin ? null : b.lat, lng: noPin ? null : b.lng, zone_id: zoneId,
     delivery_override: deliveryOverride }
 }
 

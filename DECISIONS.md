@@ -54,3 +54,9 @@ Newest at the bottom.
     like.", "Tell us where to find the place, like the road and what it is near.", "Pick the days that suit you, or Any day.",
     "Pick your area.", "Enter the amount in dollars, like 100.00.", "Enter the fee in dollars, like 25.00, or leave it blank.",
     "That's the driver PIN. The dealer page needs the dealer PIN."
+24. **Ledger rows carry `payment_id` and `order_id`** so a payment made on account (no order) can be voided from the customer's
+    ledger; before this only payments on an order could be voided (fo2 M3).
+25. **A cancelled order with nothing paid says "Nothing owing"**, not "Paid in full": a customer would read "paid" as money
+    having changed hands (fo2 M3).
+26. **The status page's refresh on coming back into view is not tested.** Headless Chromium and WebKit never mark a page hidden
+    when another tab comes forward, so a test could not fail; the 30-second poll is tested instead (fo2 M3).

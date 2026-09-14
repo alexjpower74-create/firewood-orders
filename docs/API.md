@@ -84,7 +84,7 @@ For an order of `qty` × `unit` of a product:
 `total_cents − paid_cents` for any order that is not cancelled, and `0 − paid_cents` for a cancelled one (a credit).
 Customer `balance_cents` = Σ `total_cents` of that customer's non-cancelled orders − Σ that customer's non-voided payments
 (payments without an order count too). Negative = credit. Labels: `"Balance owing $120.00"`, `"Paid in full"` (exactly 0),
-`"Credit $20.00"`.
+`"Credit $20.00"`. A **cancelled** order with nothing paid is `"Nothing owing"`, never "Paid in full" (no money changed hands).
 
 ## Capacity (the truck)
 
@@ -265,7 +265,8 @@ stops unchanged at the front; missing / duplicate / foreign id → 400 `field: "
 last_order_label } ] }` sorted by `balance_cents` descending, then name.
 
 `GET /api/dealer/customers/:id/ledger` → `{ "customer": {…}, "entries": [ { "date", "label", "kind": "order" | "payment",
-"text", "charge_cents", "payment_cents", "balance_cents" } ], "balance_cents" }` — orders (non-cancelled, dated by creation)
+"text", "charge_cents", "payment_cents", "balance_cents", "order_id", "payment_id" } ], "balance_cents" }` (`payment_id` is `null` on
+order rows, `order_id` is `null` on a payment made on account; added after fo2 M3 so an on-account payment can be voided from the ledger) — orders (non-cancelled, dated by creation)
 and non-voided payments, oldest first, `balance_cents` running.
 
 `POST /api/dealer/payments { "customer_id", "order_id"?, "amount_cents", "method": "cash"|"etransfer"|"cheque"|"card"|"other",
