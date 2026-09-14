@@ -40,6 +40,7 @@ async function request(method, path, { json, raw, type } = {}) {
 export const api = {
   info: () => request('GET', '/api/info'),
   signin: (pin) => request('POST', '/api/signin', { json: { pin } }),
+  signout: () => request('POST', '/api/signout'),
   day: (date) => request('GET', `/api/driver/day?date=${encodeURIComponent(date)}`),
   start: (date) => request('POST', `/api/driver/day/${encodeURIComponent(date)}/start`),
   checkin: (body) => request('POST', '/api/driver/checkins', { json: body }),

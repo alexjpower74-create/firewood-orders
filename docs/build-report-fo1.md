@@ -497,3 +497,59 @@ On top of `git merge --ff-only main` at d4da601, with the contract at ec1030c.
 - That a changed page reaches a phone through the network-first service worker. That needs the served file to change between two loads
   of the same browser context, and Playwright cannot route requests the service worker makes in every engine. The code path is short
   and commented in `sw.js`.
+
+## fo2's cross-review of the driver page: fixes (2026-09-14)
+
+The findings are in fo2's report, "Cross-review of fo1 M3". This round is on top of `git merge --ff-only main` at 76161d3; `worker/` is
+untouched. Each fix has a spec in `app/tests/driver/review.spec.mjs` (tests named `review #N …`). `negative-old-page.mjs` runs them all
+against the page fo2 reviewed, and **every one fails there**.
+
+1. **The Undo bar covered the next stop's Delivered: DONE.** The bar is now part of the sticky header, under the sync strip, so it can
+   never sit over the page. The previous round's scroll padding is removed.
+   - Spec: 3 stops, Cash on the first, then `expectTapTarget(#delivered, 56)` straight after Save while the bar shows, and `#undo`
+     too.
+   - Negative control `undo-bar`: the copy puts the bar back fixed at the bottom → red, "something else is on top: `<div
+     id="undo-bar">`".
+   - Note: the follow-up round's scroll padding (c09dcc7) had already let this hit-test pass at chromium-390, but it was not a fix. A
+     page too short to scroll still hid the button. Moving the bar is the fix.
+2. **MONEY: the amount was left out when it equalled the owing cached on the phone. DONE.** Cash and e-Transfer now always send
+   `amount_cents`, the amount the driver saw or typed.
+   - Spec: the driver loads the day; the dealer records $100.00 through the API; the driver saves Cash with the prefilled 373.75. The
+     door payment is exactly 37 375, next to the office's 10 000; owing −10 000.
+   - Negative control `amount-omitted`: the copy puts back `if (cents !== state.sheet.owing)` → red. The old page recorded 27 375.
+3. **Prepaid orders: DONE.** When the stop's owing is ≤ 0, the amount is left empty with the hint "Already paid. Leave the amount
+   empty." An empty or 0 amount is accepted, and the method is sent without `amount_cents`, so the server writes no payment row and
+   `door_payment` is the method.
+   - Spec: both orders paid in full by the office first. Cash with the amount empty, then e-Transfer with "0" → both delivered, with
+     `door_payment` `cash` / `etransfer`, owing 0, and only the office's payment row.
+4. **`data-stop` on two elements: DONE.** `data-stop` is on the list rows only; the next-stop card has `data-next-stop`.
+   - Spec: `[data-stop]` count 3 for 3 stops, one match per order id, and `#next` has `data-next-stop` and no `data-stop`.
+5. **Sign out left the session valid: DONE.** Sign out calls `POST /api/signout` first. It is best effort: no signal, or no answer in
+   3 s, still signs the phone out.
+   - Spec: the old token gets 200 from `/api/driver/day` before, the page's `/api/signout` answers 200, and the old token gets 401
+     after.
+6. **A refused photo shown as a refused delivery: already fixed in the follow-up round** (c09dcc7). A refused photo removes the item and
+   says "The delivery was saved; the photo couldn't be used."; it never lands under "Not accepted". It is covered by
+   `queue.spec.mjs` (the routed 415).
+7. **With no signal the next morning, yesterday showed as today: DONE.** When `/api/info` could not be fetched and "today" is only the
+   phone's saved copy, the title is "Saved <long label> (no signal)" and Start is hidden. When signal comes back the page asks
+   `/api/info` again and shows the real today.
+   - Spec: load online (the title reads "Today's deliveries" and Start shows); no signal; the phone clock moved 24 h; reload → "Saved
+     Monday, September 14 (no signal)" with Start hidden. Signal back → "Today's deliveries" and Start again.
+   - On WebKit only the offline reload is skipped, for the reason already recorded (WebKit's `page.reload` fails under `setOffline`).
+
+### Verified
+- `E2E_PORT=7704 npx playwright test tests/driver`: **76 passed, 0 failed** (19 tests × 4 projects).
+- Driver negative controls on 7706: queue-early, at-on-send, overlay, **undo-bar**, **amount-omitted**: **red**.
+- **old-page** at be77119, the page fo2 reviewed: red, **all six review specs failed**:
+  - #1 hit the undo bar;
+  - #2 recorded the wrong cash;
+  - #3 prefilled "0.00";
+  - #4 found 4 elements;
+  - #5 sent no sign-out request;
+  - #7 said "Today's deliveries".
+- The first old-page run pointed at 85beb53 and **stayed green for #1**, because that commit already had the scroll padding. Both runs
+  are in the log; the control now names be77119 and says why.
+- **A race in my own spec, found by the first run:** review #2 failed at 390 in both engines. The strip already says "All sent" before
+  Save has stored the delivery, so the spec read the API too early. A probe showed the page itself sent `amount_cents: 37375` and the
+  server stored it. The spec now waits for the sheet to close and the next stop to show before waiting for "All sent".

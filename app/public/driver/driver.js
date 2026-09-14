@@ -18,6 +18,7 @@ const state = {
   items: [],
   authNeeded: false,
   offline: false,
+  infoFailed: false, // today came from the phone's saved copy, not a fresh /api/info
   sheet: null,
   method: null,
   photo: null,
@@ -98,11 +99,13 @@ async function loadInfo() {
     const r = await api.info()
     if (r.status === 200) {
       state.info = { name: r.body.name, short_name: r.body.short_name, sample: r.body.sample, today: r.body.today }
+      state.infoFailed = false
       write(KEY.info, state.info)
     }
   } catch (e) {
     if (!(e instanceof NetworkError)) throw e
     state.offline = true
+    state.infoFailed = true
   }
 }
 
@@ -209,7 +212,10 @@ function renderStrip() {
 function renderDay() {
   const view = merged()
   const isToday = state.viewDate === today()
-  $('day-title').textContent = isToday ? "Today's deliveries" : "Tomorrow's deliveries"
+  // With no signal, "today" is only the day saved on this phone: it may be yesterday. Never call it today (fo2 review #7).
+  const savedOnly = isToday && state.infoFailed
+  $('day-title').textContent = !isToday ? "Tomorrow's deliveries"
+    : savedOnly ? `Saved ${view?.long_label || 'day'} (no signal)` : "Today's deliveries"
   $('show-today').setAttribute('aria-pressed', String(isToday))
   $('show-tomorrow').setAttribute('aria-pressed', String(!isToday))
   $('day-label').textContent = view?.long_label || ''
@@ -228,13 +234,13 @@ function renderDay() {
   empty.hidden = stops.length > 0
   empty.textContent = stops.length ? '' : 'No stops on this day.'
 
-  $('start-route').hidden = !(isToday && !view.started && stops.some((s) => s.status === 'scheduled'))
+  $('start-route').hidden = !(isToday && !savedOnly && !view.started && stops.some((s) => s.status === 'scheduled'))
 
   const next = isToday ? stops.find((s) => s.status !== 'delivered') : null
   $('next').hidden = !next
   $('all-done').hidden = !(isToday && stops.length && !next)
   if (next) {
-    $('next').dataset.stop = next.order_id
+    $('next').dataset.nextStop = next.order_id
     $('stop-count').textContent = `Stop ${next.pos} of ${stops.length}`
     $('next-name').textContent = next.name
     $('next-address').textContent = next.address
@@ -342,7 +348,7 @@ function openSheet() {
   const view = merged()
   const next = view?.stops.find((s) => s.status !== 'delivered')
   if (!next) return
-  state.sheet = { order_id: next.order_id, name: next.name, date: view.date, owing: Math.max(0, next.owing_cents) }
+  state.sheet = { order_id: next.order_id, name: next.name, date: view.date, owing: next.owing_cents }
   state.method = null
   state.photo = null
   $('sheet-for').textContent = `${next.name} · ${next.qty_label} of ${next.product_label}`
@@ -367,7 +373,8 @@ function choose(method) {
   for (const b of document.querySelectorAll('button.pay')) b.setAttribute('aria-pressed', String(b.dataset.method === method))
   const paying = method !== 'owes'
   $('amount-row').hidden = !paying
-  if (paying && !$('amount').value) $('amount').value = money(state.sheet.owing).slice(1).replace(/,/g, '')
+  if (paying && !$('amount').value && state.sheet.owing > 0) $('amount').value = money(state.sheet.owing).slice(1).replace(/,/g, '')
+  $('amount-hint').hidden = !(paying && state.sheet.owing <= 0)
   $('save-delivery').disabled = state.photoBusy
 }
 
@@ -413,14 +420,18 @@ async function save() {
   if (!state.sheet || !state.method || state.photoBusy) return
   const payment = { method: state.method }
   if (state.method !== 'owes') {
-    const cents = parseAmount($('amount').value)
-    if (cents === null) {
+    const text = $('amount').value.trim()
+    const cents = parseAmount(text)
+    if (state.sheet.owing <= 0 && /^\$?\s*0*(\.0{0,2})?$/.test(text)) {
+      // Already paid and nothing more collected: the method alone, so the office writes no payment row (fo2 review #3).
+    } else if (cents === null) {
       $('amount-error').textContent = 'Enter the amount they paid, like 120.00.'
       $('amount-error').hidden = false
       return
+    } else {
+      // Always the amount the driver saw or typed: the owing on the office's books may have changed since (fo2 review #2).
+      payment.amount_cents = cents
     }
-    // Left as the owing shown: the office works out what is owing when it arrives.
-    if (cents !== state.sheet.owing) payment.amount_cents = cents
   }
   const item = { kind: 'checkin', state: 'queued', op_id: crypto.randomUUID(), order_id: state.sheet.order_id,
     date: state.sheet.date, at, payment, note: '', photo: state.photo, name: state.sheet.name }
@@ -437,14 +448,12 @@ function showUndo(item) {
   state.undo = { op_id: item.op_id, order_id: item.order_id, date: item.date }
   $('undo-text').textContent = `Delivered: ${item.name}`
   $('undo-bar').hidden = false
-  document.documentElement.classList.add('undo-open')
   state.undoTimer = setTimeout(hideUndo, UNDO_MS)
 }
 
 function hideUndo() {
   clearTimeout(state.undoTimer)
   $('undo-bar').hidden = true
-  document.documentElement.classList.remove('undo-open')
   state.undo = null
 }
 
@@ -488,6 +497,30 @@ async function undo() {
   }
 }
 
+// End the session on the server too (best effort: no signal, or no answer in 3 s, still signs this phone out) (fo2 review #5).
+async function signOut() {
+  if (getToken()) {
+    try {
+      await Promise.race([api.signout(), new Promise((resolve) => setTimeout(resolve, 3000))])
+    } catch (e) {
+      if (!(e instanceof NetworkError)) throw e
+    }
+  }
+  clearToken()
+  hideUndo()
+  render()
+}
+
+// Signal is back: send what waits, and ask the office what day it is before calling anything today.
+async function signalBack() {
+  state.offline = false
+  sender.kick(true)
+  const wasToday = !state.viewDate || state.viewDate === today()
+  await loadInfo()
+  if (getToken() && wasToday) await showDay(today())
+  else render()
+}
+
 function setDaylight(on, remember) {
   if (on) document.documentElement.dataset.theme = 'daylight'
   else delete document.documentElement.dataset.theme
@@ -508,12 +541,8 @@ function bind() {
   $('save-delivery').addEventListener('click', save)
   $('sheet-cancel').addEventListener('click', closeSheet)
   $('undo').addEventListener('click', undo)
-  $('sign-out').addEventListener('click', () => {
-    clearToken()
-    hideUndo()
-    render()
-  })
-  window.addEventListener('online', () => { state.offline = false; sender.kick(true); render() })
+  $('sign-out').addEventListener('click', signOut)
+  window.addEventListener('online', signalBack)
   window.addEventListener('offline', () => render())
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return
