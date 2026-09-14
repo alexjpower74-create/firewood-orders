@@ -6,9 +6,12 @@ import { addDays, dateTimeLabel, isoWeekday, longLabel, nlDate, shortLabel, time
 
 export const DAY_STATUSES = "('scheduled', 'out_for_delivery', 'delivered')"
 export const NOTE = 'Order is by distance, not road time.'
-export const MAP = {
-  tiles: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+// The base map: one style URL and the attribution that provider requires, set as [vars] in wrangler.toml (MAP_STYLE_URL,
+// MAP_ATTRIBUTION). Defaults are OpenFreeMap (free, commercial use allowed, no key, no SLA).
+export const DEFAULT_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
+export const DEFAULT_MAP_ATTRIBUTION = '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+export function mapInfo(env) {
+  return { style: env?.MAP_STYLE_URL || DEFAULT_MAP_STYLE, attribution: env?.MAP_ATTRIBUTION || DEFAULT_MAP_ATTRIBUTION }
 }
 
 export async function loadSettings(db) {

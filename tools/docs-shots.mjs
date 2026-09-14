@@ -1,6 +1,6 @@
 // docs/shots/: screenshots of every main screen from a running `npm run demo`, phone (WebKit, iPhone 14) and desktop (Chromium,
 // 1280). Viewport captures on purpose: full-page captures paint the sticky header (WebKit) or the fixed price bar (Chromium)
-// halfway down the picture. Map tiles load from OpenStreetMap exactly as they would for a person opening the page.
+// halfway down the picture. The base map loads from OpenFreeMap exactly as it would for a person opening the page.
 // Usage: npm run demo   (in another terminal), then   node tools/docs-shots.mjs [base, default http://127.0.0.1:7701]
 import { createRequire } from 'node:module'
 import { mkdirSync } from 'node:fs'
@@ -53,6 +53,19 @@ for (const profile of PROFILES) {
 
   await page.goto(BASE + '/')
   await shot('order')
+  // The pin step: product, amount, then the map with the base map drawn and a pin dropped near King's Point.
+  await page.locator('button.product[data-product="p_softwood_dry"]').click()
+  await page.locator('#next').click()
+  await page.locator('button.unit[data-unit="cord"]').click()
+  await page.locator('#next').click()
+  await page.locator('#map canvas.maplibregl-canvas').waitFor({ timeout: 15000 })
+  const box = await page.locator('#map').boundingBox()
+  await page.waitForTimeout(2500)
+  await page.mouse.click(box.x + box.width * 0.38, box.y + box.height * 0.4)
+  await page.locator('#map').scrollIntoViewIfNeeded()
+  await page.waitForTimeout(1500)
+  await page.screenshot({ path: path.join(OUT, `${profile.name}-order-pin.png`) })
+  console.log(`docs/shots/${profile.name}-order-pin.png`)
   await page.goto(`${BASE}/o/?t=${sample.token}`)
   await shot('status')
 

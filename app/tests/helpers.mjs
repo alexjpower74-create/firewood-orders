@@ -40,6 +40,11 @@ export function solidPng(width, height, [r, g, b]) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
 }
 export const TILE_PNG = solidPng(256, 256, [30, 41, 59])
+/** A stand-in MapLibre style: one background layer, no sources (so no tile, glyph or sprite requests). */
+export const TEST_STYLE = JSON.stringify({
+  version: 8, name: 'Firewood Orders test stand-in', sources: {},
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#dfe6e9' } }],
+})
 /** A generated stand-in for a delivery photo (never a real picture). */
 export const samplePhotoPng = () => ({ name: 'delivery.png', mimeType: 'image/png', buffer: solidPng(320, 240, [120, 84, 50]) })
 
@@ -52,10 +57,17 @@ export async function guardContext(context, { now = NOW } = {}) {
   await context.setExtraHTTPHeaders({ 'X-Test-Now': now })
   const offenders = []
   context.__offenders = offenders
+  context.__styleRequests = []
   await context.route(isThirdParty, (route) => {
     const url = new URL(route.request().url())
-    if (url.hostname === 'tile.openstreetmap.org' || url.hostname.endsWith('.tile.openstreetmap.org')) {
-      return route.fulfill({ status: 200, contentType: 'image/png', body: TILE_PNG })
+    if (url.hostname === 'tiles.openfreemap.org') {
+      // The base map never reaches the internet in a test: the style is a one-layer local stand-in with no sources, so MapLibre
+      // asks for no tiles, fonts or sprites; anything else on that host gets an empty answer. The style URL asked is recorded.
+      if (url.pathname.startsWith('/styles/')) {
+        context.__styleRequests.push(url.href)
+        return route.fulfill({ status: 200, contentType: 'application/json', body: TEST_STYLE })
+      }
+      return route.fulfill({ status: 204, body: '' })
     }
     offenders.push(route.request().url())
     return route.abort()

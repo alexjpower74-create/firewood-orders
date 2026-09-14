@@ -7,6 +7,7 @@
 
 import { api } from '/api.js'
 import { esc, money, icon, clearErrors, showError } from '/ui.js'
+import { addBaseLayer } from '/map.js'
 
 /** Which step holds the input each API `field` names. */
 export const FIELD_STEP = {
@@ -290,8 +291,7 @@ export function createOrderForm(root, { info, mode = 'customer', onChange = () =
     // beside a control onto the control (touch adjustment), so a pin dropped near them zoomed the map instead.
     map = L.map($('#map'), { center: [info.yard.lat, info.yard.lng], zoom: 10, scrollWheelZoom: false, tapHold: false, zoomControl: false })
     L.control.zoom({ position: 'bottomleft' }).addTo(map)
-    map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>')
-    L.tileLayer(info.map.tiles, { attribution: info.map.attribution, maxZoom: 18 }).addTo(map)
+    addBaseLayer(map, info.map)
     L.circleMarker([info.yard.lat, info.yard.lng], { radius: 8, color: '#1a0e02', weight: 2, fillColor: '#fb923c', fillOpacity: 1 })
       .addTo(map).bindTooltip(esc(info.yard.label))
     map.on('click', (ev) => setPin(ev.latlng))

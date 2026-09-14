@@ -4,6 +4,7 @@
 
 import { api } from '/api.js'
 import { esc, money, cords, clearErrors, showError, dollarsToCents } from '/ui.js'
+import { addBaseLayer } from '/map.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
 const WEEKDAYS = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [7, 'Sun']]
@@ -247,8 +248,7 @@ function mountYardMap() {
   L.Icon.Default.imagePath = '/vendor/leaflet/images/'
   yardMap = L.map(el, { center: [y.lat, y.lng], zoom: 11, scrollWheelZoom: false, zoomControl: false })
   L.control.zoom({ position: 'bottomleft' }).addTo(yardMap)
-  yardMap.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>')
-  if (info?.map) L.tileLayer(info.map.tiles, { attribution: info.map.attribution, maxZoom: 18 }).addTo(yardMap)
+  addBaseLayer(yardMap, info?.map)
   const marker = L.marker([y.lat, y.lng], { draggable: true, title: 'Yard' }).addTo(yardMap)
   const move = (ll) => {
     yardPoint = { lat: Math.round(ll.lat * 1e6) / 1e6, lng: Math.round(ll.lng * 1e6) / 1e6 }

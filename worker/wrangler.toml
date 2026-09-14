@@ -19,3 +19,9 @@ bucket_name = "firewood-orders-photos"
 directory = "../app/public"
 binding = "ASSETS"
 run_worker_first = ["/api/*"]
+
+# The base map, in one place: the MapLibre style URL and the attribution its provider requires (GET /api/info hands both to the
+# pages). OpenFreeMap: free, commercial use allowed, no key, no limits, no SLA. To switch provider, change these two lines.
+[vars]
+MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
+MAP_ATTRIBUTION = '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'

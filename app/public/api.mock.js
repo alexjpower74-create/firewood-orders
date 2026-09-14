@@ -238,7 +238,7 @@ function info() {
     min_order_cents: SETTINGS.min_order_cents, hst_registered: SETTINGS.hst_registered, yard: YARD,
     delivery: { mode: 'bands', bands: SETTINGS.bands, zones: [], beyond_message: SETTINGS.beyond_message },
     load: SETTINGS.load, products: PRODUCTS.map(publicProduct), delivery_dates: deliveryDates(),
-    map: { tiles: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+    map: { style: 'https://tiles.openfreemap.org/styles/liberty', attribution: '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>' },
   }
 }
 

@@ -44,8 +44,8 @@ with `wrangler dev --local`).
 ## Real and SAMPLE
 
 - **Real:** Newfoundland place names and coordinates from Natural Resources Canada's Geographical Names Database
-  (`data/sample-places.json`, raw answers in `data/sources/geonames/`), the 15 % NL HST, the definition of a cord, OpenStreetMap map
-  tiles with their attribution (tests never fetch them; a placeholder is served).
+  (`data/sample-places.json`, raw answers in `data/sources/geonames/`), the 15 % NL HST, the definition of a cord, the base map
+  (OpenFreeMap's vector style from OpenStreetMap data, with its attribution; tests never fetch it, a stand-in style is served).
 - **SAMPLE:** the dealer "SAMPLE Wood & Pellets — Springdale (demo)", every customer (names end in "(SAMPLE)", no house numbers),
   products, prices, stock, the truck, phone numbers (709-555-01xx), the deposit e-mail (example.com) and the delivery photos
   (generated placeholder images).
@@ -88,7 +88,8 @@ affected specs (order, targets, dealer, journey) passed 70 / 0 / 2 skipped, and 
 Not done tonight; Alexander decides. Full checklist in `docs/DEPLOY.md`. In short: a D1 database `firewood-orders` (create, put
 its id in `worker/wrangler.toml`, apply the migrations remotely), an R2 bucket `firewood-orders-photos`, deploy the Worker
 `firewood-orders` (it serves the pages too). No secrets and no cron. Then change both PINs, enter the real dealer's settings and
-turn SAMPLE off. Never set `TEST_MODE`. A tile provider for real map traffic is his call.
+turn SAMPLE off. Never set `TEST_MODE`. Map tiles need nothing: OpenFreeMap is free with commercial use
+allowed and no key, but has no SLA; switching provider is two lines under `[vars]` in `worker/wrangler.toml`.
 
 ## Where to pick this up
 

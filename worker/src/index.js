@@ -9,7 +9,7 @@ import { addDays, isValidDate, isoWeekday, longLabel, nlDate, shortLabel, TZ, we
 import { cordsOf, cordsText } from './units.js'
 import { MAX_PAYMENT_CENTS, parseContactInput, parseOrderInput, parseProductInput, phoneDigits } from './validate.js'
 import {
-  customerOrderView, DAY_STATUSES, dateView, deliveredLabel, deliveryView, loadProducts, loadSettings, MAP, METHOD_LABELS,
+  customerOrderView, DAY_STATUSES, dateView, deliveredLabel, deliveryView, loadProducts, loadSettings, mapInfo, METHOD_LABELS,
   nextDeliveryDates, NOTE, ORDER_SELECT, orderMessages, orderSummary, paymentView, preferredDates, publicProduct, qtyLabelOf,
 } from './views.js'
 import { adjustStock, changePin, createProduct, getSettings, putSettings, updateProduct } from './admin.js'
@@ -166,7 +166,7 @@ async function info(c) {
     season_open: s.season_open, season_message: s.season_message, deposit_text: s.deposit_text,
     min_order_cents: s.min_order_cents, hst_registered: s.hst_registered, yard: s.yard, delivery: deliveryView(s.delivery),
     load: { cords: s.load.cords, description: s.load.description }, products,
-    delivery_dates: nextDeliveryDates(s, c.today, 14), map: MAP,
+    delivery_dates: nextDeliveryDates(s, c.today, 14), map: mapInfo(c.env),
   })
 }
 

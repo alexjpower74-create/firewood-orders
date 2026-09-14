@@ -68,3 +68,8 @@ Newest at the bottom.
     Delivered button for 15 seconds on a phone.
 30. **A driver day opened with no signal is titled "Saved <day> (no signal)"** with Start hidden, because the phone cannot know
     whether its saved "today" is still today.
+31. **Map tiles: OpenFreeMap** (Alexander's ask via Onyx, 2026-09-14, terms checked that day): free, commercial use explicitly
+    allowed, no key, no limits, no SLA. OSM's standard tiles can withdraw commercial access; MapTiler and Stadia free plans are
+    non-commercial. The Liberty vector style is drawn by MapLibre GL 5.24.0 inside the existing Leaflet maps through
+    @maplibre/maplibre-gl-leaflet 0.1.4 (both vendored, pinned); MapLibre loads only when a map mounts. The style URL and the
+    attribution are one pair of `[vars]` in `worker/wrangler.toml`, handed to the pages by `GET /api/info`.

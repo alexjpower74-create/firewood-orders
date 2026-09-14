@@ -145,11 +145,13 @@ is a row in `stock_moves (product_id, change, reason 'delivered'|'undo'|'adjust'
       "bags_per_ton": 50, "bags_per_skid": 70,
       "units": [ { "unit": "bag", "price_cents": 799, "explain": "One 40 lb bag.", "pellet_bags": 1 } ] } ],
   "delivery_dates": [ { "date": "2026-09-15", "label": "Tue Sep 15", "long_label": "Tuesday, September 15" } ],
-  "map": { "tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-           "attribution": "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors" } }
+  "map": { "style": "https://tiles.openfreemap.org/styles/liberty",
+           "attribution": "<a href=\"https://openfreemap.org\" target=\"_blank\">OpenFreeMap</a> <a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> Data from <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a>" } }
 ```
 Only active products, only offered units (price not null), in `sort` order. Stock is never public. `delivery_dates` = the
-next 14 delivery weekdays starting **tomorrow**.
+next 14 delivery weekdays starting **tomorrow**. `map.style` is a MapLibre style URL and `map.attribution` the attribution
+HTML its provider requires, from the Worker's `MAP_STYLE_URL` / `MAP_ATTRIBUTION` vars (OpenFreeMap by default, changed
+2026-09-14 from OSM raster tiles). Pages draw the style with MapLibre inside Leaflet and show the attribution on every map.
 
 `POST /api/quote` — same body as `POST /api/orders` minus name/phone/address/notes/preferred; nothing is written.
 → `200 { "product_label", "qty_label", "explain", "wood_cu_in", "pellet_bags", "distance_km", "goods_cents", "stacking_cents",

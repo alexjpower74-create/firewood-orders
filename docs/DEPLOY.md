@@ -22,9 +22,11 @@ says go. One deployment = one dealer.
 3. In Settings: the dealer's real name, phone, yard pin, deposit text (their own e-Transfer email), delivery bands or zones,
    the load definition, truck limits, delivery weekdays, products and prices, stock counts; then turn **SAMPLE** off.
    `migrations/0002_sample.sql` seeds the SAMPLE dealer so a fresh database is usable at once; everything it sets is editable.
-4. **Map tiles.** The pages load tiles from `tile.openstreetmap.org`, whose usage policy is for light use with attribution
-   (shown on every map). A dealer with real traffic should move to a tile provider with a plan (a settings change in the pages'
-   `map.tiles` from `GET /api/info`). Alexander's decision.
+4. **Map tiles: nothing to set up.** Every map draws OpenFreeMap's vector style (`https://tiles.openfreemap.org/styles/liberty`)
+   through MapLibre: free, commercial use allowed, no key, no request limits, and **no SLA** (if it is down, the maps show only
+   the pins and the rest of the app keeps working). The attribution OpenFreeMap requires is shown on every map. To switch
+   provider or style, change `MAP_STYLE_URL` and `MAP_ATTRIBUTION` under `[vars]` in `worker/wrangler.toml` (a MapLibre style
+   URL and that provider's attribution) and deploy again; nothing else changes.
 5. **Driver page updates.** The driver page is kept on the phone by a service worker (`app/public/driver/sw.js`) so it opens
    with no signal. It asks the network first (3-second limit) and falls back to the saved copy, so a deployed change reaches a
    phone on its next load with signal; no cache bump is needed. (Not tested end to end: Playwright cannot swap the served file

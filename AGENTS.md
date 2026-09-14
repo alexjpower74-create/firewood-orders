@@ -24,7 +24,8 @@ Read PLAN.md first (the Rig contract), then docs/API.md (the contract between sl
 - **SAMPLE on every screen.** Dealer "SAMPLE Wood & Pellets — Springdale (demo)"; customer names end in "(SAMPLE)"; no house numbers.
 - **Money is integer cents, wood is integer cubic inches, pellets are bags.** HST 15 % half-up per order. No floats in sums.
 - **Stock moves only on delivery** (and its undo, and a dealer count). Capacity check + write is one SQL statement.
-- **Tests never reach a third-party host**: map tiles are routed to a local placeholder and a test fails on any non-127.0.0.1 request.
+- **Tests never reach a third-party host**: the OpenFreeMap style is answered with a local stand-in style and a test fails on any other
+  non-127.0.0.1 request. The base map is `MAP_STYLE_URL` / `MAP_ATTRIBUTION` in `worker/wrangler.toml` [vars], drawn by vendored MapLibre.
 - Own only your slice's paths; `rig guard` enforces it. Verify → commit (own paths) → report.
 - Every important check has a negative control that breaks a copy in `.negative/`, goes red, and is recorded.
 - Plain English for Newfoundland users. No emoji as icons. No devils or demons.

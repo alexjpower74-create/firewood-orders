@@ -4,6 +4,7 @@
 
 import { api } from '/api.js'
 import { esc, cords, icon } from '/ui.js'
+import { addBaseLayer } from '/map.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
 const grip = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>'
@@ -136,8 +137,7 @@ function drawMap(r) {
     L.Icon.Default.imagePath = '/vendor/leaflet/images/'
     map = L.map(el, { scrollWheelZoom: false, zoomControl: false })
     L.control.zoom({ position: 'bottomleft' }).addTo(map)
-    map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>')
-    if (info?.map) L.tileLayer(info.map.tiles, { attribution: info.map.attribution, maxZoom: 18 }).addTo(map)
+    addBaseLayer(map, info?.map)
     layers = L.layerGroup().addTo(map)
   }
   layers.clearLayers()

@@ -46,7 +46,9 @@ test('info: shape per API.md, 4 products, delivery dates start tomorrow and skip
   assert.ok(!body.delivery_dates.some((d) => d.date === SUN || d.date === '2026-09-27'))
   assert.equal(body.delivery_dates[5].date, '2026-09-21') // Tue..Sat, then Mon 21
   assert.equal(body.delivery_dates[13].date, '2026-09-30')
-  assert.match(body.map.attribution, /OpenStreetMap/)
+  assert.equal(body.map.style, 'https://tiles.openfreemap.org/styles/liberty')
+  assert.equal(body.map.attribution, '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>')
+  assert.equal(body.map.tiles, undefined, 'no raster tile URL any more')
 })
 
 test('quote: three orders written out by hand', async () => {
