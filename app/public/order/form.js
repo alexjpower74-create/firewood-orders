@@ -20,7 +20,9 @@ const UNIT_EACH = { cord: 'a cord', half_cord: 'a half cord', face_cord: 'a face
 const errorSlot = (field, alert = false) => `<p class="error" data-error-for="${field}"${alert ? ' role="alert"' : ''} hidden></p>`
 
 function productButton(p) {
-  const from = Math.min(...p.units.map((u) => u.price_cents))
+  // The cheapest unit on offer, named: "from $120.00 a face cord" and "from $220.00 a cord" are different units, and without
+  // the unit green wood looked dearer than dry.
+  const from = p.units.reduce((a, b) => (b.price_cents < a.price_cents ? b : a))
   const chips = p.kind === 'wood'
     ? [p.dryness === 'green' ? 'Green' : 'Dry', `${p.cut_in} in`, p.split ? 'Split' : 'Not split']
     : [`${p.bag_lb} lb bags`]
@@ -31,7 +33,7 @@ function productButton(p) {
       <span class="product-sub">${esc(p.kind === 'wood' ? p.species : p.brand)}</span>
       <span class="chips">${chips.map((c) => `<span class="chip">${esc(c)}</span>`).join('')}</span>
     </span>
-    <span class="product-price">from <strong>${money(from)}</strong></span>
+    <span class="product-price">from <strong>${money(from.price_cents)}</strong> ${esc(UNIT_EACH[from.unit] || '')}</span>
   </button>`
 }
 

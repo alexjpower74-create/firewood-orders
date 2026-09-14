@@ -68,7 +68,8 @@ export const icon = {
   dollar: svg('<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2.1 0 2.9 5.8 1.5 5.8 4.3 0 1.3-1.2 2.2-3 2.2-1.4 0-2.5-.6-3-1.6M12 6v1.8M12 16.4V18"/>'),
   phone: svg('<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>', 18),
   pin: svg('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', 18),
-  wood: svg('<ellipse cx="7" cy="12" rx="4" ry="5"/><path d="M7 7h11a4 5 0 0 1 0 10H7"/><ellipse cx="7" cy="12" rx="1.5" ry="2"/>'),
+  // A woodpile seen end-on: three log ends with a ring each (the earlier single log read as a toggle switch).
+  wood: svg('<circle cx="8" cy="15.5" r="3.8"/><circle cx="16" cy="15.5" r="3.8"/><circle cx="12" cy="8.5" r="3.8"/><circle cx="8" cy="15.5" r="1.2"/><circle cx="16" cy="15.5" r="1.2"/><circle cx="12" cy="8.5" r="1.2"/>'),
   pellets: svg('<path d="M6 4h12l1 4v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8z"/><path d="M5 8h14M9 13h6"/>'),
   signout: svg('<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/>', 18),
 }

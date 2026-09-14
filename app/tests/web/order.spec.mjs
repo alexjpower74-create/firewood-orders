@@ -182,3 +182,27 @@ test('below the minimum and outside the area: the API\'s messages appear under t
   w.expectClean()
   assertNoThirdParty(context)
 })
+
+test('each product card names the unit its "from" price is for, so green wood does not look dearer than dry', async ({ page, context, request }) => {
+  await fresh(context, request)
+  const w = watch(page)
+  const info = (await api(request, 'GET', '/api/info')).body
+  const EACH = { cord: 'a cord', half_cord: 'a half cord', face_cord: 'a face cord', load: 'a load', bag: 'a bag', ton: 'a ton', skid: 'a skid' }
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'What would you like?' })).toBeVisible()
+  // Worked out by hand from the SAMPLE price list: the cheapest unit of each product, with its unit.
+  const byHand = {
+    p_softwood_dry: 'from $120.00 a face cord',
+    p_birch_dry: 'from $140.00 a face cord',
+    p_softwood_green: 'from $220.00 a cord',
+    p_pellets: 'from $7.99 a bag',
+  }
+  for (const p of info.products) {
+    const cheapest = p.units.reduce((a, b) => (b.price_cents < a.price_cents ? b : a))
+    const fromApi = `from $${(cheapest.price_cents / 100).toFixed(2)} ${EACH[cheapest.unit]}`
+    expect(fromApi, `${p.id}: the API's cheapest unit matches the hand-worked label`).toBe(byHand[p.id])
+    await expect(page.locator(`button.product[data-product="${p.id}"] .product-price`)).toHaveText(byHand[p.id])
+  }
+  w.expectClean()
+  assertNoThirdParty(context)
+})
