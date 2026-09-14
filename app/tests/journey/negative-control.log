@@ -9,3 +9,14 @@
     .negative/journey-results/journey-journey-order---sc-eec22--status-page-says-Delivered-chromium-390/test-failed-2.png
   1 failed
 RESULT: RED (good: the journey caught the break)
+
+== 2026-09-14T16:42:44.991Z journey: the copy's status page shows delivered as "Out for delivery"
+  ✘  1 [chromium-390] › tests/journey/journey.spec.mjs:19:1 › order -> schedule -> deliver -> status page says Delivered (12.6s)
+    Error: expect(locator).toHaveText(expected) failed
+    Expected: "Delivered"
+    Received: "Out for delivery"
+    .negative/journey-results/journey-journey-order---sc-eec22--status-page-says-Delivered-chromium-390/test-failed-3.png
+    .negative/journey-results/journey-journey-order---sc-eec22--status-page-says-Delivered-chromium-390/test-failed-2.png
+    .negative/journey-results/journey-journey-order---sc-eec22--status-page-says-Delivered-chromium-390/test-failed-1.png
+  1 failed
+RESULT: RED (good: the journey caught the break)

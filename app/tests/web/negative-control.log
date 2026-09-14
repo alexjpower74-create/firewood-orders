@@ -441,3 +441,55 @@ Running 1 test using 1 worker
   1 failed
     [chromium-390] › tests/web/order.spec.mjs:186:1 › each product card names the unit its "from" price is for, so green wood does not look dearer than dry
 
+== negative:map-attribution  2026-09-14T16:42:14.607Z
+what: the base map is drawn without the OpenFreeMap attribution
+break: app/public/map.js: "  map.attributionControl.addAttribution(mapInfo.attribution)\n" -> ""
+run: E2E_PORT=7707 E2E_WORKER_DIR=app/.negative/map-attribution/worker npx playwright test tests/web/map.spec.mjs --project chromium-390 --grep "order page: the pin step draws the OpenFreeMap style"
+exit 1; expected failure /OpenFreeMap © OpenMapTiles Data from OpenStreetMap/; RED (good: the check caught the break)
+--- output (tail) ---
+
+[1/1] [chromium-390] › tests/web/map.spec.mjs:32:1 › order page: the pin step draws the OpenFreeMap style with its attribution, and a tap still places the pin
+  1) [chromium-390] › tests/web/map.spec.mjs:32:1 › order page: the pin step draws the OpenFreeMap style with its attribution, and a tap still places the pin 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('#map').locator('.leaflet-control-attribution')
+    Expected substring: "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"
+    Received string:    "Leaflet"
+    Timeout: 8000ms
+
+    Call log:
+      - Expect "toContainText" locator('#map').locator('.leaflet-control-attribution') with timeout 8000ms
+      - waiting for locator('#map').locator('.leaflet-control-attribution')
+        20 × locator resolved to <div class="leaflet-control-attribution leaflet-control">…</div>
+           - unexpected value "Leaflet"
+
+
+      16 |   const attribution = mapLocator.locator('.leaflet-control-attribution')
+      17 |   await expect(attribution).toBeVisible()
+    > 18 |   await expect(attribution).toContainText(ATTRIBUTION_TEXT)
+         |                             ^
+      19 |   for (const href of LINKS) await expect(attribution.locator(`a[href="${href}"]`)).toHaveCount(1)
+      20 |   // Visible means a person can see it: scrolled to the middle of the screen the way a person would scroll to it (the same
+      21 |   // allowance tap() makes), the attribution's own middle hit-tests to the attribution, not the price bar or anything else.
+        at expectBaseMap (/home/alexander/Projects/Firewood Orders/.worktrees/qa/app/tests/web/map.spec.mjs:18:29)
+        at /home/alexander/Projects/Firewood Orders/.worktrees/qa/app/tests/web/map.spec.mjs:44:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    .negative/map-attribution/results/web-map-order-page-the-pin-c3cb6--a-tap-still-places-the-pin-chromium-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: .negative/map-attribution/results/web-map-order-page-the-pin-c3cb6--a-tap-still-places-the-pin-chromium-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    .negative/map-attribution/results/web-map-order-page-the-pin-c3cb6--a-tap-still-places-the-pin-chromium-390/trace.zip
+    Usage:
+
+        npx playwright show-trace .negative/map-attribution/results/web-map-order-page-the-pin-c3cb6--a-tap-still-places-the-pin-chromium-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium-390] › tests/web/map.spec.mjs:32:1 › order page: the pin step draws the OpenFreeMap style with its attribution, and a tap still places the pin
+

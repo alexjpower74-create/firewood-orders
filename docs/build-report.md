@@ -127,3 +127,26 @@ Pinned QA worktree at `fbce0f5`, the specs this touches: `order` 16 / 0 / 0, `ta
 36 / 0 / 0, `journey` 4 / 0 / 0 (70 passed, 0 failed, chromium + webkit at 390 and 1280). Negative control (i)
 `negative-from-unit.mjs`: a copy that drops the unit turns the new check red. Customer screenshots retaken from the running demo
 (`docs/shots/phone-order.png`, `docs/shots/desktop-order.png`) and looked at.
+
+## Map tiles: OpenFreeMap (2026-09-14, lead only, Alexander's ask via Onyx)
+
+OSM's standard tiles can withdraw commercial access and the MapTiler / Stadia free plans are non-commercial, so the maps now draw
+**OpenFreeMap**'s Liberty vector style: free, commercial use explicitly allowed, no key, no limits, no SLA.
+
+- MapLibre GL 5.24.0 and @maplibre/maplibre-gl-leaflet 0.1.4, vendored and pinned (`app/public/vendor/`), inside the existing
+  Leaflet maps (order pin, dealer route, yard pin). `app/public/map.js` loads MapLibre only when a map mounts, so the order page's
+  first step stays quick, and Leaflet keeps pins, taps and the zoom controls (the plugin's GL layer is not interactive).
+- One place to switch: `MAP_STYLE_URL` and `MAP_ATTRIBUTION` under `[vars]` in `worker/wrangler.toml`, handed to the pages by
+  `GET /api/info` (`map.style`, `map.attribution`). The attribution is OpenFreeMap's own line (from its TileJSON): "OpenFreeMap ©
+  OpenMapTiles Data from OpenStreetMap", with links, visible on every map.
+- Tests never reach it: the helpers answer the style URL with a one-layer local stand-in style (no sources, so no tile, font or
+  sprite requests) and record which style URL was asked; OSM tile requests would now fail a test as a leak. `map.spec.mjs` checks,
+  in every project, the MapLibre canvas, the exact style URL, the attribution text and links, that the attribution is uncovered
+  (hit-test after scrolling to it), and that a tap still places the pin (with `tapMap`'s zoom-control guard).
+- A first local run caught my own check: the attribution was hit-tested without scrolling to it, so the order page's fixed price
+  bar (and off-screen at 390 on the route) read as "covered". The check now scrolls it to mid-screen first, as a person would.
+
+Pinned QA worktree at `164b9ad`: Worker unit 34 / 0 / 0, API 76 / 0 / 0; Playwright **198 passed / 0 failed / 6 skipped by
+width** (web 118 including map 8 and order 16, driver 76, journey 4). Negative control (j) `negative-map-attribution.mjs`: a copy
+whose map module never adds the attribution turns the map spec red; the journey control is red too. Screenshots retaken from the
+running demo with real OpenFreeMap tiles (`docs/shots/*-order-pin.png` new, `*-dealer-route.png`), and looked at.

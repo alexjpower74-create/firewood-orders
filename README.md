@@ -83,6 +83,9 @@ code, never the shipped code, and proves its check can fail.
 Polish after review (`fbce0f5`): product cards name the unit of their "from" price and the firewood icon is a woodpile; the
 affected specs (order, targets, dealer, journey) passed 70 / 0 / 2 skipped, and a 28th negative control went red.
 
+Map tiles switched to OpenFreeMap (`164b9ad`): Worker unit 34 / 0 / 0, API 76 / 0 / 0, Playwright 198 passed / 0 failed / 6
+skipped (a new map spec in every project), and a 29th negative control (the attribution) went red.
+
 ## What deploying needs
 
 Not done tonight; Alexander decides. Full checklist in `docs/DEPLOY.md`. In short: a D1 database `firewood-orders` (create, put
