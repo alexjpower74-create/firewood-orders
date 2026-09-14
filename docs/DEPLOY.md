@@ -26,7 +26,9 @@ says go. One deployment = one dealer.
    (shown on every map). A dealer with real traffic should move to a tile provider with a plan (a settings change in the pages'
    `map.tiles` from `GET /api/info`). Alexander's decision.
 5. **Driver page updates.** The driver page is kept on the phone by a service worker (`app/public/driver/sw.js`) so it opens
-   with no signal. Whenever a driver file changes, bump its `CACHE` name before deploying, or phones keep the old page.
+   with no signal. It asks the network first (3-second limit) and falls back to the saved copy, so a deployed change reaches a
+   phone on its next load with signal; no cache bump is needed. (Not tested end to end: Playwright cannot swap the served file
+   under a live service worker in every engine.)
 6. The app **takes no payments and sends no messages**: deposit instructions are text, messages are "Copy text". Nothing to set up.
 
 ## After deploying
