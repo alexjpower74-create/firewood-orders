@@ -147,3 +147,110 @@ the picker, over capacity, detail and phone order.
    `node_modules/` does not match a symlink. I did not commit it. A plain `node_modules` line would fix it.
 6. **Mock error texts.** For `bad_request` fields that API.md gives no wording for, the mock's texts are placeholders.
    The real Worker's words will show instead.
+
+Lead's answers (after the M1 merge), so these are closed:
+- DONE: `tapMap` now refuses points within 16 px of a control.
+- DONE: a quote without a pin, and `delivery_cents` on the quote, are accepted into API.md. fo1 builds them after its M2;
+  the page keeps the yard workaround until the lead says they're on main.
+- DONE: the seven page-written messages are signed off as DECISIONS.md #23.
+- DONE: `.gitignore` has a plain `node_modules` line.
+- DONE: `shot()` is fixed.
+- DONE: on the status page, the first card's heading is now "Order status" (it used to say "Your order", which also heads
+  the order card).
+
+## Cross-review of fo1 M1 (2026-09-14, read-only)
+
+**Method.** I read `git diff d1918cd d37b5d9 -- worker/`: `index.js`, `views.js`, `validate.js`, `errors.js`, `time.js`.
+I checked it line by line against docs/API.md as it stands on main. Then I ran the Worker on my dev port 7701 with
+`TEST_MODE:1` and probed every route my pages call with the test clock. The probe script is not committed; it lives in the
+git-ignored `app/tests/results/`.
+
+The probe covered:
+- info, and quotes: with and without a pin, below the minimum, not offered, Buchans, and with `delivery_cents`
+- placing orders: a good order, no address, no pin
+- the status page: a good token and a 404
+- sign-in: wrong PIN, dealer PIN, driver PIN
+- the board with a driver token, no token and after sign-out
+- days, and scheduling: a Sunday, four cords then a fifth (409), a pellet 409, unschedule
+- the order detail and its messages
+- payments: an unknown customer, zero, a future date
+- a phone order with a fee override
+- a day's route
+
+I also drove my own pages on it without `?mock`, with real taps: the order flow → status → dealer (wrong PIN, driver PIN,
+board, schedule, Record a payment, Copy text, phone order).
+
+**What matches the contract, exactly:**
+- `/api/info` shape and `delivery_dates`.
+- Quote numbers: King's Point is $300.00 + $25.00 + $48.75 = $373.75.
+- The error texts for `below_minimum`, `outside_area` (the dealer's `beyond_message`) and `not_offered`, each with its
+  `field`.
+- The 201 order body and `status_url`.
+- The `/api/o/:token` shape, `status_label` ("Scheduled for Tuesday, September 15") and `owing_label`, plus a 404 for an
+  unknown token.
+- Sign-in: 401 `field: "pin"` "That PIN is not right."; roles and expiry times; 403 `forbidden` for a driver token;
+  401 with no token and after sign-out.
+- The board buckets and every order-summary field.
+- `/api/dealer/days`, including "No deliveries on Sundays".
+- The Sunday schedule: 400 `field: "date"` "We don't deliver on Sundays."
+- The `over_capacity` 409: body byte-for-byte with API.md's example (4.00 of 4.50 cords, `day`, `needs`); the pellet
+  wording "210 of 210 bags already planned, this order needs 20."
+- The `scheduled` message text, character for character.
+- Payment 400s with `field` (the new contract line).
+- The phone-order override ($10.00 → HST $46.50).
+- The route's `label` and `long_label`.
+
+**Mismatches** (OPEN, for the lead to route to fo1):
+
+1. **Quote without a pin.**
+   - API.md (quote): "**Without a pin** (`lat`/`lng` absent or null) the quote still answers 200 with goods and stacking …
+     `distance_km`, `delivery_cents`, `subtotal_cents`, `hst_cents` and `total_cents` are `null`".
+   - Worker: `validate.js` `parseOrderInput` throws `400 bad_request field: "pin"` for quotes too. The probe with no pin
+     and with `lat: null` both got 400.
+   - Fix: when `!full` and `lat`/`lng` are absent or null, skip the pin check, and have `priceOrder` return those five
+     fields as `null` (keeping `below_minimum`).
+   - Already scheduled by the lead for after fo1 M2.
+2. **Quote ignores `delivery_cents`.**
+   - API.md (quote): "An optional `delivery_cents` (0–50 000) in the body skips the band lookup exactly as on a dealer
+     phone order".
+   - Worker: `quote()` calls `parseOrderInput(..., dealer: false)`, so the field is dropped. The probe sent 1000 and got
+     `delivery_cents: 2500`.
+   - Fix: parse `delivery_cents` on the quote route too (`dealer: true` for that field only). Same timing as 1.
+3. **Override range.**
+   - API.md: `delivery_cents` "(0–50 000)", which matches the settings band/zone fee limit of 0–50 000.
+   - Worker: `validate.js` accepts 0–100 000, with the message "Enter a delivery fee from $0.00 to $1,000.00."
+   - Fix: limit it to 50 000 with "…from $0.00 to $500.00."
+4. **Over-capacity wording can name the wrong load.**
+   - API.md (Capacity): cords wording for the wood limit, and "(Pellet wording: … bags …)" for the pellet limit.
+   - Worker: `overCapacity()` uses the cords wording whenever `woodShort || o.kind === 'wood'`. So a pellet order refused on
+     a day whose wood use is already past a lowered truck limit (`over: true`, which API.md allows) says "… cords already
+     planned, this order needs 0.00." And a wood order refused because the pellets are over quotes cords that fit.
+   - Fix: choose the wording by the limit that is actually exceeded (`woodShort ? cords : bags`, and cords when both).
+5. **`sample` is hard-coded.**
+   - API.md (Settings): "`sample` (boolean; `false` for a real dealer removes every SAMPLE badge, reported by
+     `GET /api/info`)".
+   - Worker: `info()`, `customerOrderView()` and `driverDay()` all return the literal `sample: true`. The pages hide the
+     badge from this flag.
+   - Fix: store `sample` in settings (SAMPLE reset = `true`) and return it in all three. This belongs with fo1's M2
+     settings work.
+6. **Unknown order + bad date gives 400, not 404.**
+   - API.md: `not_found` 404 for an unknown order.
+   - Worker: `schedule()` runs `checkScheduleDate` before `orderById`, so `POST /api/dealer/orders/o_nope/schedule` with a
+     Sunday answers 400 `field: "date"`.
+   - Fix: load the order first. Minor; no page hits it.
+7. **`used_skids` precision.**
+   - API.md (`GET /api/dealer/days`): shows `"used_skids": 1, "cap_skids": 3` as whole numbers.
+   - Worker: returns a 2-decimal fraction (20 bags → `0.29`).
+   - Fix: either the contract says "2 decimals", or the Worker floors to whole skids. The pages don't read it; they show
+     bags.
+
+**No change needed:**
+- `POST /api/signout` answers `{ "signed_out": true }`; API.md only says 200.
+- The 401 texts ("Sign in first.", "Your sign-in has run out. Sign in again.") aren't set by the contract; the dealer
+  page shows them under the PIN.
+
+**My own side, found by the same run:** the dealer's phone order sent an empty `name` on the real Worker, which answered
+400 "Tell us your name, in up to 80 characters." under the name field. So the Worker behaved correctly; the bug is in my
+page, and it is being fixed in M2 below.
+Real API 4xx answers also log "Failed to load resource" console errors in the browser. My M2 specs therefore fail only on
+page errors and on console errors that are not a failed resource load.
