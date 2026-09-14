@@ -708,3 +708,44 @@ test('schedule: an unknown order is 404, whatever the date', async () => {
     assert.deepEqual([r.status, r.body.code], [404, 'not_found'], date)
   }
 })
+
+// ---------------- fo2's M3 open items ----------------
+
+test('ledger entries carry order_id and payment_id: null payment_id on orders, null order_id on a payment on account', async () => {
+  await reset()
+  const dealer = await signin('1357')
+  const o = await order()
+  const cust = await customerOf(dealer, o.id)
+  const onOrder = await pay(dealer, { customer_id: cust, order_id: o.id, amount_cents: 10000, method: 'etransfer' }, minutesAfter(T0, 1))
+  const onAccount = await pay(dealer, { customer_id: cust, amount_cents: 2500, method: 'cash', note: 'On account' }, minutesAfter(T0, 2))
+  const l = await call('GET', `/api/dealer/customers/${cust}/ledger`, { token: dealer })
+  assert.equal(l.status, 200)
+  assert.deepEqual(l.body.entries.map((e) => [e.kind, e.order_id, e.payment_id, e.charge_cents, e.payment_cents, e.balance_cents]), [
+    ['order', o.id, null, 37375, 0, 37375],
+    ['payment', o.id, onOrder.body.payment.id, 0, 10000, 27375],
+    ['payment', null, onAccount.body.payment.id, 0, 2500, 24875],
+  ])
+  // the id is what the ledger needs to void a payment made on account
+  assert.equal((await call('DELETE', `/api/dealer/payments/${l.body.entries[2].payment_id}`, { token: dealer })).status, 200)
+  assert.equal((await call('GET', `/api/dealer/customers/${cust}/ledger`, { token: dealer })).body.balance_cents, 27375)
+})
+
+test('owing_label: a cancelled order with nothing paid says "Nothing owing"; with a deposit it is a credit; a paid order is "Paid in full"', async () => {
+  await reset()
+  const dealer = await signin('1357')
+  const a = await order()
+  assert.equal((await call('POST', `/api/o/${a.token}/cancel`)).status, 200)
+  let s = (await call('GET', `/api/o/${a.token}`)).body.order
+  assert.deepEqual([s.status, s.owing_cents, s.owing_label], ['cancelled', 0, 'Nothing owing'])
+
+  const b = await scheduled(dealer, {}, TUE)
+  await pay(dealer, { customer_id: await customerOf(dealer, b.id), order_id: b.id, amount_cents: 5000, method: 'cash' })
+  assert.equal((await call('POST', `/api/dealer/orders/${b.id}/cancel`, { token: dealer })).status, 200)
+  s = (await call('GET', `/api/o/${b.token}`)).body.order
+  assert.deepEqual([s.owing_cents, s.owing_label], [-5000, 'Credit $50.00'])
+
+  const c = await order()
+  await pay(dealer, { customer_id: await customerOf(dealer, c.id), order_id: c.id, amount_cents: 37375, method: 'cash' })
+  s = (await call('GET', `/api/o/${c.token}`)).body.order
+  assert.deepEqual([s.status, s.owing_cents, s.owing_label], ['requested', 0, 'Paid in full'])
+})

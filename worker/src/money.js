@@ -118,7 +118,8 @@ export function customerBalance(orders, payments) {
   return charged - paid
 }
 
-export function owingLabel(owing) {
-  if (owing === 0) return 'Paid in full'
+// A cancelled order with nothing paid never says "Paid in full": no money changed hands.
+export function owingLabel(owing, { cancelled = false } = {}) {
+  if (owing === 0) return cancelled ? 'Nothing owing' : 'Paid in full'
   return owing > 0 ? `Balance owing ${formatMoney(owing)}` : `Credit ${formatMoney(-owing)}`
 }

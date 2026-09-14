@@ -1,6 +1,7 @@
 // The offline queue. Every Start and Delivered is written to IndexedDB first; a sender posts oldest first and removes an item
-// only after the server has answered 200/201 (and, for a photo, 200 to the photo). 400/403/404/409/413/415 move the item to
-// "Not accepted" with the server's message; no signal, 429 and 5xx leave it queued and try again with backoff.
+// only after the server has answered 200/201 (and, for a photo, 200 to the photo). A refused check-in (400/403/404/409) moves
+// to "Not accepted" with the server's message; a refused photo alone (413, 415, …) leaves the delivery saved and tells the
+// page. No signal, 429 and 5xx leave the item queued and try again with backoff.
 // Photos are stored as { type, data: ArrayBuffer } (WebKit cannot keep Blobs in IndexedDB in every mode).
 import { api, NetworkError } from './driver-api.js'
 
@@ -40,7 +41,8 @@ export const allItems = () => withStore('readonly', (s) => s.getAll()).then((ite
 const BACKOFF_FIRST_MS = 5000
 const BACKOFF_MAX_MS = 60000
 
-// hooks: onAccepted(item, body) after a check-in is accepted, onStarted(item, body), onChange(), onAuthNeeded()
+// hooks: onAccepted(item, body) after a check-in is accepted, onStarted(item, body), onPhotoRefused(item, answer), onChange(),
+// onAuthNeeded()
 export function createSender(hooks = {}) {
   let running = null
   let again = false
@@ -86,8 +88,15 @@ export function createSender(hooks = {}) {
         await updateItem(item)
       }
       const p = await api.photo(item.op_id, item.photo)
-      if (p.status !== 200) return answered(item, p)
+      if (p.status === 200) {
+        await removeItem(item.seq)
+        return 'ok'
+      }
+      if (p.status === 401 || p.status === 429 || p.status >= 500) return answered(item, p)
+      // The delivery itself was accepted: a refused photo (413, 415, …) never puts it under Not accepted.
+      offline = false
       await removeItem(item.seq)
+      hooks.onPhotoRefused?.(item, p)
       return 'ok'
     } catch (e) {
       if (e instanceof NetworkError) {
