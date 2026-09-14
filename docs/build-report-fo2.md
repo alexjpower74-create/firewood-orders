@@ -254,3 +254,171 @@ board, schedule, Record a payment, Copy text, phone order).
 page, and it is being fixed in M2 below.
 Real API 4xx answers also log "Failed to load resource" console errors in the browser. My M2 specs therefore fail only on
 page errors and on console errors that are not a failed resource load.
+
+## M2: Plan tab, and the real-Worker specs (2026-09-14)
+
+Branch fast-forwarded to main first (fo1 M1 + lead fixes). Everything below runs against the real Worker. The mock is a
+development aid only; it does not implement the route endpoints.
+
+### What I built — DONE
+
+- **Plan tab** (`dealer/plan.js`, the panel in `dealer/index.html`, styles in `dealer/dealer.css`):
+  - The 21 days from `GET /api/dealer/days`. Each has a wood bar (ember) and a pellet bar (teal) reading "4.00 of 4.50
+    cords" and "0 of 210 bags", a stop count, and a red edge plus "Over the truck's limit" when `over`. Non-delivery days
+    are plain rows with the API's reason.
+  - Tapping a day opens its route: the Leaflet map with the yard marker, numbered stop markers and the route line
+    (yard → stops → yard), fitted to the stops.
+  - Beside the map at 1280, below it at 390: the stop list. Each stop has a drag handle driven by pointer events
+    (`setPointerCapture`, `touch-action: none`) plus **Move up** / **Move down** buttons. Delivered stops are locked at
+    the front.
+  - **Put in best order** (`POST …/optimize`), the total km, and "Order is by distance, not road time."
+  - Every reorder is saved with `PUT …/route`, and the list is redrawn from the API's answer. A refusal shows the API's
+    words in `role="alert"`.
+- **URL hash.** The open tab and the open day live in the hash (`#plan/2026-09-15`), so a reload comes back to the same
+  route.
+- **Status page.** The first card is now headed "Order status" (lead's request).
+
+### The specs (`app/tests/web/`, run `E2E_PORT=7703 npx playwright test tests/web`)
+
+Every spec calls `fresh()` first and `assertNoThirdParty()` last. Taps go through `tap()`, map pins through `tapMap()`,
+drags through `page.mouse`. Setup goes only through the API. `web-helpers.mjs` adds three things:
+- `watch(page)`: page errors and console errors fail the test. The browser's own "Failed to load resource" line for an
+  API 4xx that the test provokes is allowed.
+- `hstOf()`: the contract's half-up HST, written out.
+- `typeIn()`: see the finding below.
+
+How each spec could fail:
+- `order.spec.mjs`
+  - The five steps with real taps.
+  - A unit's explain text for cord → face cord → load → cord.
+  - `#quote-total` equals the API quote for the **exact body the page sent** (re-asked of the API), and equals $373.75
+    worked out by hand (goods 30 000 + delivery 2 500 + HST `hstOf(32 500)` = 4 875).
+  - A second price check where the HST is **not whole cents**: 14 bags → 2 052.9 ¢ → $20.53, total $157.39. That is what
+    negative control (d) needs.
+  - The API's below-minimum message under qty; the dealer's beyond message under the pin at Buchans (zoomed out with the
+    real zoom button), and Next refusing both.
+  - Request sent → `#status-link` equals the API's `status_url` → Requested, "Balance owing $373.75", and the deposit
+    text from `/api/info`.
+  - The attribution is visible and contains OpenStreetMap.
+- `status.spec.mjs`
+  - One order moved by the API: schedule → driver start → check-in with a generated PNG photo.
+  - The page's own 30 s poll brings each change (`page.clock.runFor`), so a broken poll fails too.
+  - Labels exact: Requested, "Scheduled for Tuesday, September 15", "Out for delivery", "Delivered" with
+    `delivered_label`.
+  - The photo is visible and loaded at 320 px wide.
+  - A bad token shows the plain message.
+- `dealer.spec.mjs`
+  - A wrong PIN shows "That PIN is not right." in `role="alert"`, **and** the sign-in response is 401.
+  - A new online order is under New; Schedule into Tue Sep 15 moves it to Scheduled, and a second page on its status link
+    says "Scheduled for Tuesday, September 15".
+  - **Capacity:** with 4 one-cord orders set up through the API, the picker shows 4.00 of 4.50. Tapping the day gets a
+    409 whose `error` equals the contract's sentence, and the card's `role="alert"` shows exactly that text. After a
+    reload the order is still under New, on the page and in the API.
+  - Record $100.00: the payment's `amount_cents` is 10 000; the detail, the card and the status page drop from $373.75
+    to $273.75; the API's `owing_cents` difference is exactly 10 000.
+  - Copy text: the shown text equals the API's `scheduled` message, and the button says "Copied". In chromium the
+    clipboard is read and must equal it. In WebKit the read is skipped with a written annotation, because Playwright
+    cannot grant `clipboard-read` there.
+  - A phone order (birch half cord, King's Point, $10.00 fee) answers 201. Detail total $241.50 by hand. The card has
+    `data-source="phone"`, and the API board says `source: "phone"`, `delivery_cents: 1000`.
+- `plan.spec.mjs`
+  - Day bars "4.00 of 4.50 cords" and "0 of 210 bags", and "No deliveries on Sundays".
+  - The route lists the 4 stops in API order, with 4 markers.
+  - **Put in best order:** the list equals the order in the optimize response and in a fresh `GET`, and the test first
+    asserts that order **differs** from the starting one (104.5 → 79.9 km), so it cannot pass by doing nothing.
+  - 1280: a real `page.mouse` drag of stop 3's handle above stop 1 → a `PUT` answering 200, the list and API equal
+    [3, 1, 2, 4], still so after `page.reload()`.
+  - 390: Move up then Move down → the list and API equal [2, 1, 4, 3], still so after a reload.
+  - The note is visible.
+- `targets.spec.mjs`
+  - The SAMPLE badge and dealer name on `/`, `/o/` and `/dealer/`.
+  - Contrast of Next and Sign in ≥ 4.5.
+  - 390: on every screen (order steps 1–5, status, sign-in, Orders, schedule picker, order detail, phone order, Plan
+    days, Plan route), every visible button and tab is ≥ 44 px and hit-tests to itself, and nothing scrolls sideways.
+  - After typing into the last field (`#note`), `elementFromPoint` at the field's middle **and** its lower edge is the
+    field, not the price bar; then Send is hit-tested.
+
+### Finding: key presses lost after an emulated touch tap in Chromium (my tests, not the page) — DONE, for the lead
+
+On the real Worker, the dealer's phone order first failed with 400 "Tell us your name…". The name I typed had never
+reached the field. I bisected it on the dealer's phone-order form, typing the name and then the address:
+
+| variant (chromium, 390, touch) | address typed? |
+|---|---|
+| lead's `type()` (touch tap, then `keyboard.type`) | no: `keydown` fires, no `beforeinput`/`input`, no `preventDefault` anywhere (trapped) |
+| map element removed / `autocomplete="off"` / 1 s wait after the tap | no |
+| the same field after `keyboard.insertText` | yes, and key presses after that work |
+| a **mouse** click, then `keyboard.type` | yes |
+| chromium 1280 (mouse), webkit 390 (touch) | yes |
+
+A phone's on-screen keyboard sends text as `insertText`, so this is not a bug a customer or dealer would hit. My
+`typeIn()` therefore does a hit-tested `tap()`, then on touch projects `page.keyboard.insertText`, and on mouse projects
+the lead's `type()`. It then **asserts the field's value**, so any lost text fails where it happens.
+
+For the lead: `helpers.mjs` `type()` can lose characters in the chromium-390 project. You may want the same value check
+there.
+
+### Negative controls (M2) — all four RED
+
+`node app/tests/web/negative-<name>.mjs` for each control. The shared `negative-lib.mjs` does this:
+1. Copies `worker/` and `app/public/` into the git-ignored `app/.negative/<name>/`.
+2. Breaks the **copy** by exact text replacement. If an anchor isn't found exactly once, it exits 2, so a control can
+   never pass by breaking nothing.
+3. Runs the one named test on a fresh Worker from the copy (`E2E_PORT=7707`, `E2E_WORKER_DIR`), with its own `--output`.
+4. Exits 0 only if that test failed with the expected message.
+
+The full output is in `app/tests/web/negative-control.log`.
+
+| control | the break in the copy | red output |
+|---|---|---|
+| (a) `negative-capacity-message` | the schedule picker's catch sets `alert.hidden = true` instead of showing `e.message` | `expect(locator).toHaveText(expected) failed` / `Expected: "That's more than the truck can carry that day: 4.00 of 4.50 cords already planned, this order needs 1.00."` / `element(s) not found` |
+| (b) `negative-status-label` | `pill.textContent = o.status === 'scheduled' ? 'Requested' : o.status_label` | `Expected: "Scheduled for Tuesday, September 15"` / `Received: "Requested"` |
+| (c) `negative-send-overlay` | a transparent `.send-cover` over the bar's buttons, shown only while Send is | `tap(locator('#send')) hit-test …: something else is on top` / `Received: "<div class=\"send-cover\"></div>"` |
+| (d) `negative-hst-float` | price bar total = `subtotal + subtotal * 0.15`, a float with no rounding | `Expected: "$157.39"` / `Received: "$157.38"` (14 bags: HST 2 052.9 ¢) |
+
+The shipped code passes the same four tests (final run below).
+
+### What the real-Worker runs caught (fixed)
+
+1. **Plan route scrolled sideways at 390 (2 px), in both engines.** The one-column route layout was only applied between
+   900 and 1100 px, so at phone width the 360 px stop list stayed beside a squeezed map. `targets.spec` found it with its
+   sideways-scroll check, which doubles as that check's red run on a known-bad page. Fixed: the one-column layout now
+   applies at ≤ 1100 px, and the route header, stop rows and day list stack at phone width.
+2. **`targets.spec` checked screens before they were drawn** (e.g. step 1 before `/api/info` answered, `/dealer/` before
+   it chose to show sign-in). That gave zero buttons, which the test refuses; a half-drawn screen would have passed with
+   too few. Fixed: each screen now waits for its own content before the check.
+3. **Playwright empties `app/tests/results/` when a run starts.** My first logs, kept there, were deleted by the run that
+   wrote them; one run's output was lost and the run was stopped. Logs now go to the git-ignored `app/.logs/`, and each
+   negative control has its own `--output`.
+4. The phone-order typing finding above.
+
+### Screenshots — DONE
+
+`shot(page, testInfo, 'web', …)` from the specs, against the real Worker, at 390 and 1280 in both engines:
+- order steps 1–5, outside the area, Request sent
+- status: requested, scheduled, out for delivery, delivered, not found
+- dealer: sign-in, Orders, schedule picker, over capacity, order detail, phone order
+- Plan: days and route
+
+The 80 `mock-*` shots are `git rm`'d. Not shot, because M2 can't reach them on the real Worker: the season-closed screen
+(needs `PUT /api/dealer/settings`, fo1 M2) and a cancelled status (needs cancel, fo1 M2). Both come in M3.
+
+### Left undone — OPEN
+
+- M3 (Customers, Totals, Settings, edit / cancel / undeliver, "Cancel my order"): not started, as the milestone rule says.
+- The page's quote-before-pin workaround (quoting at the yard) stays until the lead says the null-pin quote is on main.
+- `api.mock.js` has no route endpoints, so the Plan tab doesn't work under `?mock=1`. It is a dev aid only; every
+  spec uses the real Worker.
+- The status page's refresh when it comes back into view (`visibilitychange`) is not driven by any test; only the
+  30-second poll is.
+
+### Final result (M2)
+
+`E2E_PORT=7703 npx playwright test tests/web` on a fresh real Worker (fo1 M1 on main), all four projects:
+**66 passed, 0 failed, 6 skipped**. The skips are by design, each with a written reason:
+- the 1280 drag test in both 390 projects
+- the 390 Move up / Move down test in both 1280 projects
+- the 390 tap-target sweep in both 1280 projects
+
+Negative controls (a)–(d): 4 of 4 red. Servers I started (dev Worker on 7701, the e2e and control Workers on 7703 and
+7707) are stopped.
