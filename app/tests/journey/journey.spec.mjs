@@ -72,16 +72,20 @@ test('order -> schedule -> deliver -> status page says Delivered', async ({ page
   await r.goto('/driver/')
   await type(r, r.locator('#pin'), DRIVER_PIN)
   await tap(r, r.locator('#signin-btn'), 'Sign in (driver)')
+  // The strip already reads "All sent" before a new item is saved, so it cannot say this item arrived. Wait for the office's
+  // answer to this very request instead, then ask the status page.
+  const started = r.waitForResponse((res) => res.url().includes(`/api/driver/day/${TODAY}/start`) && res.request().method() === 'POST')
   await tap(r, r.locator('#start-route'), 'Start the route')
-  // Start is saved on the phone first (the button goes), then sent (the strip says All sent); only then ask the status page.
+  expect((await started).status(), 'the driver page started the route').toBe(200)
   await expect(r.locator('#start-route')).toBeHidden()
-  await expect(r.locator('#sync-strip')).toContainText('All sent')
   await page.reload()
   await expect(page.locator('#status')).toHaveText('Out for delivery')
   await expect(r.locator(`[data-stop="${orderId}"]`).first()).toBeVisible()
   await tap(r, r.locator('#delivered'), 'Delivered')
   await tap(r, r.locator('button.pay[data-method="owes"]'), 'Owes')
+  const checkedIn = r.waitForResponse((res) => res.url().endsWith('/api/driver/checkins') && res.request().method() === 'POST')
   await tap(r, r.locator('#save-delivery'), 'Save')
+  expect((await checkedIn).status(), 'the office accepted the delivery').toBe(201)
   await expect(r.locator('#sync-strip')).toContainText('All sent')
 
   // 4. The customer's status page.
