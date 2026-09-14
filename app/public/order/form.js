@@ -1,6 +1,8 @@
 // The order form, shared by the customer's five-step page (/) and the dealer's "Add a phone order". It renders the five
 // sections (What · How much · Where · When · You), keeps the choices, asks POST /api/quote (debounced 300 ms) whenever a
-// priced choice changes, and puts API errors under the input the API names. Every number shown comes from the quote.
+// priced choice changes, and puts API errors under the input the API names. Every number shown comes from the quote:
+// before the map is tapped the quote is asked with no pin, and the API answers goods and stacking with no delivery, HST or
+// total (docs/API.md). A dealer's fee override goes on the quote too, so the total shown is the one that will be saved.
 // Leaflet is the vendored global `L`.
 
 import { api } from '/api.js'
@@ -11,7 +13,7 @@ export const FIELD_STEP = {
   product_id: 1, unit: 2, qty: 2, stacking: 2, pin: 3, zone_id: 3, address: 3, dump_notes: 3, delivery_cents: 3,
   preferred: 4, name: 5, phone: 5, note: 5,
 }
-const QUOTE_FIELDS = ['product_id', 'unit', 'qty', 'stacking', 'pin', 'zone_id']
+const QUOTE_FIELDS = ['product_id', 'unit', 'qty', 'stacking', 'pin', 'zone_id', 'delivery_cents']
 const UNIT_TITLE = { cord: 'Cord', half_cord: 'Half cord', face_cord: 'Face cord', load: 'Load', bag: 'Bag', ton: 'Ton', skid: 'Skid' }
 const UNIT_EACH = { cord: 'a cord', half_cord: 'a half cord', face_cord: 'a face cord', load: 'a load', bag: 'a bag', ton: 'a ton', skid: 'a skid' }
 
@@ -33,7 +35,7 @@ function productButton(p) {
   </button>`
 }
 
-export function createOrderForm(root, { info, mode = 'customer', onChange = () => {} }) {
+export function createOrderForm(root, { info, mode = 'customer', onChange = () => {}, deliveryOverride = () => null }) {
   const dealer = mode === 'dealer'
   const zones = info.delivery?.mode === 'zones'
   const state = {
@@ -139,17 +141,19 @@ export function createOrderForm(root, { info, mode = 'customer', onChange = () =
     const mine = ++seq
     const p = product()
     if (!p || !unitOf()) { state.quote = null; state.quoteError = null; onChange(state); return }
-    // Before the pin the quote uses the yard, only for goods, stacking and the minimum; delivery and the total wait
-    // for the pin (the page never works a price out itself).
-    const at = state.pin || { lat: info.yard.lat, lng: info.yard.lng }
-    const body = { product_id: p.id, unit: state.unit, qty: state.qty, stacking: state.stacking, lat: at.lat, lng: at.lng, zone_id: state.zone_id }
-    if (zones && !state.zone_id) body.zone_id = info.delivery.zones[0]?.id ?? null
+    const body = { product_id: p.id, unit: state.unit, qty: state.qty, stacking: state.stacking, zone_id: state.zone_id }
+    if (state.pin) {
+      body.lat = state.pin.lat
+      body.lng = state.pin.lng
+    }
+    const fee = deliveryOverride()
+    if (fee !== null && fee !== undefined) body.delivery_cents = fee
     try {
       const q = await api.quote(body)
       if (mine !== seq) return
       state.quote = q
       state.quoteError = null
-      state.provisional = !state.pin || (zones && !state.zone_id)
+      state.provisional = q.total_cents === null
       clearQuoteErrors()
     } catch (e) {
       if (mine !== seq) return
@@ -339,7 +343,7 @@ export function createOrderForm(root, { info, mode = 'customer', onChange = () =
   }
 
   /** Price lines from the latest quote into container: goods, stacking, delivery, HST and #quote-total. */
-  function renderPrice(container, { deliveryOverride = null } = {}) {
+  function renderPrice(container) {
     const q = state.quote
     const p = product()
     let lines = ''
@@ -358,7 +362,6 @@ export function createOrderForm(root, { info, mode = 'customer', onChange = () =
         pinned ? item('HST', money(q.hst_cents), 'quote-hst') : '',
       ].join('')
       if (pinned) total = money(q.total_cents)
-      if (deliveryOverride !== null) lines += `<span class="price-note">Saved with your delivery fee of ${money(deliveryOverride)}; the total is worked out again when you save.</span>`
     }
     container.innerHTML = `<div class="price-lines">${lines}</div><div class="price-total"><span>Total</span><strong id="quote-total" aria-live="polite">${total}</strong></div>`
     container.classList.toggle('stale', dirty)
@@ -368,5 +371,5 @@ export function createOrderForm(root, { info, mode = 'customer', onChange = () =
     for (const s of root.querySelectorAll('.step')) s.hidden = Number(s.dataset.step) !== n
   }
 
-  return { state, root, body, settle, validateStep, showApiError, renderPrice, showStep, mountMap, product }
+  return { state, root, body, settle, validateStep, showApiError, renderPrice, showStep, mountMap, product, requote }
 }

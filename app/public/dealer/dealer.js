@@ -663,11 +663,12 @@ function openPhoneOrder() {
     const cents = text ? dollarsToCents(text) : null
     return cents
   }
-  const renderPrice = () => phoneForm && phoneForm.renderPrice(root.querySelector('#phone-price'), { deliveryOverride: override() })
-  phoneForm = createOrderForm(root.querySelector('#phone-form'), { info, mode: 'dealer', onChange: renderPrice })
+  const renderPrice = () => phoneForm && phoneForm.renderPrice(root.querySelector('#phone-price'))
+  // The quote takes the dealer's fee (docs/API.md), so the total shown before saving is the total that will be saved.
+  phoneForm = createOrderForm(root.querySelector('#phone-form'), { info, mode: 'dealer', onChange: renderPrice, deliveryOverride: override })
   phoneForm.mountMap()
   renderPrice()
-  root.querySelector('#delivery-fee')?.addEventListener('input', renderPrice)
+  root.querySelector('#delivery-fee')?.addEventListener('input', () => phoneForm.requote())
   root.querySelector('#phone-back').addEventListener('click', closeDetail)
   root.querySelector('#save-phone-order').addEventListener('click', savePhoneOrder)
   if (matchMedia('(max-width: 899px)').matches) window.scrollTo(0, 0)

@@ -550,3 +550,111 @@ Screenshots: **27 screens × 4 projects = 108**, all from the specs against the 
 Both M2 gaps are now shot. All servers I started are stopped (7701 dev, 7703 e2e, 7707 controls).
 
 M3 is DONE apart from the OPEN items above. The driver-queue cross-review waits for the lead's prompt.
+
+## Cross-review of fo1 M3: driver page and offline queue (2026-09-14, read-only)
+
+**Method.** I read `app/public/driver/**` (`index.html`, `driver.js`, `driver-api.js`, `queue.js`, `sw.js`) and
+`app/tests/driver/**` from commits 485f5d9 and be77119 against docs/API.md and PLAN.md. I then ran the page on my dev port
+7701 (fo1's Worker, `TEST_MODE:1`) with driver PIN 2580, using a Playwright probe with real taps at 390. The probe:
+- set up three SAMPLE orders scheduled today: Alma (owing), Paid P. (prepaid $373.75 by the dealer) and Quinn;
+- delivered them on the page;
+- read the server state back through the dealer API.
+
+The probe script lives in the git-ignored `app/.logs/`, not in fo1's paths. I edited nothing of fo1's. Every numbered item below
+is OPEN for the lead to route to fo1.
+
+1. **The Undo bar covers the next stop's Delivered button for 15 seconds** (confirmed live).
+   - PLAN.md, driver: "After Save the next stop shows at once and an **Undo** bar stays 15 s", and tap targets must hit-test
+     to themselves.
+   - Page: `#undo-bar` is fixed at the bottom. At 390, straight after a Save and with no scrolling, `#delivered` sits at
+     760–824 px and the bar at 767–844 px. `elementFromPoint` at Delivered's centre returns `undo-bar`, and still does after
+     scrolling Delivered into view, because the page is at `scrollY 0` and cannot scroll further. So the driver cannot tap
+     Delivered for the next stop until the bar goes. `app/tests/driver/targets.spec.mjs` checks the buttons before any Save,
+     so it never sees this.
+   - Fix: while the bar shows, pad the page bottom by the bar's height (or put the bar at the top), and hit-test
+     `#delivered` in the spec right after a Save.
+2. **Cash collected equal to the phone's cached owing is not what gets recorded** (confirmed live).
+   - API.md, check-ins: `amount_cents` (1–10 000 000) "or, when omitted, the order's owing **at that moment**".
+   - Page (`driver.js` `save`): `if (cents !== state.sheet.owing) payment.amount_cents = cents`, so the amount is left out
+     whenever it equals the owing **cached on the phone**. Probe: the phone showed Balance owing $373.75 for Quinn. The dealer
+     then recorded $100.00. The driver took Cash with the prefilled 373.75, and the server stored a door payment of
+     **27 375**, not the 37 375 the driver entered. The cash in hand and the books disagree by $100.00.
+   - Fix: always send `amount_cents` for Cash and e-Transfer; it is the amount the driver saw and typed.
+3. **A prepaid order cannot be saved as Cash or e-Transfer, and the only way through records it as "Owes"** (confirmed live).
+   - API.md: an omitted amount means the owing, "none if ≤ 0". `door_payment` is the method.
+   - Page: for an owing of 0 the amount prefills `0.00`, `parseAmount` refuses anything under 1 cent, and Save shows "Enter
+     the amount they paid, like 120.00." with the sheet still open. Probe: Paid P. could only be saved with **Owes**. The
+     server now has `door_payment: "owes"` on an order with owing 0, so the dealer sees "Owes" on a paid customer.
+   - Fix: when the owing is ≤ 0, allow an empty or 0 amount and send the method with no `amount_cents`, or offer a "Paid
+     already" choice.
+4. **The stop hook is on two elements** (confirmed live).
+   - PLAN.md hooks: "stops `[data-stop="<order id>"]`".
+   - Page: `renderDay` sets `data-stop` on the next-stop card (`#next`) **and** on that stop's row in the list, so
+     `[data-stop="<id>"]` matches 2 elements (probe count 2). A strict-mode locator in the journey spec would fail on it.
+   - Fix: keep `data-stop` on the list rows only, and give the card its own attribute (e.g. `data-next-stop`).
+5. **Sign out leaves the session valid on the server** (confirmed live).
+   - API.md: "`POST /api/signout` (Bearer) → 200"; driver tokens last 14 days.
+   - Page: Sign out only does `clearToken()`. The probe saw **no** API request when it was tapped, so the token stays valid
+     for up to 14 days on a phone that is handed on.
+   - Fix: send `POST /api/signout` with the token (best effort, ignoring no signal) before clearing it.
+6. **A refused photo is shown as the delivery not being accepted** (code read).
+   - PLAN.md: a 409/404/400 "moves it to a visible 'Not accepted' list with the server's message".
+   - Page (`queue.js`): after the check-in answers 201 the item becomes `state: 'photo'`. If the photo PUT then gets 404, 413
+     or 415, `answered()` marks the whole item `rejected`. The list heading says "The office did not accept these", although
+     the delivery **was** accepted and only the picture was not. "Remove from this phone" then drops just the photo, with no
+     word of that.
+   - Fix: for a photo refusal, say "Delivered and saved. The photo was not accepted: <error>", and label the button
+     "Remove the photo".
+7. **With no signal on first open, yesterday shows as today** (code read).
+   - API.md: "The app never uses the browser clock for dealer dates: it takes `today` and `now` from `GET /api/info`."
+   - Page: `state.info` (with `today`) is cached. Opening the page with no signal the next morning shows the cached day under
+     "Today's deliveries" and "Start the route", with yesterday's long label in the header.
+   - Fix: when `today` came from the cache and not a fresh `/api/info`, title the day "Saved <long label> (no signal)" rather
+     than "Today's deliveries", and hide Start.
+
+**Checked and in line with the contract:**
+- **Check-in body:** `{ op_id, order_id, at, payment, note }`. `op_id` comes from `crypto.randomUUID()`.
+- **`at`:** stamped at the tap of Save, before any sending, and kept through retries. fo1's control (m) proves it.
+- **Queue removal:** a check-in leaves the queue only after 200/201; a photo only after 200. A replay's 200 `duplicate` is
+  handled.
+- **401:** keeps the queue and asks to sign in again ("Nothing saved on this phone is lost").
+- **429, 5xx and no signal:** the item stays queued, with backoff from 5 s to 60 s.
+- **400/403/404/409/413/415:** the item goes to "Not accepted" with the API's `error`.
+- **Photos:** downscaled to ≤ 1600 px JPEG 0.7, kept as ArrayBuffer + type, then PUT with its type.
+- **Undo:** a queued delivery is removed from the phone; a sent one gets `DELETE`, and Undo waits for the sender first. A
+  refusal shows the API's words (`too_late`).
+- **Day cache:** under `firewood-orders:day:<date>`, with the queue laid over it.
+- **Service worker:** registered with scope `/driver/` (probe: `…/driver/`). It answers only its listed files and returns
+  early for anything under `/api/*`, non-GET or cross-origin.
+- **PLAN hooks:** all present: `#pin`, `#signin-btn`, `#start-route`, `#delivered`, `button.pay[data-method]`, `#amount`,
+  `#take-photo` for `#photo-input`, `#save-delivery`, `#sync-strip`, `#undo`, `#daylight`. `data-stop` is item 4.
+- **Wording:**
+  - the PLAN words ("Today's deliveries", "Start the route", "Open in Maps", "How did they pay?", Cash, e-Transfer, Owes,
+    "Take a photo", Save, Undo, "All sent", Daylight, "That PIN is not right.")
+  - the offline strip sentence, exactly
+  - the owing pill using the API's labels (Balance owing / Paid in full / Credit)
+
+## Step 3 after fo1 M3: the no-pin quote and the fee on the quote — DONE
+
+The yard workaround is removed.
+- **`order/form.js`**
+  - Before a pin, the quote is sent with **no `lat`/`lng` at all**, and no guessed zone.
+  - The bar shows the API's goods and stacking with "Delivery: after the map pin", no HST, and Total "—", because
+    `total_cents` is `null`. The total appears only when the API sends one.
+  - A dealer's fee override goes on the quote as `delivery_cents`. A refused fee lands under its field (`delivery_cents` is
+    now a quote field).
+- **`dealer/dealer.js`:** the phone-order form passes its fee to the quote and re-quotes as it is typed. The note "the total
+  is worked out again when you save" is gone, because the shown total is now the saved one.
+- **`order.spec`:** at step 2 with stacking on, the quote request has no `lat` and no `lng` keys, the API answers
+  `[goods 30000, stacking 6000, distance null, delivery null, HST null, total null]`, and the bar shows $300.00, $60.00,
+  "after the map pin", no HST and Total "—". Stacking goes off again before the pin, and $373.75 is checked as before.
+- **`dealer.spec`:** after typing the $10.00 fee, a quote carrying `delivery_cents: 1000` answers 24 150, and the form shows
+  **$241.50 before Save**: half cord 20 000 + 1 000, HST 3 150, by hand. The distance fee would have made it $270.25.
+- **Negative controls:** not run this turn, as asked, because QA holds 7707.
+- **Result:** `E2E_PORT=7703 npx playwright test tests/web` on a fresh real Worker (main with fo1 M3):
+  **106 passed, 0 failed, 6 skipped** (the by-width skips).
+- **How the new checks could fail:** the removed workaround sent the yard's `lat`/`lng` on every quote before the pin, so
+  `not.toContain('lat')` would have failed against it; the old phone form quoted without the fee ($270.25), so `$241.50`
+  would have failed. Neither is re-proved with a copy this turn, because QA holds 7707. The standing controls (a)–(e) were
+  last red at 6dc24ce.
+- **Servers:** the dev Worker on 7701 and the e2e Worker on 7703 are stopped.
