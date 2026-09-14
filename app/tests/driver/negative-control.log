@@ -1,5 +1,5 @@
 
-=== queue-early — 2026-09-14T10:24:47.513Z
+=== queue-early — 2026-09-14T10:40:16.639Z
 break: queue.js removes the item from IndexedDB just before POST /api/driver/checkins, instead of after 200/201
 patched: driver/queue.js
 run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/queue-early/worker npx playwright test tests/driver/offline.spec.mjs --project=chromium-390 --reporter=json -g a 500 from the office
@@ -16,7 +16,7 @@ run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/queue-early/worker npx playwrigh
         - waiting for locator('#stop-count')
 RESULT: RED as intended (exit 1)
 
-=== at-on-send — 2026-09-14T10:25:01.896Z
+=== at-on-send — 2026-09-14T10:40:29.712Z
 break: queue.js sends at: new Date().toISOString() (the phone's time at sending) instead of the saved item.at
 patched: driver/queue.js
 run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/at-on-send/worker npx playwright test tests/driver/offline.spec.mjs --project=chromium-390 --reporter=json -g no signal: two deliveries
@@ -29,7 +29,7 @@ run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/at-on-send/worker npx playwright
       Received: "2026-09-14T13:40:00.000Z"
 RESULT: RED as intended (exit 1)
 
-=== overlay — 2026-09-14T10:25:09.854Z
+=== overlay — 2026-09-14T10:40:35.364Z
 break: index.html puts a transparent absolutely positioned div over the next-stop card, on top of Delivered
 patched: driver/index.html
 run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/overlay/worker npx playwright test tests/driver/driver.spec.mjs --project=chromium-390 --reporter=json -g the status page says Out for delivery
@@ -40,4 +40,150 @@ run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/overlay/worker npx playwright te
       
       Expected: ""
       Received: "<div style=\"position:absolute;inset:0;background:transparent;z-index:5\"></div>"
+RESULT: RED as intended (exit 1)
+
+=== undo-bar — 2026-09-14T10:40:40.372Z
+break: driver.css makes .undo-bar position: fixed at the bottom again (as before the fix)
+patched: driver/driver.css
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/undo-bar/worker npx playwright test tests/driver/review.spec.mjs --project=chromium-390 --reporter=json -g review #1
+  FAILED  [chromium-390] review #1: right after a Save, the next stop's Delivered hit-tests to itself while the Undo bar shows
+      Error: #delivered right after Save: something else is on top
+      
+      expect(received).toBe(expected) // Object.is equality
+      
+      Expected: ""
+      Received: "<div id=\"undo-bar\" class=\"undo-bar\" role=\"status\">
+            <span id=\"undo-text\">Delivered: Alma P. (SAMPLE)</span>
+            <button id=\"undo\" class=\"btn secondary\" t"
+RESULT: RED as intended (exit 1)
+
+=== amount-omitted — 2026-09-14T10:40:45.712Z
+break: driver.js sends amount_cents only when it differs from the owing cached on the phone (the old omission)
+patched: driver/driver.js
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/amount-omitted/worker npx playwright test tests/driver/review.spec.mjs --project=chromium-390 --reporter=json -g review #2
+  FAILED  [chromium-390] review #2: Cash with the prefilled amount records exactly that amount, even after the dealer took a payment
+      Error: the cash the driver collected, to the cent
+      
+      expect(received).toEqual(expected) // deep equality
+      
+      - Expected  - 1
+      + Received  + 1
+      
+        Array [
+          Array [
+      -     37375,
+RESULT: RED as intended (exit 1)
+
+=== old-page — 2026-09-14T10:40:51.956Z
+break: the whole driver page replaced by its files at 85beb53, before the review fixes
+patched: driver/index.html, driver/driver.css, driver/driver.js, driver/driver-api.js, driver/queue.js, driver/sw.js
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/old-page/worker npx playwright test tests/driver/review.spec.mjs --project=chromium-390 --reporter=json -g review #
+  PASSED  [chromium-390] review #1: right after a Save, the next stop's Delivered hit-tests to itself while the Undo bar shows
+  FAILED  [chromium-390] review #2: Cash with the prefilled amount records exactly that amount, even after the dealer took a payment
+      Error: the cash the driver collected, to the cent
+      
+      expect(received).toEqual(expected) // deep equality
+      
+      - Expected  - 1
+      + Received  + 1
+      
+        Array [
+          Array [
+      -     37375,
+  FAILED  [chromium-390] review #3: a prepaid order is saved as Cash or e-Transfer with no amount: no payment row, and door_payment is the method
+      Error: expect(locator).toHaveValue(expected) failed
+      
+      Locator:  locator('#amount')
+      Expected: ""
+      Received: "0.00"
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveValue" locator('#amount') with timeout 8000ms
+        - waiting for locator('#amount')
+  FAILED  [chromium-390] review #4: data-stop is on the list row only; the next-stop card has data-next-stop
+      Error: expect(locator).toHaveCount(expected) failed
+      
+      Locator:  locator('[data-stop]')
+      Expected: 3
+      Received: 4
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveCount" locator('[data-stop]') with timeout 8000ms
+        - waiting for locator('[data-stop]')
+  FAILED  [chromium-390] review #5: Sign out ends the session on the server: the old token gets 401
+      TimeoutError: page.waitForResponse: Timeout 8000ms exceeded while waiting for event "response"
+  FAILED  [chromium-390] review #7: opened with no signal the next day, the saved day is not called today and Start is hidden
+      Error: expect(locator).toHaveText(expected) failed
+      
+      Locator:  locator('#day-title')
+      Expected: "Saved Monday, September 14 (no signal)"
+      Received: "Today's deliveries"
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveText" locator('#day-title') with timeout 8000ms
+        - waiting for locator('#day-title')
+RESULT: STAYED GREEN — the check measured nothing (exit 1; not red: review #1: right after a Save, the next stop's Delivered hit-tests to itself while the Undo bar shows)
+
+=== old-page — 2026-09-14T10:42:00.238Z
+break: the whole driver page replaced by its files at be77119, before the review fixes
+patched: driver/index.html, driver/driver.css, driver/driver.js, driver/driver-api.js, driver/queue.js, driver/sw.js
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/old-page/worker npx playwright test tests/driver/review.spec.mjs --project=chromium-390 --reporter=json -g review #
+  FAILED  [chromium-390] review #1: right after a Save, the next stop's Delivered hit-tests to itself while the Undo bar shows
+      Error: #delivered right after Save: something else is on top
+      
+      expect(received).toBe(expected) // Object.is equality
+      
+      Expected: ""
+      Received: "<div id=\"undo-bar\" class=\"undo-bar\" role=\"status\">
+          <span id=\"undo-text\">Delivered: Alma P. (SAMPLE)</span>
+          <button id=\"undo\" class=\"btn secondary\" type="
+  FAILED  [chromium-390] review #2: Cash with the prefilled amount records exactly that amount, even after the dealer took a payment
+      Error: the cash the driver collected, to the cent
+      
+      expect(received).toEqual(expected) // deep equality
+      
+      - Expected  - 1
+      + Received  + 1
+      
+        Array [
+          Array [
+      -     37375,
+  FAILED  [chromium-390] review #3: a prepaid order is saved as Cash or e-Transfer with no amount: no payment row, and door_payment is the method
+      Error: expect(locator).toHaveValue(expected) failed
+      
+      Locator:  locator('#amount')
+      Expected: ""
+      Received: "0.00"
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveValue" locator('#amount') with timeout 8000ms
+        - waiting for locator('#amount')
+  FAILED  [chromium-390] review #4: data-stop is on the list row only; the next-stop card has data-next-stop
+      Error: expect(locator).toHaveCount(expected) failed
+      
+      Locator:  locator('[data-stop]')
+      Expected: 3
+      Received: 4
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveCount" locator('[data-stop]') with timeout 8000ms
+        - waiting for locator('[data-stop]')
+  FAILED  [chromium-390] review #5: Sign out ends the session on the server: the old token gets 401
+      TimeoutError: page.waitForResponse: Timeout 8000ms exceeded while waiting for event "response"
+  FAILED  [chromium-390] review #7: opened with no signal the next day, the saved day is not called today and Start is hidden
+      Error: expect(locator).toHaveText(expected) failed
+      
+      Locator:  locator('#day-title')
+      Expected: "Saved Monday, September 14 (no signal)"
+      Received: "Today's deliveries"
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveText" locator('#day-title') with timeout 8000ms
+        - waiting for locator('#day-title')
 RESULT: RED as intended (exit 1)

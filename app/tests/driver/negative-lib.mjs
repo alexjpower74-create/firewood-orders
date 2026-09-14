@@ -29,7 +29,8 @@ function flatten(suite, out = []) {
 }
 
 // patches: [{ file (under app/public), from, to }]; from must occur exactly once.
-export async function negative({ name, why, patches, spec, grep, project = 'chromium-390', expectRed }) {
+// overwrite: [{ file (under app/public), content }] replaces whole files first (e.g. an older version of the page).
+export async function negative({ name, why, patches = [], overwrite = [], spec, grep, project = 'chromium-390', expectRed }) {
   const root = path.join(APP, '.negative', name)
   rmSync(root, { recursive: true, force: true })
   mkdirSync(path.join(root, 'worker'), { recursive: true })
@@ -40,6 +41,7 @@ export async function negative({ name, why, patches, spec, grep, project = 'chro
   cpSync(path.join(APP, 'public'), path.join(root, 'app', 'public'), { recursive: true })
 
   const header = `\n=== ${name} — ${new Date().toISOString()}\nbreak: ${why}\n`
+  for (const o of overwrite) writeFileSync(path.join(root, 'app', 'public', o.file), o.content)
   for (const p of patches) {
     const file = path.join(root, 'app', 'public', p.file)
     const text = readFileSync(file, 'utf8')
@@ -71,7 +73,7 @@ export async function negative({ name, why, patches, spec, grep, project = 'chro
   const result = red
     ? `RESULT: RED as intended (exit ${code})`
     : `RESULT: STAYED GREEN — the check measured nothing (exit ${code}; not red: ${missing.join(' | ') || 'no results'})`
-  const text = `${header}patched: ${patches.map((p) => p.file).join(', ')}\n` +
+  const text = `${header}patched: ${[...overwrite, ...patches].map((p) => p.file).join(', ')}\n` +
     `run: E2E_PORT=${PORT} E2E_WORKER_DIR=app/.negative/${name}/worker npx ${args.join(' ')}\n${lines.join('\n')}\n${result}\n`
   appendFileSync(LOG, text)
   console.log(text)

@@ -23,6 +23,10 @@
       <button id="daylight" class="btn toggle" type="button" aria-pressed="false">Daylight</button>
     </div>
     <div id="sync-strip" role="status" aria-live="polite" data-state="sent">All sent</div>
+    <div id="undo-bar" class="undo-bar" role="status" hidden>
+      <span id="undo-text"></span>
+      <button id="undo" class="btn secondary" type="button">Undo</button>
+    </div>
   </header>
 
   <main>
@@ -92,6 +96,7 @@
       <div id="amount-row" class="field" hidden>
         <label for="amount">Amount paid, in dollars</label>
         <input id="amount" type="text" inputmode="decimal" autocomplete="off">
+        <p id="amount-hint" class="lead" hidden>Already paid. Leave the amount empty.</p>
         <p id="amount-error" class="error" role="alert" hidden></p>
       </div>
       <label id="take-photo" class="btn outline" for="photo-input">Take a photo</label>
@@ -102,9 +107,5 @@
     </div>
   </div>
 
-  <div id="undo-bar" class="undo-bar" role="status" hidden>
-    <span id="undo-text"></span>
-    <button id="undo" class="btn secondary" type="button">Undo</button>
-  </div>
 </body>
 </html>

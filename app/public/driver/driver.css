@@ -186,20 +186,16 @@ label { display: block; font-weight: 600; margin: 12px 0 6px; }
 .photo-note { margin: 8px 0 0; color: var(--ok); font-weight: 600; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; opacity: 0; }
 
+/* The Undo bar is part of the sticky header, under the sync strip, so it can never cover the page (fo2 review #1). */
 .undo-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 30;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 8px 16px;
   background: var(--raised);
   border-top: 1px solid var(--line-strong);
 }
-/* While the Undo bar is up, scrolling to a control stops above it. */
-html.undo-open { scroll-padding-bottom: 96px; }
 .undo-bar span { flex: 1; min-width: 0; font-size: 17px; overflow-wrap: anywhere; }
 .undo-bar .btn { width: auto; min-width: 120px; margin: 0; }
