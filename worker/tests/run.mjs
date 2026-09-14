@@ -5,6 +5,7 @@
 //   --api-only        skip the unit tests
 //   --unit <files>    comma list of unit test files (default: all *.test.mjs except api)
 //   --grep <regex>    only API tests whose name matches
+//   --fresh           refuse to reuse a Worker already answering on PORT (negative controls must test their own copy)
 // Exit code is non-zero when any test fails. Local only: never --remote.
 import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readdirSync, rmSync } from 'node:fs'
@@ -50,6 +51,10 @@ if (!flag('--api-only')) {
 if (!flag('--unit-only')) {
   let dev = null
   if (await answers()) {
+    if (flag('--fresh')) {
+      console.error(`\n== api: REFUSED — something already answers on ${BASE} and --fresh was given`)
+      process.exit(1)
+    }
     console.log(`\n== api: using the Worker already answering on ${BASE}`)
   } else {
     console.log(`\n== api: fresh Worker on ${BASE} (state ${path.relative(WORKER, STATE)})`)
@@ -79,7 +84,13 @@ if (!flag('--unit-only')) {
     { API_BASE: BASE, STATE_DIR: STATE })
   if (dev) {
     try { process.kill(-dev.pid, 'SIGTERM') } catch {}
-    await new Promise((r) => setTimeout(r, 500))
+    // Wait until the port is really free, so the next run cannot talk to this Worker.
+    const t0 = Date.now()
+    while ((await answers()) && Date.now() - t0 < 20000) await new Promise((r) => setTimeout(r, 200))
+    if (await answers()) {
+      try { process.kill(-dev.pid, 'SIGKILL') } catch {}
+      await new Promise((r) => setTimeout(r, 1000))
+    }
   }
 }
 
