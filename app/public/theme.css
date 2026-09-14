@@ -1,0 +1,135 @@
+/* Firewood Orders design tokens. Lead-owned: slices read these and style their own pages in their own CSS files.
+   Look: Alexander's approved portfolio look (Shop Board calm pass, 2026-09-12): dark navy base, colour on data, pills,
+   edges and icons, never a loud backdrop. Ember orange is the one accent (wood); teal marks pellets.
+   System fonts only, so the driver page renders with no signal. Every text/background pair used for text is >= 4.5:1. */
+
+:root {
+  color-scheme: dark;
+
+  /* Ground and surfaces */
+  --ground: #0b1020;
+  --surface: #121a2c;
+  --raised: #1a2440;
+  --glass: rgba(18, 26, 44, 0.78);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text: --text 16.9:1, --muted 8.6:1, --faint 5.2:1 on --ground */
+  --text: #eef2f8;
+  --muted: #a6b0c3;
+  --faint: #7d889c;
+
+  /* Accent and primary action (ink on the gradient: 6.9:1 at #f97316, 9.6:1 at #f59e0b) */
+  --accent: #fb923c;
+  --primary-from: #f97316;
+  --primary-to: #f59e0b;
+  --on-primary: #1a0e02;
+
+  /* Data colours */
+  --wood: #fb923c;
+  --pellets: #2dd4bf;
+  --requested: #fbbf24;
+  --scheduled: #38bdf8;
+  --out: #a78bfa;
+  --delivered: #4ade80;
+  --cancelled: #94a3b8;
+  --owing: #fb7185;
+  --credit: #4ade80;
+  --danger: #fb7185;
+  --ok: #4ade80;
+  --tint: 22%; /* band/pill tint strength: color-mix(in srgb, var(--wood) var(--tint), transparent) */
+
+  /* Driver actions: solid, white text, all >= 4.5:1 (white on #15803d 5.0, #1d4ed8 6.7, #6d28d9 7.1, #b91c1c 6.5) */
+  --act-delivered: #15803d;
+  --act-cash: #1d4ed8;
+  --act-etransfer: #6d28d9;
+  --act-owes: #b91c1c;
+  --on-act: #ffffff;
+
+  /* Shape and size */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --tap: 44px;         /* every tap target, every page */
+  --tap-driver: 64px;  /* driver buttons (56 px is the floor) */
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px rgba(0, 0, 0, 0.35);
+  --aurora-opacity: 0.2;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Driver "Daylight" mode for bright sun: set data-theme="daylight" on <html>. Same token names, light values. */
+:root[data-theme="daylight"] {
+  color-scheme: light;
+  --ground: #ffffff;
+  --surface: #f3f5f8;
+  --raised: #e7ebf1;
+  --glass: rgba(243, 245, 248, 0.92);
+  --line: rgba(0, 0, 0, 0.12);
+  --line-strong: rgba(0, 0, 0, 0.24);
+  --text: #0b0f14;
+  --muted: #3f4a5a;
+  --faint: #56606e;
+  --accent: #c2410c;
+  --wood: #c2410c;
+  --pellets: #0f766e;
+  --requested: #92400e;
+  --scheduled: #075985;
+  --out: #5b21b6;
+  --delivered: #166534;
+  --cancelled: #475569;
+  --owing: #9f1239;
+  --credit: #166534;
+  --danger: #9f1239;
+  --ok: #166534;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --aurora-opacity: 0;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* The SAMPLE badge every screen shows next to the dealer name. */
+.sample-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1.5px solid var(--requested);
+  border-radius: 999px;
+  color: var(--requested);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Optional slow aurora behind customer and dealer pages (never the driver page). */
+.aurora {
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--aurora-opacity);
+  background:
+    radial-gradient(40vmax 30vmax at 20% 10%, rgba(249, 115, 22, 0.55), transparent 60%),
+    radial-gradient(35vmax 28vmax at 85% 30%, rgba(45, 212, 191, 0.40), transparent 60%),
+    radial-gradient(45vmax 30vmax at 50% 95%, rgba(99, 102, 241, 0.35), transparent 60%);
+  filter: blur(40px);
+  animation: aurora-drift 40s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift { to { transform: translate3d(3vmax, -2vmax, 0) scale(1.05); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

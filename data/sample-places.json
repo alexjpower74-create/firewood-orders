@@ -1,0 +1,1655 @@
+{
+  "about": "Community points for SAMPLE customers and the SAMPLE yard. Real place names and CGNDB coordinates; the people and the dealer are SAMPLE. No house numbers.",
+  "source": "Natural Resources Canada, Canadian Geographical Names Database (CGNDB) search API",
+  "licence": "Open Government Licence - Canada (https://open.canada.ca/en/open-government-licence-canada)",
+  "places": [
+    {
+      "name": "Springdale",
+      "lat": 49.5119027,
+      "lng": -56.0642695,
+      "concise": "TOWN",
+      "cgndb_id": "AAZCY",
+      "location": null,
+      "km_from_springdale": 0,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Springdale&province=10",
+      "fetched": "2026-09-14T08:34:45.631Z",
+      "record": {
+        "id": "AAZCY",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAZCY"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/d611993ed05311d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Springdale",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "d611993ed05311d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/d611993ed05311d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.5119027,
+        "longitude": -56.0642695,
+        "map": [
+          "012H09",
+          "C.4572",
+          "012H08",
+          "C.4000",
+          "C.4001",
+          "C.4006",
+          "C.4591",
+          "C.4821"
+        ],
+        "relevance": 7500000,
+        "bbox": [
+          -56.126843,
+          49.4771722,
+          -55.9944972,
+          49.5325405
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.0642695,
+            49.5119027
+          ]
+        },
+        "decision": "1996-05-03"
+      }
+    },
+    {
+      "name": "King's Point",
+      "lat": 49.5807861,
+      "lng": -56.208,
+      "concise": "TOWN",
+      "cgndb_id": "AALPI",
+      "location": "Baie Verte",
+      "km_from_springdale": 12.9,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=King's%20Point&province=10",
+      "fetched": "2026-09-14T08:34:47.174Z",
+      "record": {
+        "id": "AALPI",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AALPI"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/992d7a9ac6be11d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "King's Point",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "992d7a9ac6be11d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/992d7a9ac6be11d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": "Baie Verte",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.5807861,
+        "longitude": -56.208,
+        "map": [
+          "012H09"
+        ],
+        "relevance": 1000000,
+        "bbox": [
+          -56.2892187,
+          49.5265129,
+          -56.1110463,
+          49.6271381
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.208,
+            49.5807861
+          ]
+        },
+        "decision": "2001-06-22"
+      }
+    },
+    {
+      "name": "South Brook",
+      "lat": 49.4029722,
+      "lng": -56.089675,
+      "concise": "TOWN",
+      "cgndb_id": "AAVAR",
+      "location": null,
+      "km_from_springdale": 12.3,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=South%20Brook&province=10",
+      "fetched": "2026-09-14T08:34:48.631Z",
+      "record": {
+        "id": "AAVAR",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAVAR"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/709770b2d05511d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "South Brook",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "709770b2d05511d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/709770b2d05511d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.4029722,
+        "longitude": -56.089675,
+        "map": [
+          "012H08"
+        ],
+        "relevance": 1000000,
+        "bbox": [
+          -56.1450522,
+          49.3371344,
+          -56.0455481,
+          49.4776008
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.089675,
+            49.4029722
+          ]
+        },
+        "decision": "1996-05-03"
+      }
+    },
+    {
+      "name": "Robert's Arm",
+      "lat": 49.4766556,
+      "lng": -55.8347694,
+      "concise": "TOWN",
+      "cgndb_id": "AATLJ",
+      "location": null,
+      "km_from_springdale": 17,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Robert's%20Arm&province=10",
+      "fetched": "2026-09-14T08:34:50.123Z",
+      "record": {
+        "id": "AATLJ",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AATLJ"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/ea04b6d5d05311d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Robert's Arm",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "ea04b6d5d05311d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/ea04b6d5d05311d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.4766556,
+        "longitude": -55.8347694,
+        "map": [
+          "002E05"
+        ],
+        "relevance": 1000000,
+        "bbox": [
+          -55.9051409,
+          49.4502604,
+          -55.7571958,
+          49.5150002
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.8347694,
+            49.4766556
+          ]
+        },
+        "decision": "1996-04-26"
+      }
+    },
+    {
+      "name": "Pilley's Island",
+      "lat": 49.5277056,
+      "lng": -55.7158528,
+      "concise": "TOWN",
+      "cgndb_id": "AAREE",
+      "location": null,
+      "km_from_springdale": 25.2,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Pilley's%20Island&province=10",
+      "fetched": "2026-09-14T08:34:51.558Z",
+      "record": {
+        "id": "AAREE",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAREE"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/36bf9522c6cd11d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Pilley's Island",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "36bf9522c6cd11d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/36bf9522c6cd11d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.5277056,
+        "longitude": -55.7158528,
+        "map": [
+          "002E12"
+        ],
+        "relevance": 250000,
+        "bbox": [
+          -55.7641007,
+          49.481353,
+          -55.6601622,
+          49.5668833
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.7158528,
+            49.5277056
+          ]
+        },
+        "decision": "1997-01-01"
+      }
+    },
+    {
+      "name": "Little Bay",
+      "lat": 49.5992389,
+      "lng": -55.9518361,
+      "concise": "TOWN",
+      "cgndb_id": "AAMGB",
+      "location": null,
+      "km_from_springdale": 12.7,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Little%20Bay&province=10",
+      "fetched": "2026-09-14T08:34:53.050Z",
+      "record": {
+        "id": "AAMGB",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAMGB"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/34245090c6cd11d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Little Bay",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "34245090c6cd11d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/34245090c6cd11d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.5992389,
+        "longitude": -55.9518361,
+        "map": [
+          "002E12"
+        ],
+        "relevance": 250000,
+        "bbox": [
+          -55.9706419,
+          49.5816633,
+          -55.933808,
+          49.6142415
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.9518361,
+            49.5992389
+          ]
+        },
+        "decision": "1997-01-01"
+      }
+    },
+    {
+      "name": "Beachside",
+      "lat": 49.6428889,
+      "lng": -55.8991139,
+      "concise": "TOWN",
+      "cgndb_id": "ABEXU",
+      "location": "Green Bay",
+      "km_from_springdale": 18.8,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Beachside&province=10",
+      "fetched": "2026-09-14T08:34:54.640Z",
+      "record": {
+        "id": "ABEXU",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/ABEXU"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/39843d8dc6ce11d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Beachside",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "39843d8dc6ce11d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/39843d8dc6ce11d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": "Green Bay",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.6428889,
+        "longitude": -55.8991139,
+        "map": [
+          "002E12"
+        ],
+        "relevance": 250000,
+        "bbox": [
+          -55.9235663,
+          49.6245455,
+          -55.8618756,
+          49.6643162
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.8991139,
+            49.6428889
+          ]
+        },
+        "decision": "1997-01-01"
+      }
+    },
+    {
+      "name": "St. Patrick's",
+      "lat": 49.566667,
+      "lng": -55.9825,
+      "concise": "UNP",
+      "cgndb_id": "ABRBA",
+      "location": null,
+      "km_from_springdale": 8.5,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=St.%20Patrick's&province=10",
+      "fetched": "2026-09-14T08:34:56.100Z",
+      "record": {
+        "id": "ABRBA",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/ABRBA"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/05e7e824b57a4eb0b010ce5825fd4fdb"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/previouslyOfficial"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/104"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "St. Patrick's",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "05e7e824b57a4eb0b010ce5825fd4fdb",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/05e7e824b57a4eb0b010ce5825fd4fdb"
+            }
+          }
+        },
+        "category": "H",
+        "status": {
+          "code": "previouslyOfficial",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/previouslyOfficial"
+            }
+          }
+        },
+        "concise": {
+          "code": "UNP",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+            }
+          }
+        },
+        "generic": {
+          "code": "104",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/104"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.566667,
+        "longitude": -55.9825,
+        "map": [
+          "002E12",
+          "012H09"
+        ],
+        "relevance": 50000,
+        "bbox": [
+          -56.0025,
+          49.546667,
+          -55.9625,
+          49.586667
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.9825,
+            49.566667
+          ]
+        },
+        "decision": "1954-03-04"
+      }
+    },
+    {
+      "name": "Harry's Harbour",
+      "lat": 49.7002778,
+      "lng": -55.9238889,
+      "concise": "UNP",
+      "cgndb_id": "AAJQF",
+      "location": "Green Bay",
+      "km_from_springdale": 23.3,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Harry's%20Harbour&province=10",
+      "fetched": "2026-09-14T08:34:57.581Z",
+      "record": {
+        "id": "AAJQF",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAJQF"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/d9bcc73fd05311d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/402"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Harry's Harbour",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "d9bcc73fd05311d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/d9bcc73fd05311d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "UNP",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+            }
+          }
+        },
+        "generic": {
+          "code": "402",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/402"
+            }
+          }
+        },
+        "location": "Green Bay",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.7002778,
+        "longitude": -55.9238889,
+        "map": [
+          "002E12"
+        ],
+        "relevance": 250000,
+        "bbox": [
+          -55.9438889,
+          49.6802778,
+          -55.9038889,
+          49.7202778
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.9238889,
+            49.7002778
+          ]
+        },
+        "decision": "1996-04-12"
+      }
+    },
+    {
+      "name": "Middle Arm",
+      "lat": 49.7030277,
+      "lng": -56.1148445,
+      "concise": "TOWN",
+      "cgndb_id": "AASOE",
+      "location": "Baie Verte",
+      "km_from_springdale": 21.6,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Middle%20Arm&province=10",
+      "fetched": "2026-09-14T08:34:59.077Z",
+      "record": {
+        "id": "AASOE",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AASOE"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/7beea146c5f711d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Middle Arm",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "7beea146c5f711d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/7beea146c5f711d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": "Baie Verte",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.7030277,
+        "longitude": -56.1148445,
+        "map": [
+          "012H09"
+        ],
+        "relevance": 1200000,
+        "bbox": [
+          -56.1712458,
+          49.674183,
+          -56.0399924,
+          49.7371631
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.1148445,
+            49.7030277
+          ]
+        },
+        "decision": "1998-07-17"
+      }
+    },
+    {
+      "name": "Jackson's Cove",
+      "lat": 49.6852778,
+      "lng": -55.9936111,
+      "concise": "UNP",
+      "cgndb_id": "AAKWY",
+      "location": "Green Bay",
+      "km_from_springdale": 19.9,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Jackson's%20Cove&province=10",
+      "fetched": "2026-09-14T08:35:00.591Z",
+      "record": {
+        "id": "AAKWY",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAKWY"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/336c4b1ec6cd11d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/201"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Jackson's Cove",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "336c4b1ec6cd11d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/336c4b1ec6cd11d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "UNP",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+            }
+          }
+        },
+        "generic": {
+          "code": "201",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/201"
+            }
+          }
+        },
+        "location": "Green Bay",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.6852778,
+        "longitude": -55.9936111,
+        "map": [
+          "002E12",
+          "012H09"
+        ],
+        "relevance": 1200000,
+        "bbox": [
+          -56.0136111,
+          49.6652778,
+          -55.9736111,
+          49.7052778
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.9936111,
+            49.6852778
+          ]
+        },
+        "decision": "1982-06-24"
+      }
+    },
+    {
+      "name": "Sheppardville",
+      "lat": 49.4508334,
+      "lng": -56.4316666,
+      "concise": "UNP",
+      "cgndb_id": "AAYNV",
+      "location": "Green Bay",
+      "km_from_springdale": 27.4,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Sheppardville&province=10",
+      "fetched": "2026-09-14T08:35:02.078Z",
+      "record": {
+        "id": "AAYNV",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/AAYNV"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/d5d97239d05311d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/402"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Sheppardville",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "d5d97239d05311d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/d5d97239d05311d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "UNP",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/UNP"
+            }
+          }
+        },
+        "generic": {
+          "code": "402",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/402"
+            }
+          }
+        },
+        "location": "Green Bay",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.4508334,
+        "longitude": -56.4316666,
+        "map": [
+          "012H08"
+        ],
+        "relevance": 145000,
+        "bbox": [
+          -56.4516666,
+          49.4308334,
+          -56.4116666,
+          49.4708334
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.4316666,
+            49.4508334
+          ]
+        },
+        "decision": "1996-05-03"
+      }
+    },
+    {
+      "name": "Triton",
+      "lat": 49.518325,
+      "lng": -55.619875,
+      "concise": "TOWN",
+      "cgndb_id": "ABJYL",
+      "location": "Green Bay",
+      "km_from_springdale": 32.1,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Triton&province=10",
+      "fetched": "2026-09-14T08:35:03.537Z",
+      "record": {
+        "id": "ABJYL",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/ABJYL"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/6e153269d05511d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Triton",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "6e153269d05511d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/6e153269d05511d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": "Green Bay",
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.518325,
+        "longitude": -55.619875,
+        "map": [
+          "002E12"
+        ],
+        "relevance": 85000,
+        "bbox": [
+          -55.6632891,
+          49.4920748,
+          -55.574817,
+          49.5508962
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -55.619875,
+            49.518325
+          ]
+        },
+        "decision": "1996-05-03"
+      }
+    },
+    {
+      "name": "Baie Verte",
+      "lat": 49.9087083,
+      "lng": -56.1946584,
+      "concise": "TOWN",
+      "cgndb_id": "ABAUI",
+      "location": null,
+      "km_from_springdale": 45.1,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Baie%20Verte&province=10",
+      "fetched": "2026-09-14T08:35:05.020Z",
+      "record": {
+        "id": "ABAUI",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/ABAUI"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/d6c1614cd05311d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Baie Verte",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "d6c1614cd05311d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/d6c1614cd05311d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 49.9087083,
+        "longitude": -56.1946584,
+        "map": [
+          "012H16",
+          "C.4000",
+          "C.4001",
+          "C.4006",
+          "C.4821"
+        ],
+        "relevance": 7500000,
+        "bbox": [
+          -56.3921693,
+          49.6929694,
+          -55.9844051,
+          50.0997094
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.1946584,
+            49.9087083
+          ]
+        },
+        "decision": "1996-03-29"
+      }
+    },
+    {
+      "name": "Buchans",
+      "lat": 48.8238,
+      "lng": -56.8490694,
+      "concise": "TOWN",
+      "cgndb_id": "ACGAI",
+      "location": null,
+      "km_from_springdale": 95.4,
+      "source_url": "https://geogratis.gc.ca/services/geoname/en/geonames.json?q=Buchans&province=10",
+      "fetched": "2026-09-14T08:35:06.863Z",
+      "record": {
+        "id": "ACGAI",
+        "links": {
+          "self": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/geonames/ACGAI"
+          },
+          "feature": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/features/76cec70ed05511d892e2080020a0f4c9"
+          },
+          "language": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+          },
+          "status": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+          },
+          "concise": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+          },
+          "generic": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+          },
+          "province": {
+            "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+          }
+        },
+        "name": "Buchans",
+        "language": {
+          "code": "und",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/language/und"
+            }
+          }
+        },
+        "feature": {
+          "id": "76cec70ed05511d892e2080020a0f4c9",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/features/76cec70ed05511d892e2080020a0f4c9"
+            }
+          }
+        },
+        "category": "O",
+        "status": {
+          "code": "official",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/status/official"
+            }
+          }
+        },
+        "concise": {
+          "code": "TOWN",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/concise/TOWN"
+            }
+          }
+        },
+        "generic": {
+          "code": "2",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/generic/2"
+            }
+          }
+        },
+        "location": null,
+        "province": {
+          "code": "10",
+          "links": {
+            "self": {
+              "href": "https://geogratis.gc.ca/services/geoname/en/codes/province/10"
+            }
+          }
+        },
+        "latitude": 48.8238,
+        "longitude": -56.8490694,
+        "map": [
+          "012A15"
+        ],
+        "relevance": 7500000,
+        "bbox": [
+          -56.869034,
+          48.8030539,
+          -56.8244434,
+          48.8408966
+        ],
+        "accuracy": 100,
+        "position": {
+          "type": "Point",
+          "coordinates": [
+            -56.8490694,
+            48.8238
+          ]
+        },
+        "decision": "1996-03-29"
+      }
+    }
+  ]
+}

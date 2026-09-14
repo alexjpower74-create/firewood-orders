@@ -1,0 +1,13 @@
+{
+  "name": "firewood-orders",
+  "private": true,
+  "type": "module",
+  "description": "Order book and delivery route for a small Newfoundland firewood and wood-pellet dealer. Local build; see README.md.",
+  "scripts": {
+    "demo": "node demo.mjs",
+    "test:worker": "cd worker && npm test",
+    "test:negative": "cd worker && npm run negative",
+    "test:e2e": "cd app && npx playwright test",
+    "places": "node tools/fetch-sample-places.mjs"
+  }
+}
