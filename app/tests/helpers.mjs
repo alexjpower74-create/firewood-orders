@@ -112,8 +112,15 @@ export const isCoarse = (page) => page.evaluate(() => matchMedia('(pointer: coar
 /** Tap into a field and type with the real keyboard. clear: select what is there first so typing replaces it. */
 export async function type(page, locator, text, { clear = false } = {}) {
   await tap(page, locator)
+  await expect(locator).toBeFocused()
+  const before = clear ? '' : await locator.inputValue()
   if (clear) { await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.press('Backspace') }
-  await page.keyboard.type(String(text))
+  // Touch projects send text the way a phone's on-screen keyboard does (insertText). Chromium's emulated touch silently
+  // dropped key presses typed straight after a touch tap (keydown, no input event; fo2 M2 bisected it, a 1 s wait did not
+  // help). Mouse projects use real key presses. Either way the field must then hold exactly what was typed.
+  if (await isCoarse(page)) await page.keyboard.insertText(String(text))
+  else await page.keyboard.type(String(text))
+  await expect(locator, `type(): the field should hold what was typed`).toHaveValue(before + String(text))
 }
 
 /** Tap a Leaflet map at a fraction of its box (0..1), after checking the point hits the map and not a control on top. */
