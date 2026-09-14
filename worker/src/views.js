@@ -14,7 +14,9 @@ export const MAP = {
 export async function loadSettings(db) {
   const row = await db.prepare('SELECT data, load_cu_in, cap_cu_in, cap_bags FROM settings WHERE id = 1').first()
   if (!row) throw new ApiError(500, 'server_error', 'The dealer settings are missing.')
-  return { ...JSON.parse(row.data), load_cu_in: row.load_cu_in, cap_cu_in: row.cap_cu_in, cap_bags: row.cap_bags }
+  const data = JSON.parse(row.data)
+  // `sample` arrived in M2; a database seeded before it is the SAMPLE dealer.
+  return { ...data, sample: data.sample !== false, load_cu_in: row.load_cu_in, cap_cu_in: row.cap_cu_in, cap_bags: row.cap_bags }
 }
 
 export function productFromRow(r) {
@@ -120,7 +122,7 @@ export function orderSummary(o, payments) {
 export function customerOrderView(o, payments, settings) {
   const owing = owingCents(o, payments)
   return {
-    dealer: { name: settings.name, short_name: settings.short_name, sample: true, phone: settings.phone },
+    dealer: { name: settings.name, short_name: settings.short_name, sample: settings.sample, phone: settings.phone },
     deposit_text: settings.deposit_text,
     order: {
       status: o.status, status_label: statusLabel(o), product_label: o.product_label, qty_label: qtyLabelOf(o),

@@ -71,6 +71,16 @@ export function dateTimeLabel(instant) {
   return `${shortLabel(nlDate(instant))}, ${timeLabel(instant)}`
 }
 
+// The NL-local month of an instant: '2026-10-01T02:00:00Z' (Sep 30, 11:30 PM NDT) → '2026-09'.
+export function nlMonth(instant) {
+  return nlDate(instant).slice(0, 7)
+}
+
+export function nextMonth(month) {
+  const [y, m] = month.split('-').map(Number)
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`
+}
+
 // "September 2026"
 export function monthLabel(month) {
   const [y, m] = month.split('-').map(Number)

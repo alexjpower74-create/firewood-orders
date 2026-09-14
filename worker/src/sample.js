@@ -8,6 +8,7 @@ const springdale = SAMPLE_PLACES.find((p) => p.name === 'Springdale')
 export const SAMPLE_SETTINGS = {
   name: 'SAMPLE Wood & Pellets — Springdale (demo)',
   short_name: 'SAMPLE Wood & Pellets',
+  sample: true,
   phone: '709-555-0100',
   deposit_text: 'This page takes no payments. To pay a deposit, send an Interac e-Transfer to sample-wood@example.com with ' +
     'your name in the message. You can also pay cash or e-Transfer when we deliver.',

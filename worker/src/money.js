@@ -94,9 +94,12 @@ export function plainMoney(cents) {
 
 // --- Balances. A payment counts unless voided; a cancelled order charges nothing. ---
 
+// A payment counts toward every sum unless it was voided.
+export const counts = (p) => !p.voided
+
 export function paidCents(orderId, payments) {
   let sum = 0
-  for (const p of payments) if (p.order_id === orderId && !p.voided) sum += p.amount_cents
+  for (const p of payments) if (p.order_id === orderId && counts(p)) sum += p.amount_cents
   return sum
 }
 
@@ -109,7 +112,7 @@ export function customerBalance(orders, payments) {
   let charged = 0
   for (const o of orders) if (o.status !== 'cancelled') charged += o.total_cents
   let paid = 0
-  for (const p of payments) if (!p.voided) paid += p.amount_cents
+  for (const p of payments) if (counts(p)) paid += p.amount_cents
   return charged - paid
 }
 

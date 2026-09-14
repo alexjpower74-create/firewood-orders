@@ -14,6 +14,11 @@
     "negative:stock": "node tests/negative-stock.mjs",
     "negative:idempotent": "node tests/negative-idempotent.mjs",
     "negative:time": "node tests/negative-time.mjs",
-    "negative:twoopt": "node tests/negative-twoopt.mjs"
+    "negative:twoopt": "node tests/negative-twoopt.mjs",
+    "negative:month": "node tests/negative-month.mjs",
+    "negative:csvguard": "node tests/negative-csvguard.mjs",
+    "negative:void": "node tests/negative-void.mjs",
+    "negative:undo": "node tests/negative-undo.mjs",
+    "negative:hst": "node tests/negative-hst.mjs"
   }
 }

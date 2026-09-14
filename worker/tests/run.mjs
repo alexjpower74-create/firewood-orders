@@ -42,7 +42,7 @@ let failed = 0
 if (!flag('--api-only')) {
   const unit = opt('--unit')
     ? opt('--unit').split(',').map((f) => path.join('tests', f))
-    : readdirSync(path.join(WORKER, 'tests')).filter((f) => f.endsWith('.test.mjs') && f !== 'api.test.mjs')
+    : readdirSync(path.join(WORKER, 'tests')).filter((f) => f.endsWith('.test.mjs') && !f.startsWith('api'))
       .map((f) => path.join('tests', f))
   console.log(`\n== unit: ${unit.join(' ')}`)
   failed |= runNodeTests(unit)
@@ -80,7 +80,7 @@ if (!flag('--unit-only')) {
     }
   }
   const grep = opt('--grep')
-  failed |= runNodeTests(['tests/api.test.mjs'], grep ? [`--test-name-pattern=${grep}`] : [],
+  failed |= runNodeTests(['tests/api.test.mjs', 'tests/api-m2.test.mjs'], grep ? [`--test-name-pattern=${grep}`] : [],
     { API_BASE: BASE, STATE_DIR: STATE })
   if (dev) {
     try { process.kill(-dev.pid, 'SIGTERM') } catch {}

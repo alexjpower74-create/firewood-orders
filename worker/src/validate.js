@@ -5,6 +5,7 @@ import { unitName, unitsFor } from './units.js'
 export const MAX_PAYMENT_CENTS = 10000000
 
 const str = (v) => (typeof v === 'string' ? v.trim() : null)
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 
 export function phoneDigits(phone) {
   return phone.replace(/\D/g, '')
@@ -15,10 +16,9 @@ export function validPhone(phone) {
     /^[0-9 +\-().]+$/.test(phone.trim()) && phoneDigits(phone).length >= 7
 }
 
-// `full` = an order (name, phone, address…); otherwise a quote. `dealer` allows a delivery_cents override.
-// `deliveryDates` = the dates a customer may prefer.
-export function parseOrderInput(body, { products, settings, deliveryDates, full, dealer }) {
-  const b = body && typeof body === 'object' && !Array.isArray(body) ? body : {}
+// What is ordered and where: product, unit, qty, stacking, pin, zone, and (dealer only) a delivery fee override.
+export function parseProductInput(body, { products, settings, dealer }) {
+  const b = isObj(body) ? body : {}
   const product = products.find((p) => p.id === b.product_id && p.active)
   if (!product) throw bad('product_id', 'Pick what you would like.')
   if (!unitsFor(product.kind).includes(b.unit)) throw bad('unit', 'Pick how much you would like.')
@@ -37,11 +37,6 @@ export function parseOrderInput(body, { products, settings, deliveryDates, full,
   if (!okNum(b.lat) || !okNum(b.lng) || b.lat < 46.5 || b.lat > 60.5 || b.lng < -67.9 || b.lng > -52.5) {
     throw bad('pin', 'Tap the map where the truck should dump it.')
   }
-  let zoneId = null
-  if (settings.delivery.mode === 'zones') {
-    if (!settings.delivery.zones.some((z) => z.id === b.zone_id)) throw bad('zone_id', 'Pick your area.')
-    zoneId = b.zone_id
-  }
   let deliveryOverride = null
   if (dealer && b.delivery_cents !== undefined && b.delivery_cents !== null) {
     if (!Number.isInteger(b.delivery_cents) || b.delivery_cents < 0 || b.delivery_cents > 100000) {
@@ -49,15 +44,26 @@ export function parseOrderInput(body, { products, settings, deliveryDates, full,
     }
     deliveryOverride = b.delivery_cents
   }
-  const input = { product, unit: b.unit, qty: b.qty, stacking, lat: b.lat, lng: b.lng, zone_id: zoneId,
+  let zoneId = null
+  if (settings.delivery.mode === 'zones') {
+    const known = settings.delivery.zones.some((z) => z.id === b.zone_id)
+    // With a dealer fee the zone is only a note; without one it sets the fee and is required.
+    if (!known && deliveryOverride === null) throw bad('zone_id', 'Pick your area.')
+    zoneId = known ? b.zone_id : null
+  }
+  return { product, unit: b.unit, qty: b.qty, stacking, lat: b.lat, lng: b.lng, zone_id: zoneId,
     delivery_override: deliveryOverride }
-  if (!full) return input
+}
 
+// Who and when: address, dump notes, preferred days, name, phone, note.
+// `deliveryDates` = the dates a customer may prefer.
+export function parseContactInput(body, { deliveryDates }) {
+  const b = isObj(body) ? body : {}
   const address = str(b.address)
   if (!address || address.length > 120) throw bad('address', 'Tell us where to find you, in up to 120 characters.')
   const dumpNotes = b.dump_notes === undefined || b.dump_notes === null ? '' : str(b.dump_notes)
   if (dumpNotes === null || dumpNotes.length > 200) throw bad('dump_notes', 'Keep the dump spot notes to 200 characters.')
-  const pref = b.preferred && typeof b.preferred === 'object' ? b.preferred : null
+  const pref = isObj(b.preferred) ? b.preferred : null
   const allowed = new Set(deliveryDates.map((d) => d.date))
   let preferredAny = false
   let preferred = []
@@ -75,6 +81,12 @@ export function parseOrderInput(body, { products, settings, deliveryDates, full,
   if (!validPhone(b.phone)) throw bad('phone', 'Enter a phone number we can call, with at least 7 digits.')
   const note = b.note === undefined || b.note === null ? '' : str(b.note)
   if (note === null || note.length > 280) throw bad('note', 'Keep the note to 280 characters.')
-  return { ...input, address, dump_notes: dumpNotes, preferred_any: preferredAny, preferred_dates: preferred, name,
+  return { address, dump_notes: dumpNotes, preferred_any: preferredAny, preferred_dates: preferred, name,
     phone: b.phone.trim(), note }
+}
+
+// `full` = an order (name, phone, address…); otherwise a quote. `dealer` allows a delivery_cents override.
+export function parseOrderInput(body, opts) {
+  const input = parseProductInput(body, opts)
+  return opts.full ? { ...input, ...parseContactInput(body, opts) } : input
 }

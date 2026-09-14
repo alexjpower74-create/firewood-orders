@@ -133,3 +133,146 @@ Mistakes in my own tests, found by the first API run and fixed in the tests, not
 3. On a dealer phone order with a `delivery_cents` override, the band lookup is skipped, so a pin past the last band is accepted with
    the dealer's fee. A public order past the last band is still refused with `outside_area`.
 4. Payment refusals for an unknown `customer_id` or `order_id` answer `400` with `field`, not `404`, so the form can place the message.
+
+All four were accepted by the lead and written into docs/API.md on main at aae0e30. **DONE**
+
+## M2: Worker, the rest (2026-09-14)
+
+### What I built: DONE
+
+Every remaining route in docs/API.md, on top of `git merge --ff-only main` at aae0e30. New modules:
+- `admin.js`: settings, products, stock counts, PINs.
+- `reports.js`: totals and CSV.
+- `csv.js`, `guards.js` (rate guards), `seed.js`, `png.js` and `http.js`.
+
+`validate.js` is split into product input and contact input, so a dealer edit reuses the same checks.
+
+- **Order changes.**
+  - `POST /api/o/:token/cancel` works only from `requested`.
+  - Dealer `cancel` works from `requested` or `scheduled`. It clears the day, and the day's route compacts.
+  - `PUT /api/dealer/orders/:id` merges the changes onto the order and checks the result.
+    - Money is recomputed, with today's prices, **only** when `qty`, `unit`, `stacking`, `delivery_cents`, `lat`/`lng` or `zone_id`
+      actually change.
+    - A moved pin recomputes the band or zone fee, unless `delivery_cents` is sent.
+    - On a delivered order those fields refuse with 409 `bad_state`; words (address, notes, note, name, phone, preferred) still save.
+    - A new phone moves the order and its payments to the customer with that phone, and the newest name wins.
+- **Capacity on edit** is one guarded `UPDATE`, like scheduling. It allows the edit when the order doesn't grow, or when the day still
+  fits. A day over a lowered truck limit can therefore always be fixed by shrinking. Otherwise 409 `over_capacity` with the same body
+  as scheduling.
+- **Undo.** `undeliver` (dealer, any time) and `DELETE /api/driver/checkins/:op_id` (driver, up to 15 minutes after `received_at`)
+  share one `DB.batch()`:
+  1. The check-in gets `undone_at`.
+  2. Stock goes back up.
+  3. An `undo` stock move is written.
+  4. The door payment is voided.
+  5. The order returns to `out_for_delivery` if its day was started, otherwise to `scheduled`.
+
+  Every statement applies only while the order is still delivered by that check-in, so a second undo changes nothing. After 15
+  minutes the driver gets 409 `too_late`; an already-undone check-in gets 409 `bad_state`.
+- **Payments.** `DELETE /api/dealer/payments/:id` voids the payment and keeps it; a second call is harmless. Whether a payment counts is
+  decided in one place, `money.counts`. Order paid and owing, customer balance, ledger, customers list, board, totals and the CSV all
+  go through it.
+- **Totals.** The season runs from `<year>-season_start` to the day before the next season. There is one row per month from the season
+  start to the month containing today (or the season end), including months with nothing in them. Deliveries count in the NL-local
+  month of `delivered_at` (`time.nlMonth`), payments in the month of their `date`. `owing_cents` is the sum of positive owing on the
+  season's delivered orders.
+- **CSV.** Headers exact, CRLF after every row, quoting with doubled `"`. The formula guard puts a `'` in front of text starting with
+  `= + - @` tab or CR. Filenames per API.md.
+- **Settings.** `GET` returns `{ settings, products }` with stock, and no PIN hash or salt. `PUT` merges the groups sent onto the saved
+  settings, validates the whole result, recomputes `load_cu_in`, `cap_cu_in` and `cap_bags`, and returns the same shape as `GET`.
+  `sample` (boolean) is honoured by `GET /api/info`, the status page and the driver day.
+- **Products.** `POST` and `PUT` validate per field; prices use `price_cents.<unit>` fields. Kind is fixed after creation. `cap_bags`
+  is recomputed after every product change, because it depends on the first active pellet product.
+- **Stock.** `POST /api/dealer/products/:id/stock` takes `set` or `add`, in `cords` for firewood or `bags` for pellets, and writes an
+  `adjust` stock move.
+- **PIN.** `PUT /api/dealer/pin` checks `current_dealer_pin`; a wrong one counts toward the sign-in guard. A new PIN must differ from the
+  other role's PIN. Sessions of the changed role end, except the dealer making the change.
+- **Rate guards.** 5 wrong PINs in 15 minutes per IP → 429, then even the right PIN, until the oldest wrong try is 15 minutes old.
+  10 accepted public orders an hour per IP → 429. Refused requests and dealer phone orders don't count.
+- **Season closed and zones:** end to end, per API.md.
+- **`POST /api/test/seed { scenario: "demo" }`** resets first, then writes:
+  - 12 SAMPLE customers at the SAMPLE places with small fixed offsets.
+  - 20 orders from 10 days back to 7 days ahead, in every status.
+  - The day after tomorrow at exactly 4.00 of 4.50 cords.
+  - Paid, part-paid, owing and one credit.
+  - Two delivered orders with a generated 240 × 120 PNG that says SAMPLE: a stored-block PNG, no dependencies.
+  - Check-ins, stock moves and stock that agree with the deliveries.
+
+  It answers `{ seeded, scenario, today, customers, orders, busy_day, status_url }`, where `status_url` is a scheduled order. `demo.mjs`
+  reads `today` and `status_url`.
+
+### What I verified, and how it could have failed
+
+`npm test`: **unit 32 / 0 failed / 0 skipped, API 70 / 0 / 0** (M1 42 + M2 28). The API suites are now two files with shared helpers
+(`api-helpers.mjs`). Every request sends its own `X-Test-IP` unless a test sets one, so the rate guards only apply where a test means
+them to. **Stock is now read through `GET /api/dealer/settings`**, as planned. `stock_moves` has no route, so the tests still read that
+one table read-only through `node:sqlite`.
+
+M2 tests, each against hand-written numbers:
+- **Edit** recomputes money: 2 cords stacked 828.00 → King's Point 856.75 → $10 fee 839.50. Refused edits save nothing; a delivered
+  order refuses a quantity change but takes a note; a phone change moves the order and its payment (old customer balance 0).
+- **Edit capacity:** a half cord → cord is refused with the exact 409; half → face cord fits. With the truck lowered to 3 cords,
+  growing is refused and shrinking is accepted.
+- **Undo:** stock is back to the cubic inch, the door payment is voided, owing is back to 166.75, and the stock moves read
+  `[-73728, +73728, -73728, +73728]`. Undeliver of pellets on an unstarted day returns to `scheduled`. A second undo moves nothing.
+- **Driver undo window:** exactly 15 minutes → 200; 16 → 409 `too_late`, counted from `received_at`, not the tap.
+- **Voided payments leave every sum:** order, customer, status page, ledger, customers list, board owing, totals and the payments CSV.
+- **Messages:** the balance reminder text is exact.
+- **Settings:** round trip with `sample: false` reaching info, the status page and the driver day; truck caps; `cap_bags` following
+  `bags_per_skid`.
+- **Settings validation:** 9 group tests covering 34 cases, each checked for `field` and that nothing was saved.
+- **Zones:** Buchans is accepted with the zone fee, 385.25.
+- **Season closed:** public 403 with the dealer's message, quote 200, phone order 201 past the bands with the dealer's fee.
+- **Products:** add, edit, not-sold units, deactivate, and refusals per field.
+- **Stock counts:** set and add with the moves.
+- **PIN change:** wrong current PIN 401; old driver sessions end.
+- **Sign-in guard:** 5 wrong → 429, still 429 at 14 minutes, 200 at 16, another IP fine.
+- **Order guard:** the 11th order → 429; an invalid request doesn't count; phone orders and another IP fine; 61 minutes later fine.
+- **Totals:** Sep / Oct (zero) / Nov rows written out by hand. The Oct 1 02:00 UTC delivery counts in September; HST 20.53 on 136.86;
+  totals equal the row sums; owing 287.39; the 2025 season has 12 empty months.
+- **CSV:** both files byte for byte, including `"Smith, ""Junior"" (SAMPLE)"`, `'=SUM(A1) (SAMPLE)`, a quoted two-line address and
+  `'+ extra`.
+- **Seed:** counts per bucket, every status, Wed Sep 16 at 4.00 of 4.50, both photos are PNGs, stock equals the deliveries, September
+  totals non-empty.
+- **Unit tests:** CSV cells, guard and CRLF; the PNG checked with zlib for signature, CRCs, dimensions, inflate and ink pixels; NL months.
+
+Mistake in my own test, found by the first run: the totals test used the 14-day driver token from Sep 14 on Oct 1 and got 401. The
+driver now signs in again on Sep 30.
+
+### Negative controls (M2, and M1 re-run)
+
+`npm run negative` now runs all 11 controls, re-running M1's six against the M2 code. **All 11 went red; `negative-all` exit 0.**
+- Every API control logged `== api: fresh Worker on … 7705`: ten of them. twoopt is unit-only.
+- None was refused by `--fresh`, and every break applied exactly once, so the M1 anchors survived the M2 edits.
+- The log is `worker/tests/negative-control.log`. Port 7705 was free afterwards.
+
+| control | the break in the copy | what went red (from the log) |
+|---|---|---|
+| (g) `negative:month` | `nlMonth` returns the UTC month (`toISOString().slice(0, 7)`) | the September row had `delivered: 1, goods 30000, delivery 2500, hst 4875`, not `2, 41186, 5000, 6928`: the Sep 30, 11:30 PM delivery moved into October |
+| (h) `negative:csvguard` | the `'` prefix line removed from `csvCell` | unit `formula guard`: got `=SUM(A1)`, expected `'=SUM(A1)`. The CSV export test also went red. |
+| (i) `negative:void` | `money.counts` returns true for every payment | the order showed paid 345.00 / owing 0.00 and the customer −20.00, not 245.00 / 100.00 / 100.00 |
+| (j) `negative:undo` | `undoDelivery`'s `UPDATE products` statement removed (the undo move is still written) | stock after the driver's undo was 8 773 632 cu in, not 8 847 360 |
+| (k) `negative:hst` | `hstCents` = `Math.floor(subtotal × 15 / 100)` | unit HST: 33 310 → 4 996, not 4 997. Totals: September HST 6 927, not 6 928; the 20.529 on 136.86 floored to 20.52. |
+
+M1 controls on the M2 code went red exactly as recorded for M1: (a) capacity, (b) race, (c) stock, (d) idempotent, (e) time,
+(f) twoopt.
+
+### Choices you may want to know about (fo2 and the lead)
+
+- Settings validation `field` names use dots for groups: `delivery.mode`, `delivery.bands`, `delivery.zones`,
+  `delivery.beyond_message`, `load.cords`, `load.description`, `truck.name`, `truck.wood_cords_per_day`,
+  `truck.pellet_skids_per_day`. The top-level ones are plain (`name`, `yard`, `delivery_weekdays`, `window_days`, …). Product prices
+  use `price_cents.cord`, etc.
+- `PUT /api/dealer/settings` and `PUT /api/dealer/products/:id` accept partial bodies: fields not sent are kept.
+- The CSV formula guard applies to text cells only. Money cells are written as numbers, so a credit is `-20.00`, not `'-20.00`.
+- `owing_cents` in totals covers the season's delivered orders.
+- `PUT /api/dealer/pin` answers a wrong `current_dealer_pin` with 401 and `field: "current_dealer_pin"`, as API.md says. The dealer page
+  should not treat that particular 401 as "signed out".
+- `migrations/0002_sample.sql` was regenerated to add `sample: true`. A database migrated before that is still read as the SAMPLE
+  dealer, because `loadSettings` treats a missing `sample` as `true`.
+- Not tested here: that `/api/test/*` answer 404 without `TEST_MODE`. That needs a second Worker started without the var. The code path
+  is one `if` in the router.
+
+### Left undone
+
+M3 (the driver page) is not started, as asked.

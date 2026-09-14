@@ -1,7 +1,9 @@
 // NL dates and labels (America/St_Johns: NDT = UTC−2:30 in September, NST = UTC−3:30 in winter).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { addDays, dateTimeLabel, isoWeekday, isValidDate, longLabel, nlDate, shortLabel, timeLabel } from '../src/time.js'
+import {
+  addDays, dateTimeLabel, isoWeekday, isValidDate, longLabel, monthLabel, nextMonth, nlDate, nlMonth, shortLabel, timeLabel,
+} from '../src/time.js'
 
 test('labels', () => {
   assert.equal(shortLabel('2026-09-15'), 'Tue Sep 15')
@@ -26,4 +28,13 @@ test('NL local time, not UTC', () => {
   assert.equal(timeLabel('2026-09-15T14:30:00.000Z'), '12:00 PM')
   // winter: NST is UTC−3:30
   assert.equal(timeLabel('2026-12-15T17:00:00.000Z'), '1:30 PM')
+})
+
+test('months: the NL month of an instant, the next month, the label', () => {
+  assert.equal(nlMonth('2026-10-01T02:00:00.000Z'), '2026-09') // Sep 30, 11:30 PM NDT
+  assert.equal(nlMonth('2026-10-01T03:00:00.000Z'), '2026-10') // Oct 1, 12:30 AM NDT
+  assert.equal(nlMonth('2027-01-01T03:00:00.000Z'), '2026-12') // Dec 31, 11:30 PM NST
+  assert.equal(nextMonth('2026-09'), '2026-10')
+  assert.equal(nextMonth('2026-12'), '2027-01')
+  assert.equal(monthLabel('2026-09'), 'September 2026')
 })

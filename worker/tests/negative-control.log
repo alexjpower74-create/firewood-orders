@@ -1,17 +1,17 @@
 
-=== negative:capacity — 2026-09-14T09:05:25.594Z
+=== negative:capacity — 2026-09-14T09:38:24.513Z
 break: the guard's SUM of the day's current use is replaced by 0 (wood and pellets), so only the order itself is compared to the cap
 patched: src/index.js, src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^capacity (PORT 7705)
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
-# tests 2
-# pass 0
+# tests 3
+# pass 1
 # fail 2
-not ok 1 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused
+not ok 2 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused
   ---
-  duration_ms: 221.122613
+  duration_ms: 191.470608
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:322:1'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:234:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -24,16 +24,16 @@ not ok 1 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half 
   actual: 200
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:328:10)
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:240:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
   ...
-not ok 2 - capacity for pellets: 3 skids planned, then 1 bag is refused
+not ok 3 - capacity for pellets: 3 skids planned, then 1 bag is refused
   ---
-  duration_ms: 135.373028
+  duration_ms: 104.893662
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:350:1'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:262:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -46,26 +46,26 @@ not ok 2 - capacity for pellets: 3 skids planned, then 1 bag is refused
   actual: 200
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:356:10)
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:268:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
   ...
 RESULT: RED as intended (exit 1); red tests: capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused | capacity for pellets: 3 skids planned, then 1 bag is refused
 
-=== negative:race — 2026-09-14T09:05:29.305Z
+=== negative:race — 2026-09-14T09:38:27.820Z
 break: the one-statement check-and-write is split into SELECT use → await scheduler.wait(25) → UPDATE
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^the race (PORT 7705)
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
-# tests 1
-# pass 0
+# tests 2
+# pass 1
 # fail 1
-not ok 1 - the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
+not ok 2 - the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
   ---
-  duration_ms: 299.383417
+  duration_ms: 293.62084
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/race/worker/tests/api.test.mjs:393:1'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/race/worker/tests/api.test.mjs:305:1'
   failureType: 'testCodeFailure'
   error: |-
     [200,200,200,200,200,200,200,200]
@@ -85,25 +85,25 @@ not ok 1 - the race: 8 concurrent schedule calls into an empty day → exactly 4
     -   409,
 RESULT: RED as intended (exit 1); red tests: the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
 
-=== negative:stock — 2026-09-14T09:05:32.996Z
+=== negative:stock — 2026-09-14T09:38:31.170Z
 break: POST /api/orders also runs UPDATE products SET stock_cu_in = stock_cu_in - wood, stock_bags = stock_bags - bags in its batch
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^stock: (PORT 7705)
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
-# tests 1
-# pass 0
+# tests 2
+# pass 1
 # fail 1
-not ok 1 - stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
+not ok 2 - stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
   ---
-  duration_ms: 144.906782
+  duration_ms: 165.318833
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/stock/worker/tests/api.test.mjs:412:1'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/stock/worker/tests/api.test.mjs:324:1'
   failureType: 'testCodeFailure'
   error: |-
     order
     + actual - expected
     
-      [Object: null prototype] {
+      {
         stock_bags: 0,
     +   stock_cu_in: 8773632
     -   stock_cu_in: 8847360
@@ -117,19 +117,19 @@ not ok 1 - stock: unchanged by order, schedule and start; a delivered 16-inch fa
   actual:
 RESULT: RED as intended (exit 1); red tests: stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
 
-=== negative:idempotent — 2026-09-14T09:05:36.345Z
+=== negative:idempotent — 2026-09-14T09:38:34.821Z
 break: checkins rows are inserted (and read back) under crypto.randomUUID() instead of op_id, so a replay is never recognised
 patched: src/index.js, src/index.js, src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^idempotent (PORT 7705)
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
-# tests 1
-# pass 0
+# tests 2
+# pass 1
 # fail 1
-not ok 1 - idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
+not ok 2 - idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
   ---
-  duration_ms: 194.7374
+  duration_ms: 178.980957
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:432:1'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:344:1'
   failureType: 'testCodeFailure'
   error: |-
     {"error":"This stop was already marked delivered.","code":"already_delivered"}
@@ -142,26 +142,26 @@ not ok 1 - idempotent check-in: same op_id twice → 201 then 200 duplicate; sto
   actual: 409
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:444:10)
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:356:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
   ...
 RESULT: RED as intended (exit 1); red tests: idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
 
-=== negative:time — 2026-09-14T09:05:40.633Z
+=== negative:time — 2026-09-14T09:38:38.295Z
 break: delivered_at = server now, always (the phone's `at` is ignored)
 patched: src/index.js
 run: node tests/run.mjs --fresh --api-only --grep ^original time (PORT 7705)
 == api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
-# tests 1
-# pass 0
+# tests 2
+# pass 1
 # fail 1
-not ok 1 - original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
+not ok 2 - original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
   ---
-  duration_ms: 185.688629
+  duration_ms: 226.513955
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:473:1'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:385:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -177,11 +177,11 @@ not ok 1 - original time: at = T with server now T + 45 min keeps T; 2 h in the 
   actual: '2026-09-15T17:50:00.000Z'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:483:10)
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:395:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
 RESULT: RED as intended (exit 1); red tests: original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
 
-=== negative:twoopt — 2026-09-14T09:05:44.990Z
+=== negative:twoopt — 2026-09-14T09:38:42.299Z
 break: optimizeRoute returns the nearest-neighbour order without 2-opt
 patched: src/route.js
 run: node tests/run.mjs --fresh --unit-only --unit route.test.mjs (PORT 7705)
@@ -191,7 +191,7 @@ run: node tests/run.mjs --fresh --unit-only --unit route.test.mjs (PORT 7705)
 # fail 2
 not ok 2 - crossing instance: nearest neighbour crosses itself, 2-opt uncrosses it
   ---
-  duration_ms: 2.79993
+  duration_ms: 2.08728
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:34:1'
   failureType: 'testCodeFailure'
@@ -213,7 +213,7 @@ not ok 2 - crossing instance: nearest neighbour crosses itself, 2-opt uncrosses 
   expected:
 not ok 3 - 50 seeded instances: no single segment reversal shortens the result by more than 1 m, and never worse than NN
   ---
-  duration_ms: 1.121504
+  duration_ms: 0.873377
   type: 'test'
   location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:61:1'
   failureType: 'testCodeFailure'
@@ -234,3 +234,215 @@ not ok 3 - 50 seeded instances: no single segment reversal shortens the result b
   ...
 # Subtest: deterministic: same input, same order, whatever order the stops arrive in
 RESULT: RED as intended (exit 1); red tests: crossing instance: nearest neighbour crosses itself, 2-opt uncrosses it | 50 seeded instances: no single segment reversal shortens the result by more than 1 m, and never worse than NN
+
+=== negative:month — 2026-09-14T09:38:42.514Z
+break: nlMonth returns the UTC month of the instant (new Date(instant).toISOString().slice(0, 7)) instead of the NL month
+patched: src/time.js
+run: node tests/run.mjs --fresh --api-only --grep ^totals (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 2
+# pass 1
+# fail 1
+not ok 1 - totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
+  ---
+  duration_ms: 551.358215
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/month/worker/tests/api-m2.test.mjs:492:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        {
+    +     delivered: 1,
+    +     delivery_cents: 2500,
+    +     goods_cents: 30000,
+    +     hst_cents: 4875,
+    -     delivered: 2,
+    -     delivery_cents: 5000,
+    -     goods_cents: 41186,
+    -     hst_cents: 6928,
+          label: 'September 2026',
+          month: '2026-09',
+RESULT: RED as intended (exit 1); red tests: totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
+
+=== negative:csvguard — 2026-09-14T09:38:47.008Z
+break: csvCell no longer prefixes ' to text starting with = + - @ tab or CR
+patched: src/csv.js
+run: node tests/run.mjs --fresh --unit csv.test.mjs --grep ^CSV exports (PORT 7705)
+== unit: tests/csv.test.mjs
+# tests 3
+# pass 2
+# fail 1
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 2
+# pass 1
+# fail 1
+not ok 2 - formula guard: = + - @ tab CR get a leading apostrophe
+  ---
+  duration_ms: 0.918797
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:19:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '=SUM(A1)'
+    - "'=SUM(A1)"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: "'=SUM(A1)"
+  actual: '=SUM(A1)'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:20:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+not ok 1 - CSV exports: header exact, CRLF, quoting, formula guard, filename, money as 123.45
+  ---
+  duration_ms: 303.935992
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/api-m2.test.mjs:549:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        'Order,Delivered,Customer,Phone,Address,Product,Quantity,Goods,Stacking,Delivery,Subtotal,HST,Total,Paid,Owing,Door payment',
+        'o_9c27adee809357cf,2026-09-14,"Smith, ""Junior"" (SAMPLE)",709-555-0161,Up the lane past the church,"Mixed softwood, dry",1 cord,300.00,0.00,25.00,325.00,48.75,373.75,373.75,0.00,Cash',
+    +   'o_a994587c6aaf9ac5,2026-09-14,=SUM(A1) (SAMPLE),709-555-0162,"Up the hill\n' +
+    -   `o_a994587c6aaf9ac5,2026-09-14,'=SUM(A1) (SAMPLE),709-555-0162,"Up the hill\n` +
+          'left at the pond","Mixed softwood, dry",1 cord,300.00,0.00,0.00,300.00,45.00,345.00,150.00,195.00,e-Transfer',
+        ''
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+RESULT: RED as intended (exit 1); red tests: formula guard: = + - @ tab CR get a leading apostrophe | CSV exports: header exact, CRLF, quoting, formula guard, filename, money as 123.45
+
+=== negative:void — 2026-09-14T09:38:51.553Z
+break: money.counts returns true for every payment, voided or not (the one place every sum asks)
+patched: src/money.js
+run: node tests/run.mjs --fresh --api-only --grep ^voided (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 2
+# pass 1
+# fail 1
+not ok 1 - voided payments leave every sum
+  ---
+  duration_ms: 312.752855
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/void/worker/tests/api-m2.test.mjs:209:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    +   34500,
+    +   0,
+    +   -2000
+    -   24500,
+    -   10000,
+    -   10000
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+RESULT: RED as intended (exit 1); red tests: voided payments leave every sum
+
+=== negative:undo — 2026-09-14T09:38:56.214Z
+break: undoDelivery's batch no longer puts the stock back (the UPDATE products statement is removed; the undo move is still written)
+patched: src/index.js
+run: node tests/run.mjs --fresh --api-only --grep ^undeliver (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 2
+# pass 1
+# fail 1
+not ok 1 - undeliver and driver undo each put stock back and void the door payment (owing restored to the cent)
+  ---
+  duration_ms: 263.934557
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:144:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 8773632
+    - 8847360
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 8847360
+  actual: 8773632
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:160:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+RESULT: RED as intended (exit 1); red tests: undeliver and driver undo each put stock back and void the door payment (owing restored to the cent)
+
+=== negative:hst — 2026-09-14T09:39:00.815Z
+break: hstCents = Math.floor(subtotal × 15 / 100) (no + 50 half-up)
+patched: src/money.js
+run: node tests/run.mjs --fresh --unit money.test.mjs --grep ^totals (PORT 7705)
+== unit: tests/money.test.mjs
+# tests 9
+# pass 8
+# fail 1
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 2
+# pass 1
+# fail 1
+not ok 5 - HST 15 % half-up per order
+  ---
+  duration_ms: 0.884507
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:58:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    4996 !== 4997
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 4997
+  actual: 4996
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:59:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+not ok 1 - totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
+  ---
+  duration_ms: 513.728556
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/api-m2.test.mjs:492:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        {
+          delivered: 2,
+          delivery_cents: 5000,
+          goods_cents: 41186,
+    +     hst_cents: 6927,
+    -     hst_cents: 6928,
+          label: 'September 2026',
+          month: '2026-09',
+          payments_cents: 37375,
+          stacking_cents: 0,
+          subtotal_cents: 46186,
+RESULT: RED as intended (exit 1); red tests: HST 15 % half-up per order | totals: HST and totals equal row sums, zero months present, NL month boundary (Oct 1 02:00 UTC counts in September)
