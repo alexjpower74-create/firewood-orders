@@ -71,7 +71,8 @@ For an order of `qty` × `unit` of a product:
 3. `distance_km` = haversine from the yard to the pin, **R = 6371 km**, unrounded for band choice, 1 decimal for display.
 4. `delivery_cents`: mode `bands` → the fee of the first band (sorted by `up_to_km`) with `distance_km ≤ up_to_km`; past
    the last band → 400 `outside_area`. Mode `zones` → the chosen zone's fee (`zone_id` required, `field: "zone_id"`).
-   A dealer phone order may send `delivery_cents` to override.
+   A dealer phone order may send `delivery_cents` to override; the band lookup is then skipped, so a pin past the last band is
+   accepted with the dealer's fee (a public order past the last band is still refused).
 5. `below_minimum` when `goods_cents + stacking_cents < min_order_cents` (message
    `"The smallest order we deliver is $110.00 before delivery."`).
 6. `subtotal_cents` = goods + stacking + delivery.
@@ -118,7 +119,8 @@ is a row in `stock_moves (product_id, change, reason 'delivered'|'undo'|'adjust'
 - **Optimize** a day: the stops not yet delivered, from a start point (the pin of the day's last delivered stop, or the
   yard when none) back to the yard: nearest neighbour from the start (ties → lower order id), then 2-opt (reverse any
   segment of the stop sequence while it shortens the closed path start → stops → yard by more than 1 m; repeat until no
-  improving move). Delivered stops keep their positions at the front. Deterministic.
+  improving move). Delivered stops stay at the front **in the order they were delivered** (`delivered_at`), and the start point
+  is the last of them. Deterministic.
 - `route_pos` is stored on each order. A newly scheduled order goes to the end of its day; unscheduling/moving compacts.
 - `total_km` = start at the yard, through every stop in route order, back to the yard; 1 decimal.
 
@@ -247,7 +249,7 @@ Non-delivery days are listed with `delivers: false` and `reason: "No deliveries 
 
 `GET /api/dealer/days/:date/route` →
 ```json
-{ "date": "2026-09-15", "label": "…", "yard": { "lat", "lng", "label" }, "started": false,
+{ "date": "2026-09-15", "label": "Tue Sep 15", "long_label": "Tuesday, September 15", "yard": { "lat", "lng", "label" }, "started": false,
   "stops": [ summary… in route_pos order ], "total_km": 42.7, "note": "Order is by distance, not road time." }
 ```
 `POST /api/dealer/days/:date/route/optimize` → saves the order per the Route rules, returns the route.
@@ -262,7 +264,8 @@ last_order_label } ] }` sorted by `balance_cents` descending, then name.
 and non-voided payments, oldest first, `balance_cents` running.
 
 `POST /api/dealer/payments { "customer_id", "order_id"?, "amount_cents", "method": "cash"|"etransfer"|"cheque"|"card"|"other",
-"date"?, "note"? }` → amount 1–10 000 000; `date` defaults to today, never in the future; → `201 { "payment": { id, customer_id,
+"date"?, "note"? }` → amount 1–10 000 000; `date` defaults to today, never in the future; an unknown `customer_id` or `order_id`
+(or an order of another customer) → 400 with that `field`, so the form can place the message; → `201 { "payment": { id, customer_id,
 order_id, amount_cents, method, date, note, source: "dealer"|"door", voided: false } }`. `DELETE /api/dealer/payments/:id` (M2)
 → voided (kept, excluded from every sum).
 
