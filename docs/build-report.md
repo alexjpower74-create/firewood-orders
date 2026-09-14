@@ -38,9 +38,16 @@ page maps scheduled to "Requested"; (c) transparent cover over Send request → 
 HST as an unrounded float → $157.38 instead of $157.39; (e) ledger pill shows total instead of owing → Owing $373.75 instead of
 $273.75.
 
-**Driver (`node app/tests/driver/negative-all.mjs`, 3):** (l) queue removes an item before the office answers → the delivery
+Web, added in fo2's last round: (f) the early quote sends the yard's lat/lng → the no-pin request check sees `lat` and `lng`;
+(g) the phone-order form leaves the fee off the quote → no quote with `delivery_cents: 1000` ever comes and the $241.50 check fails;
+(h) the ledger's Void sends an order payment's id → the DELETE names the wrong payment.
+
+**Driver (`node app/tests/driver/negative-all.mjs`, 6):** (l) queue removes an item before the office answers → the delivery
 vanishes and never reaches the server; (m) `at` stamped at send → `delivered_at` 13:40 instead of 13:00; (n) invisible overlay over
-Delivered → hit-test names the div.
+Delivered → hit-test names the div; (amount-omitted) the copy leaves out the cash amount when it equals the owing saved on the
+phone → with a $100.00 payment taken by the dealer in between, the door payment is 27 375 instead of the 37 375 collected;
+(undo-bar) the Undo bar back at the bottom → Delivered, hit-tested right after a Save, is under the bar; (old-page) the six
+review specs run against the page fo2 reviewed (`be77119`) and all six fail there.
 
 **Journey (`node app/tests/journey/negative-journey.mjs`):** the copy's status page shows delivered as "Out for delivery" → the
 journey fails with Expected "Delivered", Received "Out for delivery".
@@ -57,7 +64,12 @@ journey fails with Expected "Delivered", Received "Out for delivery".
    cached owing was sent without an amount, so a payment the dealer took in the meantime changed what was recorded), the Undo bar
    covering the next stop's Delivered for 15 s at 390, prepaid orders forced to "Owes", a duplicated stop hook, Sign out not ending
    the server session, and yesterday's cached day shown as today with no signal. One (a refused photo shown as a refused delivery)
-   was already fixed. The rest went back to fo1; results are in Final QA.
+   was already fixed. The other six went back to fo1 and were fixed with a spec each: the Undo bar moved into the sticky header,
+   Cash and e-Transfer always send the amount the driver saw, a prepaid order saves the method with no amount, the next-stop card
+   has its own `data-next-stop`, Sign out ends the server session, and a day opened with no signal is titled "Saved … (no signal)"
+   with Start hidden.
+4. **fo2's last round** added Void on ledger payment rows (an on-account payment can now be voided) and "Nothing owing" for a
+   cancelled order with nothing paid, both from contract changes fo1 made after fo2's M3 questions.
 
 ## What the tests caught (fixed)
 
@@ -70,7 +82,10 @@ journey fails with Expected "Delivered", Received "Out for delivery".
 - WebKit threw reading a chosen photo while offline and locked Save for good; any photo failure now clears the lock and says so.
 - The journey reloaded the status page before the delivery had reached the office (the sync strip already read "All sent" before
   the new item was saved); it now waits for the office's answer to that request.
-- Full-page screenshots taken while still scrolling painted sticky headers halfway down; `shot()` now waits for the top.
+- The ledger's new Void column had a hidden screen-reader label that made the page scroll sideways by 153 px at 390 in both
+  engines; the sideways-scroll sweep caught it.
+- `shot()` now waits for the page to reach the top before a full-page capture. That did not cure the sticky-bar artifact (see
+  Known gaps).
 
 ## Known gaps and limits
 

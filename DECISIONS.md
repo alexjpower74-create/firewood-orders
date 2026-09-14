@@ -60,3 +60,11 @@ Newest at the bottom.
     having changed hands (fo2 M3).
 26. **The status page's refresh on coming back into view is not tested.** Headless Chromium and WebKit never mark a page hidden
     when another tab comes forward, so a test could not fail; the 30-second poll is tested instead (fo2 M3).
+27. **The driver's Cash and e-Transfer always send the amount the driver saw or typed**, never "the owing when it arrives". Cash in
+    hand has to match the books even if the dealer took a payment while the day sat on the phone (fo2's review found the gap).
+28. **A prepaid order (owing ≤ 0) saves Cash or e-Transfer with no amount**: the method is recorded as how they settled, and no
+    payment row is written. Marking a paid customer "Owes" was the only way through before.
+29. **The driver's Undo bar lives in the sticky header**, under the sync strip, not at the bottom where it covered the next stop's
+    Delivered button for 15 seconds on a phone.
+30. **A driver day opened with no signal is titled "Saved <day> (no signal)"** with Start hidden, because the phone cannot know
+    whether its saved "today" is still today.
