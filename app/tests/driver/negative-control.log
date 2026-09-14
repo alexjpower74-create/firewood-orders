@@ -1,0 +1,43 @@
+
+=== queue-early — 2026-09-14T10:10:09.606Z
+break: queue.js removes the item from IndexedDB just before POST /api/driver/checkins, instead of after 200/201
+patched: driver/queue.js
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/queue-early/worker npx playwright test tests/driver/offline.spec.mjs --project=chromium-390 --reporter=json -g a 500 from the office
+  FAILED  [chromium-390] a 500 from the office leaves both deliveries queued; they send on the next try
+      Error: expect(locator).toHaveText(expected) failed
+      
+      Locator:  locator('#stop-count')
+      Expected: "Stop 2 of 2"
+      Received: "Stop 1 of 2"
+      Timeout:  8000ms
+      
+      Call log:
+        - Expect "toHaveText" locator('#stop-count') with timeout 8000ms
+        - waiting for locator('#stop-count')
+RESULT: RED as intended (exit 1)
+
+=== at-on-send — 2026-09-14T10:10:22.788Z
+break: queue.js sends at: new Date().toISOString() (the phone's time at sending) instead of the saved item.at
+patched: driver/queue.js
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/at-on-send/worker npx playwright test tests/driver/offline.spec.mjs --project=chromium-390 --reporter=json -g no signal: two deliveries
+  FAILED  [chromium-390] no signal: two deliveries are saved with the tap time, survive a reload, and send once signal is back
+      Error: the time the driver tapped, not the time it arrived
+      
+      expect(received).toBe(expected) // Object.is equality
+      
+      Expected: "2026-09-14T13:00:00.000Z"
+      Received: "2026-09-14T13:40:00.000Z"
+RESULT: RED as intended (exit 1)
+
+=== overlay — 2026-09-14T10:10:28.894Z
+break: index.html puts a transparent absolutely positioned div over the next-stop card, on top of Delivered
+patched: driver/index.html
+run: E2E_PORT=7706 E2E_WORKER_DIR=app/.negative/overlay/worker npx playwright test tests/driver/driver.spec.mjs --project=chromium-390 --reporter=json -g the status page says Out for delivery
+  FAILED  [chromium-390] Start → the status page says Out for delivery; Delivered + Cash → the next stop, and the office has the payment and Paid in full
+      Error: tap(Delivered) hit-test at 195,712: something else is on top
+      
+      expect(received).toBe(expected) // Object.is equality
+      
+      Expected: ""
+      Received: "<div style=\"position:absolute;inset:0;background:transparent;z-index:5\"></div>"
+RESULT: RED as intended (exit 1)
