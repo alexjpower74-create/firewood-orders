@@ -1,0 +1,19 @@
+{
+  "name": "firewood-orders-worker",
+  "private": true,
+  "type": "module",
+  "description": "Firewood Orders Worker: API, D1, R2. No npm dependencies; uses the wrangler on PATH. Local only.",
+  "scripts": {
+    "build:sample": "node tools/build-sample-data.mjs",
+    "test": "node tests/run.mjs",
+    "test:unit": "node tests/run.mjs --unit-only",
+    "dev": "wrangler d1 migrations apply firewood-orders --local --persist-to .state-dev && wrangler dev --local --port 7702 --inspector-port 7712 --persist-to .state-dev",
+    "negative": "node tests/negative-all.mjs",
+    "negative:capacity": "node tests/negative-capacity.mjs",
+    "negative:race": "node tests/negative-race.mjs",
+    "negative:stock": "node tests/negative-stock.mjs",
+    "negative:idempotent": "node tests/negative-idempotent.mjs",
+    "negative:time": "node tests/negative-time.mjs",
+    "negative:twoopt": "node tests/negative-twoopt.mjs"
+  }
+}
