@@ -249,7 +249,8 @@ else `scheduled`; the stock move reversed and the door payment from that check-i
   "wood": { "used_cu_in": 663552, "cap_cu_in": 995328, "used_cords": 3, "cap_cords": 4.5 },
   "pellets": { "used_bags": 70, "cap_bags": 210, "used_skids": 1, "cap_skids": 3 } } ] }
 ```
-Non-delivery days are listed with `delivers: false` and `reason: "No deliveries on Sundays"`.
+Non-delivery days are listed with `delivers: false` and `reason: "No deliveries on Sundays"`. `used_skids` and `cap_skids`
+are bags ÷ bags per skid to 2 decimals (20 bags of 70 → `0.29`); pages show bags.
 
 `GET /api/dealer/days/:date/route` →
 ```json
@@ -288,8 +289,8 @@ positive `owing_cents` of delivered orders now.
 `Content-Disposition: attachment; filename="firewood-orders-2026-orders.csv"`, CRLF line ends, header row exactly
 `Order,Delivered,Customer,Phone,Address,Product,Quantity,Goods,Stacking,Delivery,Subtotal,HST,Total,Paid,Owing,Door payment`
 (delivered orders in the season) and `Date,Customer,Phone,Order,Method,Amount,Note` (non-voided payments). Money as `123.45`,
-dates `YYYY-MM-DD`. A cell containing `,` `"` or a line break is quoted with `"` doubled; a cell starting with `=` `+` `-` `@`
-tab or CR gets a leading `'`.
+dates `YYYY-MM-DD`. A cell containing `,` `"` or a line break is quoted with `"` doubled; a **text** cell starting with `=` `+` `-` `@`
+tab or CR gets a leading `'`; money cells are plain numbers, so a credit reads `-20.00`.
 
 **Messages** (in `GET /api/dealer/orders/:id`, text exact; `{first}` = the name's first word, `{status_link}` = request origin +
 `status_url`; money `$1,234.56`):
@@ -298,7 +299,9 @@ tab or CR gets a leading `'`.
 - `balance` (delivered with owing > 0), label `Balance reminder`: `Hi {first}, this is {short_name}. Thanks again for your order. The balance of {owing} is still owing. {deposit_text}`
 
 **Settings** (M2). `GET /api/dealer/settings` → `{ settings, products: [ full product incl. stock_cu_in / stock_bags,
-stock_cords, active, sort ] }`. `PUT /api/dealer/settings` validates everything and answers 400 with `field`:
+stock_cords, active, sort ] }`. `PUT /api/dealer/settings` and `PUT /api/dealer/products/:id` take **partial** bodies (groups
+and fields not sent keep their saved values), validate the whole result, and answer 400 with `field`, nested fields named with dots
+(`delivery.bands`, `delivery.zones`, `load.cords`, `truck.wood_cords_per_day`; product prices `price_cents.cord`). Settings:
 `name` 1–80, `short_name` 1–40, `sample` (boolean; `false` for a real dealer removes every SAMPLE badge, reported by `GET /api/info`),
 `phone` 0–32, `deposit_text` 0–400, `season_open`, `season_message` 0–200, `season_start` `MM-DD`,
 `min_order_cents` 0–100 000, `hst_registered`, `yard {lat,lng,label}`, `delivery {mode, bands [1–6, up_to_km increasing 0.1–500,
@@ -308,7 +311,8 @@ fee 0–50 000], zones [0–30 {id,name 1–40,fee}], beyond_message 0–200}`, 
 `species`, `dryness` dry|green, `cut_in` 12–24, `split`, `stacking_cents_per_cord` null|0–50 000, `price_cents {cord, half_cord,
 face_cord, load}`; pellets: `brand`, `bag_lb` 10–80, `bags_per_ton` 1–200, `bags_per_skid` 1–200, `price_cents {bag, ton, skid}`;
 `active`, `sort`). `POST /api/dealer/products/:id/stock { "mode": "set"|"add", "cords"? | "bags"?, "note"? }` → a stock move.
-`PUT /api/dealer/pin { "which": "dealer"|"driver", "current_dealer_pin", "new_pin" }` → 200; wrong current → 401.
+`PUT /api/dealer/pin { "which": "dealer"|"driver", "current_dealer_pin", "new_pin" }` → 200; wrong current → 401 with `field: "current_dealer_pin"`
+(and it counts toward the sign-in guard). Pages must not treat that particular 401 as "signed out".
 
 ## Driver routes
 
