@@ -34,6 +34,19 @@
         <ol id="timeline" class="timeline" aria-label="Order progress"></ol>
       </section>
 
+      <section id="cancel-card" class="card cancel-card" hidden>
+        <p class="small">Changed your mind? You can cancel while your order is still a request.</p>
+        <button type="button" id="cancel-order" class="btn btn-secondary">Cancel my order</button>
+        <div id="cancel-confirm" class="confirm" hidden>
+          <p><strong>Cancel this order?</strong> We won't deliver it.</p>
+          <div class="confirm-buttons">
+            <button type="button" id="cancel-yes" class="btn btn-danger">Yes, cancel it</button>
+            <button type="button" id="cancel-no" class="btn btn-ghost">Keep my order</button>
+          </div>
+        </div>
+        <p id="cancel-error" class="alert" role="alert" hidden></p>
+      </section>
+
       <section id="photo-card" class="card" hidden>
         <h2 class="card-title">Delivery photo</h2>
         <img id="photo" class="photo" alt="Photo the driver took at delivery">

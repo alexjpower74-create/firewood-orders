@@ -1,5 +1,6 @@
 // The customer's status page (/o/?t=<token>): the status pill and timeline, the order, the money and balance owing,
-// the dealer's deposit text, the delivery photo. Polls every 30 s and whenever the page comes back into view.
+// the dealer's deposit text, the delivery photo, and "Cancel my order" while it is still a request. Polls every 30 s and
+// whenever the page comes back into view.
 
 import { api } from '/api.js'
 import { esc, money, icon, showDealer } from '/ui.js'
@@ -49,6 +50,13 @@ function render({ dealer, deposit_text: depositText, order: o }) {
     const state = i < at || o.status === 'delivered' ? 'done' : i === at ? 'current' : 'todo'
     return `<li data-state="${state}"${i === at ? ' aria-current="step"' : ''}><span class="dot" aria-hidden="true">${state === 'done' ? icon.check : ''}</span><span>${label}</span></li>`
   }).join('')
+
+  // The cancel card shows while the order can be cancelled, and stays up while it holds the API's refusal (the reload that
+  // follows a refused cancel must not hide the message that explains it).
+  const cancellable = o.status === 'requested'
+  $('#cancel-order').hidden = !cancellable
+  if (!cancellable) $('#cancel-confirm').hidden = true
+  $('#cancel-card').hidden = !cancellable && $('#cancel-error').hidden
 
   $('#photo-card').hidden = !o.photo_url
   if (o.photo_url && $('#photo').getAttribute('src') !== o.photo_url) $('#photo').src = o.photo_url
@@ -112,6 +120,37 @@ async function load() {
     loading = false
   }
 }
+
+$('#cancel-order').addEventListener('click', () => {
+  $('#cancel-error').hidden = true
+  $('#cancel-confirm').hidden = false
+  $('#cancel-order').hidden = true
+  $('#cancel-no').focus()
+})
+$('#cancel-no').addEventListener('click', () => {
+  $('#cancel-confirm').hidden = true
+  $('#cancel-order').hidden = false
+  $('#cancel-order').focus()
+})
+$('#cancel-yes').addEventListener('click', async () => {
+  const button = $('#cancel-yes')
+  button.disabled = true
+  try {
+    await api.cancelMyOrder(token)
+    $('#cancel-confirm').hidden = true
+    $('#cancel-order').hidden = false
+    await load()
+    $('#status').focus?.()
+  } catch (e) {
+    // The API's words, as is: e.g. "This order is already on the schedule. Call us to change it."
+    $('#cancel-error').textContent = e.message
+    $('#cancel-error').hidden = false
+    $('#cancel-confirm').hidden = true
+    await load()
+  } finally {
+    button.disabled = false
+  }
+})
 
 load()
 setInterval(load, 30_000)

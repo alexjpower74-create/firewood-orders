@@ -136,6 +136,79 @@
 /* A passing note under the header. It never takes a tap: taps go through to whatever is beneath. */
 .toast { position: fixed; top: calc(var(--topbar-h, 61px) + 8px); left: 50%; z-index: 2000; max-width: calc(100vw - 32px); padding: 10px 16px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--raised); box-shadow: var(--shadow); font-weight: 650; transform: translateX(-50%); pointer-events: none; }
 
+/* ---------- order detail: actions, edit, void ---------- */
+.btn-small { padding: 6px 12px; font-size: 14px; }
+.payments li { flex-wrap: wrap; align-items: center; }
+.payment-main { flex: 1 1 12rem; }
+.payments .confirm { flex-basis: 100%; }
+.edit-form { margin-top: 12px; }
+.detail .confirm { margin-top: 12px; }
+.check-row { display: flex; align-items: center; gap: 12px; min-height: 48px; margin: 10px 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--ground); cursor: pointer; }
+.check-row input { flex: none; width: 22px; height: 22px; accent-color: var(--accent); }
+.check-text { display: grid; gap: 2px; }
+
+/* ---------- Customers ---------- */
+.customers { list-style: none; display: grid; gap: 8px; margin: 0; padding: 0; }
+.customer { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.customer:hover { border-color: var(--line-strong); }
+.customer-main { display: grid; gap: 2px; min-width: 0; }
+.balance-pill, .order-owing { background: color-mix(in srgb, var(--owing) var(--tint), transparent); color: var(--owing); }
+.balance-pill[data-kind="paid"], .order-owing[data-kind="paid"] { background: color-mix(in srgb, var(--ok) var(--tint), transparent); color: var(--ok); }
+.balance-pill[data-kind="credit"], .order-owing[data-kind="credit"] { background: color-mix(in srgb, var(--credit) var(--tint), transparent); color: var(--credit); }
+.ledger-head { display: grid; gap: 4px; margin: 12px 0 14px; }
+.ledger-head .owing-big { margin: 4px 0 0; }
+.cust-orders { list-style: none; display: grid; gap: 8px; margin: 0; padding: 0; }
+.cust-order { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px; border-left: 4px solid var(--c); border-radius: 10px; background: var(--raised); }
+.cust-order-main { display: grid; flex: 1 1 14rem; gap: 2px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+.money-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.money-table th, .money-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.money-table thead th { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.money-table .num { text-align: right; }
+.money-table td.text { white-space: normal; min-width: 12rem; }
+.money-table tbody tr:last-child td, .money-table tbody tr:last-child th { border-bottom: 0; }
+.money-table tfoot th, .money-table tfoot td { border-top: 2px solid var(--line-strong); border-bottom: 0; font-weight: 800; }
+.money-table tr[data-kind="payment"] .payment { color: var(--ok); }
+
+/* ---------- Totals ---------- */
+.totals-head { display: flex; flex-wrap: wrap; align-items: end; gap: 4px 20px; }
+.season-field { flex: 0 0 16rem; margin: 0 0 10px; }
+.season-dates { flex: 1 1 20rem; margin: 0 0 14px; }
+.stat.static { grid-template-columns: 1fr; cursor: default; }
+.download-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.download { display: grid; align-content: start; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--ground); }
+.download .btn { justify-self: start; margin-top: 4px; }
+
+/* ---------- Settings ---------- */
+.settings-view { max-width: 860px; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 14px; }
+.settings-form .field { margin: 10px 0; }
+.save-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+.save-row .saved { margin: 0; color: var(--ok); }
+.sub-title { margin: 18px 0 6px; font-size: 15px; }
+.radio-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 10px; margin: 0; padding: 0; border: 0; }
+.band-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 0 10px; }
+.band-row .btn { margin-bottom: 10px; }
+#yard-map { height: 300px; background: #1e293b; }
+.weekdays { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.weekday { min-width: 56px; min-height: 48px; padding: 8px 12px; border: 1.5px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+.weekday[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+.product-block { padding: 14px 0; border-top: 1px solid var(--line); }
+.product-block:first-child { border-top: 0; padding-top: 0; }
+.product-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 17px; }
+.price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
+.stock-form { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--ground); }
+.stock-line { margin: 0; }
+.new-product { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+
+@media (max-width: 899px) {
+  .band-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .band-row .btn { grid-column: 1 / -1; justify-self: start; }
+  .season-field { flex-basis: 100%; }
+  .customer { flex-wrap: wrap; }
+}
+
 /* ---------- Plan ---------- */
 .plan-intro { margin: 0 0 12px; }
 .plan-days { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin: 0; padding: 0; }
