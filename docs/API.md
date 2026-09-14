@@ -292,7 +292,8 @@ tab or CR gets a leading `'`.
 
 **Settings** (M2). `GET /api/dealer/settings` → `{ settings, products: [ full product incl. stock_cu_in / stock_bags,
 stock_cords, active, sort ] }`. `PUT /api/dealer/settings` validates everything and answers 400 with `field`:
-`name` 1–80, `short_name` 1–40, `phone` 0–32, `deposit_text` 0–400, `season_open`, `season_message` 0–200, `season_start` `MM-DD`,
+`name` 1–80, `short_name` 1–40, `sample` (boolean; `false` for a real dealer removes every SAMPLE badge, reported by `GET /api/info`),
+`phone` 0–32, `deposit_text` 0–400, `season_open`, `season_message` 0–200, `season_start` `MM-DD`,
 `min_order_cents` 0–100 000, `hst_registered`, `yard {lat,lng,label}`, `delivery {mode, bands [1–6, up_to_km increasing 0.1–500,
 fee 0–50 000], zones [0–30 {id,name 1–40,fee}], beyond_message 0–200}`, `load {cords 0.25–10 (2 dp), description 1–200}`,
 `truck {name, wood_cords_per_day 0–40 (2 dp), pellet_skids_per_day 0–20}`, `delivery_weekdays` (ISO 1–7, ≥ 1), `window_days`
