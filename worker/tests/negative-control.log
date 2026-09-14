@@ -1,0 +1,236 @@
+
+=== negative:capacity — 2026-09-14T09:05:25.594Z
+break: the guard's SUM of the day's current use is replaced by 0 (wood and pellets), so only the order itself is compared to the cap
+patched: src/index.js, src/index.js
+run: node tests/run.mjs --fresh --api-only --grep ^capacity (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 2
+# pass 0
+# fail 2
+not ok 1 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused
+  ---
+  duration_ms: 221.122613
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:322:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    200 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 200
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:328:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+not ok 2 - capacity for pellets: 3 skids planned, then 1 bag is refused
+  ---
+  duration_ms: 135.373028
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:350:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    200 !== 409
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 409
+  actual: 200
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:356:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+RESULT: RED as intended (exit 1); red tests: capacity: 4 cords on Tue, a fifth refused with exact numbers; a half cord fits to 4.50; then even a face cord is refused | capacity for pellets: 3 skids planned, then 1 bag is refused
+
+=== negative:race — 2026-09-14T09:05:29.305Z
+break: the one-statement check-and-write is split into SELECT use → await scheduler.wait(25) → UPDATE
+patched: src/index.js
+run: node tests/run.mjs --fresh --api-only --grep ^the race (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 1
+# pass 0
+# fail 1
+not ok 1 - the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
+  ---
+  duration_ms: 299.383417
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/race/worker/tests/api.test.mjs:393:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    [200,200,200,200,200,200,200,200]
+    + actual - expected
+    
+      [
+        200,
+        200,
+        200,
+        200,
+    +   200,
+    +   200,
+    +   200,
+    +   200
+    -   409,
+    -   409,
+    -   409,
+RESULT: RED as intended (exit 1); red tests: the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409
+
+=== negative:stock — 2026-09-14T09:05:32.996Z
+break: POST /api/orders also runs UPDATE products SET stock_cu_in = stock_cu_in - wood, stock_bags = stock_bags - bags in its batch
+patched: src/index.js
+run: node tests/run.mjs --fresh --api-only --grep ^stock: (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 1
+# pass 0
+# fail 1
+not ok 1 - stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
+  ---
+  duration_ms: 144.906782
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/stock/worker/tests/api.test.mjs:412:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    order
+    + actual - expected
+    
+      [Object: null prototype] {
+        stock_bags: 0,
+    +   stock_cu_in: 8773632
+    -   stock_cu_in: 8847360
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    stock_cu_in: 8847360
+    stock_bags: 0
+  actual:
+RESULT: RED as intended (exit 1); red tests: stock: unchanged by order, schedule and start; a delivered 16-inch face cord takes exactly 73 728 cu in
+
+=== negative:idempotent — 2026-09-14T09:05:36.345Z
+break: checkins rows are inserted (and read back) under crypto.randomUUID() instead of op_id, so a replay is never recognised
+patched: src/index.js, src/index.js, src/index.js
+run: node tests/run.mjs --fresh --api-only --grep ^idempotent (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 1
+# pass 0
+# fail 1
+not ok 1 - idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
+  ---
+  duration_ms: 194.7374
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:432:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"error":"This stop was already marked delivered.","code":"already_delivered"}
+    
+    409 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 409
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:444:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+RESULT: RED as intended (exit 1); red tests: idempotent check-in: same op_id twice → 201 then 200 duplicate; stock and door payment once; another op → 409
+
+=== negative:time — 2026-09-14T09:05:40.633Z
+break: delivered_at = server now, always (the phone's `at` is ignored)
+patched: src/index.js
+run: node tests/run.mjs --fresh --api-only --grep ^original time (PORT 7705)
+== api: fresh Worker on http://127.0.0.1:7705 (state .state-7705)
+# tests 1
+# pass 0
+# fail 1
+not ok 1 - original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
+  ---
+  duration_ms: 185.688629
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:473:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '2026-09-15T17:50:00.000Z'
+    - '2026-09-15T17:05:00.000Z'
+                     ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '2026-09-15T17:05:00.000Z'
+  actual: '2026-09-15T17:50:00.000Z'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:483:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+RESULT: RED as intended (exit 1); red tests: original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
+
+=== negative:twoopt — 2026-09-14T09:05:44.990Z
+break: optimizeRoute returns the nearest-neighbour order without 2-opt
+patched: src/route.js
+run: node tests/run.mjs --fresh --unit-only --unit route.test.mjs (PORT 7705)
+== unit: tests/route.test.mjs
+# tests 7
+# pass 5
+# fail 2
+not ok 2 - crossing instance: nearest neighbour crosses itself, 2-opt uncrosses it
+  ---
+  duration_ms: 2.79993
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:34:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        'o_3',
+    +   'o_2',
+    +   'o_1',
+        'o_4',
+    -   'o_1',
+    -   'o_2'
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+not ok 3 - 50 seeded instances: no single segment reversal shortens the result by more than 1 m, and never worse than NN
+  ---
+  duration_ms: 1.121504
+  type: 'test'
+  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:61:1'
+  failureType: 'testCodeFailure'
+  error: 'instance 0: reversing 2..3 saves 11134.6 m'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:72:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: deterministic: same input, same order, whatever order the stops arrive in
+RESULT: RED as intended (exit 1); red tests: crossing instance: nearest neighbour crosses itself, 2-opt uncrosses it | 50 seeded instances: no single segment reversal shortens the result by more than 1 m, and never worse than NN
