@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>Driver · SAMPLE Wood &amp; Pellets</title>
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/driver/driver.css">
+  <script>
+    // Daylight before first paint, so a bright-sun phone never flashes the dark page.
+    try { if (JSON.parse(localStorage.getItem('firewood-orders:daylight')) === true) document.documentElement.dataset.theme = 'daylight' } catch (e) {}
+  </script>
+  <script type="module" src="/driver/driver.js"></script>
+</head>
+<body>
+  <header class="top" data-sticky-header>
+    <div class="top-inner">
+      <div class="who">
+        <div class="dealer"><span id="dealer-name">SAMPLE Wood &amp; Pellets</span> <span id="sample" class="sample-badge">SAMPLE</span></div>
+        <div id="day-label" class="day-label"></div>
+      </div>
+      <button id="daylight" class="btn toggle" type="button" aria-pressed="false">Daylight</button>
+    </div>
+    <div id="sync-strip" role="status" aria-live="polite" data-state="sent">All sent</div>
+  </header>
+
+  <main>
+    <section id="signin-view" hidden>
+      <h1>Driver sign-in</h1>
+      <p id="signin-lead" class="lead">Enter the driver PIN.</p>
+      <form id="signin-form" novalidate>
+        <label for="pin">Driver PIN</label>
+        <input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8">
+        <p id="pin-error" class="error" role="alert" hidden></p>
+        <button id="signin-btn" class="btn primary" type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <section id="day-view" hidden>
+      <div class="day-head">
+        <h1 id="day-title">Today's deliveries</h1>
+        <p class="note">Order is by distance, not road time.</p>
+        <div class="day-nav">
+          <button id="show-today" class="btn secondary" type="button" aria-pressed="true">Today</button>
+          <button id="show-tomorrow" class="btn secondary" type="button" aria-pressed="false">Tomorrow</button>
+        </div>
+      </div>
+
+      <p id="notice" class="notice" role="alert" hidden></p>
+      <p id="empty" class="empty" hidden></p>
+
+      <button id="start-route" class="btn primary" type="button" hidden>Start the route</button>
+
+      <article id="next" class="next" hidden>
+        <p id="stop-count" class="stop-count"></p>
+        <h2 id="next-name" class="name"></h2>
+        <p id="next-address" class="address"></p>
+        <div id="next-dump" class="dump"></div>
+        <p id="next-what" class="what"></p>
+        <p><span id="next-owing" class="pill"></span></p>
+        <div class="actions">
+          <a id="open-maps" class="btn outline" href="#" target="_blank" rel="noopener">Open in Maps</a>
+          <button id="delivered" class="btn delivered" type="button">Delivered</button>
+        </div>
+      </article>
+
+      <p id="all-done" class="all-done" hidden>Every stop is delivered.</p>
+
+      <section id="rejected" class="rejected" hidden>
+        <h2>Not accepted</h2>
+        <p class="lead">The office did not accept these. They are kept here so nothing is lost. Tell the dealer.</p>
+        <ul id="rejected-list"></ul>
+      </section>
+
+      <h2 class="list-title">All stops</h2>
+      <ol id="stops" class="stops"></ol>
+
+      <button id="sign-out" class="btn secondary sign-out" type="button">Sign out</button>
+    </section>
+  </main>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <h2 id="sheet-title" tabindex="-1">How did they pay?</h2>
+      <p id="sheet-for" class="sheet-for"></p>
+      <div class="pay-row">
+        <button class="pay" type="button" data-method="cash" aria-pressed="false">Cash</button>
+        <button class="pay" type="button" data-method="etransfer" aria-pressed="false">e-Transfer</button>
+        <button class="pay" type="button" data-method="owes" aria-pressed="false">Owes</button>
+      </div>
+      <div id="amount-row" class="field" hidden>
+        <label for="amount">Amount paid, in dollars</label>
+        <input id="amount" type="text" inputmode="decimal" autocomplete="off">
+        <p id="amount-error" class="error" role="alert" hidden></p>
+      </div>
+      <label id="take-photo" class="btn outline" for="photo-input">Take a photo</label>
+      <input id="photo-input" class="visually-hidden" type="file" accept="image/*" capture="environment">
+      <p id="photo-note" class="photo-note" hidden>Photo added. It sends with the delivery.</p>
+      <button id="save-delivery" class="btn primary" type="button" disabled>Save</button>
+      <button id="sheet-cancel" class="btn secondary" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <div id="undo-bar" class="undo-bar" role="status" hidden>
+    <span id="undo-text"></span>
+    <button id="undo" class="btn secondary" type="button">Undo</button>
+  </div>
+</body>
+</html>

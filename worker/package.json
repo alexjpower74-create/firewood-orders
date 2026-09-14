@@ -19,6 +19,7 @@
     "negative:csvguard": "node tests/negative-csvguard.mjs",
     "negative:void": "node tests/negative-void.mjs",
     "negative:undo": "node tests/negative-undo.mjs",
-    "negative:hst": "node tests/negative-hst.mjs"
+    "negative:hst": "node tests/negative-hst.mjs",
+    "negative:nopin": "node tests/negative-nopin.mjs"
   }
 }

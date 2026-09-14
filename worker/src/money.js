@@ -63,19 +63,21 @@ export function priceOrder(input, settings) {
     }
     stacking = stackingCents(product.stacking_cents_per_cord, wood)
   }
-  const distance = haversineKm(settings.yard, { lat: input.lat, lng: input.lng })
-  const delivery = input.delivery_override ?? deliveryCents(settings.delivery, distance, input.zone_id)
+  // A quote before the map is tapped has no pin: nothing that depends on distance is guessed (all null).
+  const pin = input.lat === null || input.lat === undefined ? null : { lat: input.lat, lng: input.lng }
+  const distance = pin ? haversineKm(settings.yard, pin) : null
+  const delivery = pin ? input.delivery_override ?? deliveryCents(settings.delivery, distance, input.zone_id) : null
   if (goods + stacking < settings.min_order_cents) {
     throw new ApiError(400, 'below_minimum',
       `The smallest order we deliver is ${formatMoney(settings.min_order_cents)} before delivery.`, { field: 'qty' })
   }
-  const subtotal = goods + stacking + delivery
-  const hst = hstCents(subtotal, settings.hst_registered)
+  const subtotal = pin ? goods + stacking + delivery : null
+  const hst = pin ? hstCents(subtotal, settings.hst_registered) : null
   return {
     product_label: product.name, qty_label: qtyLabel(unit, qty), explain: explain(product, unit, settings.load),
-    wood_cu_in: wood, pellet_bags: bags, distance_km: Math.round(distance * 10) / 10,
+    wood_cu_in: wood, pellet_bags: bags, distance_km: pin ? Math.round(distance * 10) / 10 : null,
     goods_cents: goods, stacking_cents: stacking, delivery_cents: delivery,
-    subtotal_cents: subtotal, hst_cents: hst, total_cents: subtotal + hst,
+    subtotal_cents: subtotal, hst_cents: hst, total_cents: pin ? subtotal + hst : null,
   }
 }
 
