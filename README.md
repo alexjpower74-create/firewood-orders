@@ -4,10 +4,9 @@ An order book and delivery route for a small Newfoundland firewood and wood-pell
 dealer plans delivery days by what the truck can carry, the driver works the route even with no signal, and the dealer always
 knows who has paid and who still owes.
 
-**Live (SAMPLE data): <https://firewood-orders.alexjpower74.workers.dev/>** — dealer side at [/dealer/](https://firewood-orders.alexjpower74.workers.dev/dealer/) (PIN 1357),
-driver's phone at [/driver/](https://firewood-orders.alexjpower74.workers.dev/driver/) (PIN 2580). Deployed 2026-09-15 on Alexander's go, from the
-2026-09-14 overnight build. Nothing is sent to anyone and the app never takes a payment. Every business and person on screen is SAMPLE.
-Delivery photos are off on the live copy until R2 is enabled on the account (the delivery itself still saves).
+**Local only (Alexander's call 2026-09-15): not deployed.** It was live for an hour and taken down; he does not want R2
+(delivery photos) enabled on the account right now. Run it locally with the commands below; the D1 database `firewood-orders` still
+exists on the account and `docs/DEPLOY.md` says how to put it back when he wants it.
 
 ## Run it on this computer
 
