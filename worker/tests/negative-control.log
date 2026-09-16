@@ -11,7 +11,7 @@ not ok 2 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half 
   ---
   duration_ms: 198.964741
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:234:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:234:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -24,7 +24,7 @@ not ok 2 - capacity: 4 cords on Tue, a fifth refused with exact numbers; a half 
   actual: 200
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:240:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:240:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
@@ -33,7 +33,7 @@ not ok 3 - capacity for pellets: 3 skids planned, then 1 bag is refused
   ---
   duration_ms: 125.076706
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:262:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:262:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -46,7 +46,7 @@ not ok 3 - capacity for pellets: 3 skids planned, then 1 bag is refused
   actual: 200
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:268:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/capacity/worker/tests/api.test.mjs:268:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
@@ -65,7 +65,7 @@ not ok 2 - the race: 8 concurrent schedule calls into an empty day → exactly 4
   ---
   duration_ms: 310.682171
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/race/worker/tests/api.test.mjs:305:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/race/worker/tests/api.test.mjs:305:1'
   failureType: 'testCodeFailure'
   error: |-
     [200,200,200,200,200,200,200,200]
@@ -97,7 +97,7 @@ not ok 2 - stock: unchanged by order, schedule and start; a delivered 16-inch fa
   ---
   duration_ms: 151.23029
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/stock/worker/tests/api.test.mjs:324:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/stock/worker/tests/api.test.mjs:324:1'
   failureType: 'testCodeFailure'
   error: |-
     order
@@ -129,7 +129,7 @@ not ok 2 - idempotent check-in: same op_id twice → 201 then 200 duplicate; sto
   ---
   duration_ms: 173.510039
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:344:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:344:1'
   failureType: 'testCodeFailure'
   error: |-
     {"error":"This stop was already marked delivered.","code":"already_delivered"}
@@ -142,7 +142,7 @@ not ok 2 - idempotent check-in: same op_id twice → 201 then 200 duplicate; sto
   actual: 409
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:356:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/idempotent/worker/tests/api.test.mjs:356:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
@@ -161,7 +161,7 @@ not ok 2 - original time: at = T with server now T + 45 min keeps T; 2 h in the 
   ---
   duration_ms: 178.818601
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:385:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:385:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -177,7 +177,7 @@ not ok 2 - original time: at = T with server now T + 45 min keeps T; 2 h in the 
   actual: '2026-09-15T17:50:00.000Z'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:395:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/time/worker/tests/api.test.mjs:395:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
 RESULT: RED as intended (exit 1); red tests: original time: at = T with server now T + 45 min keeps T; 2 h in the future is adjusted
 
@@ -193,7 +193,7 @@ not ok 2 - crossing instance: nearest neighbour crosses itself, 2-opt uncrosses 
   ---
   duration_ms: 1.641966
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:34:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:34:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -215,7 +215,7 @@ not ok 3 - 50 seeded instances: no single segment reversal shortens the result b
   ---
   duration_ms: 0.705549
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:61:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:61:1'
   failureType: 'testCodeFailure'
   error: 'instance 0: reversing 2..3 saves 11134.6 m'
   code: 'ERR_ASSERTION'
@@ -224,7 +224,7 @@ not ok 3 - 50 seeded instances: no single segment reversal shortens the result b
   actual: false
   operator: '=='
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:72:16)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/twoopt/worker/tests/route.test.mjs:72:16)
     Test.runInAsyncScope (node:async_hooks:226:14)
     Test.run (node:internal/test_runner/test:1402:25)
     Test.processPendingSubtests (node:internal/test_runner/test:974:18)
@@ -247,7 +247,7 @@ not ok 1 - totals: HST and totals equal row sums, zero months present, NL month 
   ---
   duration_ms: 395.522397
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/month/worker/tests/api-m2.test.mjs:492:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/month/worker/tests/api-m2.test.mjs:492:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -283,7 +283,7 @@ not ok 2 - formula guard: = + - @ tab CR get a leading apostrophe
   ---
   duration_ms: 1.122354
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:19:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:19:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -298,14 +298,14 @@ not ok 2 - formula guard: = + - @ tab CR get a leading apostrophe
   actual: '=SUM(A1)'
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:20:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/csv.test.mjs:20:10)
     Test.runInAsyncScope (node:async_hooks:226:14)
     Test.run (node:internal/test_runner/test:1402:25)
 not ok 1 - CSV exports: header exact, CRLF, quoting, formula guard, filename, money as 123.45
   ---
   duration_ms: 237.19677
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/api-m2.test.mjs:549:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/csvguard/worker/tests/api-m2.test.mjs:549:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -337,7 +337,7 @@ not ok 1 - voided payments leave every sum
   ---
   duration_ms: 321.06756
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/void/worker/tests/api-m2.test.mjs:209:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/void/worker/tests/api-m2.test.mjs:209:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -369,7 +369,7 @@ not ok 1 - undeliver and driver undo each put stock back and void the door payme
   ---
   duration_ms: 285.110859
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:144:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:144:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -384,7 +384,7 @@ not ok 1 - undeliver and driver undo each put stock back and void the door payme
   actual: 8773632
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:160:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/undo/worker/tests/api-m2.test.mjs:160:10)
     process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     async Test.run (node:internal/test_runner/test:1409:7)
 RESULT: RED as intended (exit 1); red tests: undeliver and driver undo each put stock back and void the door payment (owing restored to the cent)
@@ -405,7 +405,7 @@ not ok 5 - HST 15 % half-up per order
   ---
   duration_ms: 1.067055
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:58:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:58:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -418,7 +418,7 @@ not ok 5 - HST 15 % half-up per order
   actual: 4996
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///home/alexander/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:59:10)
+    TestContext.<anonymous> (file://~/Projects/Firewood%20Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/money.test.mjs:59:10)
     Test.runInAsyncScope (node:async_hooks:226:14)
     Test.run (node:internal/test_runner/test:1402:25)
     Test.processPendingSubtests (node:internal/test_runner/test:974:18)
@@ -427,7 +427,7 @@ not ok 1 - totals: HST and totals equal row sums, zero months present, NL month 
   ---
   duration_ms: 478.060247
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/api-m2.test.mjs:492:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/hst/worker/tests/api-m2.test.mjs:492:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -463,7 +463,7 @@ not ok 10 - without a pin: goods and stacking only, never a guessed delivery or 
   ---
   duration_ms: 7.982575
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/nopin/worker/tests/money.test.mjs:157:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/nopin/worker/tests/money.test.mjs:157:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -485,7 +485,7 @@ not ok 1 - quote without a pin: goods and stacking, the money that needs a pin i
   ---
   duration_ms: 85.908871
   type: 'test'
-  location: '/home/alexander/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/nopin/worker/tests/api-m2.test.mjs:636:1'
+  location: '~/Projects/Firewood Orders/.worktrees/fo1/worker/.negative/nopin/worker/tests/api-m2.test.mjs:636:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:

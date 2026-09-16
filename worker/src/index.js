@@ -230,7 +230,8 @@ async function customerOrder(c) {
 
 async function getPhoto(c) {
   const o = await orderByToken(c, c.params.token)
-  const obj = o.photo_key ? await c.env.PHOTOS.get(o.photo_key) : null
+  // No R2 binding (photos not set up on this deploy) reads as "no photo", never a crash.
+  const obj = o.photo_key && c.env.PHOTOS ? await c.env.PHOTOS.get(o.photo_key) : null
   if (!obj) throw notFound('There is no photo for this order.')
   return new Response(obj.body, {
     headers: { 'Content-Type': obj.httpMetadata?.contentType || o.photo_type || 'application/octet-stream',
@@ -658,6 +659,7 @@ async function putPhoto(c) {
   if (!ext) throw new ApiError(415, 'unsupported_media', 'Send the photo as a JPEG, PNG or WebP picture.')
   const tooBig = () => new ApiError(413, 'payload_too_large', 'That photo is too big. The most is 5 MB.')
   if (Number(c.request.headers.get('Content-Length') || 0) > MAX_PHOTO_BYTES) throw tooBig()
+  if (!c.env.PHOTOS) throw new ApiError(503, 'photos_off', 'Photos are not set up on this server. The delivery is saved.')
   const bytes = await c.request.arrayBuffer()
   if (bytes.byteLength > MAX_PHOTO_BYTES) throw tooBig()
   if (bytes.byteLength === 0) throw bad('photo', 'The photo was empty. Take it again.')
@@ -836,6 +838,7 @@ async function resetAll(c) {
     ...TABLES.map((t) => c.db.prepare(`DELETE FROM ${t}`)),
     ...sampleStatements().map(({ sql, params }) => c.db.prepare(sql).bind(...params)),
   ])
+  if (!c.env.PHOTOS) return
   let cursor
   do {
     const list = await c.env.PHOTOS.list({ cursor })

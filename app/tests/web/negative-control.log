@@ -23,7 +23,7 @@ Running 1 test using 1 worker
       52 |   expect(Object.keys(noPinBody)).not.toContain('lng')
       53 |   expect(noPinRes.status()).toBe(200)
       54 |   const noPinQuote = await noPinRes.json()
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:51:83
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:51:83
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/early-quote-pin/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/test-failed-1.png
@@ -65,7 +65,7 @@ Running 1 test using 1 worker
       243 |     JSON.parse(r.request().postData() || '{}').delivery_cents === 1000)
       244 |   await typeIn(page, page.locator('#delivery-fee'), '10.00')
       245 |   const feeRes = await feeQuote
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/dealer.spec.mjs:242:25
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/dealer.spec.mjs:242:25
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/phone-fee-quote/results/web-dealer-a-phone-order-t-d9308-under-New-with-source-phone-chromium-390/test-failed-1.png
@@ -110,7 +110,7 @@ Running 1 test using 1 worker
       67 |   await expect(balance).toHaveText('Balance owing $498.00')
       68 |   await expect(page.locator(`.cust-order[data-order="${first.id}"] .order-owing`)).toHaveText('Owing $273.75')
       69 |   api1 = await ledger()
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/ledger.spec.mjs:66:84
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/ledger.spec.mjs:66:84
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/ledger-void-id/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/test-failed-1.png
@@ -160,7 +160,7 @@ Running 1 test using 1 worker
       81 |   await expect(card.getByRole('alert')).toBeVisible()
       82 |   await shot(page, testInfo, 'web', 'dealer-over-capacity')
       83 |
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/dealer.spec.mjs:80:41
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/dealer.spec.mjs:80:41
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/capacity-message/results/web-dealer-capacity-with-t-07373-e-alert-and-stays-under-New-chromium-390/test-failed-1.png
@@ -212,7 +212,7 @@ exit 1; expected failure /Scheduled for Tuesday, September 15/; RED (good: the c
       26 |   await expect(page.locator('#timeline li[aria-current="step"]')).toHaveText('Scheduled')
       27 |   await shot(page, testInfo, 'web', 'status-scheduled')
       28 |
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/status.spec.mjs:25:41
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/status.spec.mjs:25:41
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/status-label/results/web-status-each-status-lab-68e14-th-the-photo-once-delivered-chromium-390/test-failed-1.png
@@ -253,8 +253,8 @@ exit 1; expected failure /tap\(locator\('#send'\)\) hit-test[\s\S]*something els
       106 |   if (await isCoarse(page)) await page.touchscreen.tap(x, y)
       107 |   else await page.mouse.click(x, y)
       108 | }
-        at tap (/home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/helpers.mjs:105:104)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:108:3
+        at tap (~/Projects/Firewood Orders/.worktrees/fo2/app/tests/helpers.mjs:105:104)
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:108:3
 
     Error: page.waitForResponse: Test ended.
 
@@ -265,7 +265,7 @@ exit 1; expected failure /tap\(locator\('#send'\)\) hit-test[\s\S]*something els
       108 |   await tap(page, page.locator('#send'))
       109 |   const placedRes = await placed
       110 |   expect(placedRes.status()).toBe(201)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:107:23
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:107:23
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/send-overlay/results/web-order-five-steps-with--60f04-equest-sent-opens-Requested-chromium-390/test-failed-1.png
@@ -317,7 +317,7 @@ Running 1 test using 1 worker
       149 |   w.expectClean()
       150 |   assertNoThirdParty(context)
       151 | })
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:148:46
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/order.spec.mjs:148:46
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/hst-float/results/web-order-an-HST-that-is-n-62cbb-s-to-King-s-Point-is-157-39-chromium-390/test-failed-1.png
@@ -369,7 +369,7 @@ Running 1 test using 1 worker
       48 |   await expect(page.locator(`.cust-order[data-order="${second.id}"] .order-owing`)).toHaveText('Owing $224.25')
       49 |   let api1 = await ledger()
       50 |   expect(api1.balance_cents).toBe(firstTotal + secondTotal - 5000 - 10000)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/ledger.spec.mjs:47:84
+        at ~/Projects/Firewood Orders/.worktrees/fo2/app/tests/web/ledger.spec.mjs:47:84
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/ledger-owing/results/web-ledger-payments-and-a--20c2c-lance-column-equals-the-API-chromium-390/test-failed-1.png
@@ -421,7 +421,7 @@ Running 1 test using 1 worker
       205 |   }
       206 |   w.expectClean()
       207 |   assertNoThirdParty(context)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/qa/app/tests/web/order.spec.mjs:204:89
+        at ~/Projects/Firewood Orders/.worktrees/qa/app/tests/web/order.spec.mjs:204:89
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/from-unit/results/web-order-each-product-car-adc91-es-not-look-dearer-than-dry-chromium-390/test-failed-1.png
@@ -472,8 +472,8 @@ exit 1; expected failure /OpenFreeMap © OpenMapTiles Data from OpenStreetMap/; 
       19 |   for (const href of LINKS) await expect(attribution.locator(`a[href="${href}"]`)).toHaveCount(1)
       20 |   // Visible means a person can see it: scrolled to the middle of the screen the way a person would scroll to it (the same
       21 |   // allowance tap() makes), the attribution's own middle hit-tests to the attribution, not the price bar or anything else.
-        at expectBaseMap (/home/alexander/Projects/Firewood Orders/.worktrees/qa/app/tests/web/map.spec.mjs:18:29)
-        at /home/alexander/Projects/Firewood Orders/.worktrees/qa/app/tests/web/map.spec.mjs:44:3
+        at expectBaseMap (~/Projects/Firewood Orders/.worktrees/qa/app/tests/web/map.spec.mjs:18:29)
+        at ~/Projects/Firewood Orders/.worktrees/qa/app/tests/web/map.spec.mjs:44:3
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     .negative/map-attribution/results/web-map-order-page-the-pin-c3cb6--a-tap-still-places-the-pin-chromium-390/test-failed-1.png

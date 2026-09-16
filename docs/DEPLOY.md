@@ -1,7 +1,39 @@
 # Firewood Orders: what deploying needs
 
-**Nothing here has been run.** Tonight's build is local only (Alexander's order, 2026-09-14). This is the checklist for when he
-says go. One deployment = one dealer.
+**Deployed 2026-09-15** on Alexander's go ("Push Firewood Orders"). One deployment = one dealer.
+
+| Created | Value |
+|---|---|
+| Worker `firewood-orders` (env `production`) | <https://firewood-orders.alexjpower74.workers.dev> |
+| D1 `firewood-orders` | id `97b97222-afb7-4f24-bac9-1b8cd270295d`, migrations 0001 + 0002 applied `--remote` |
+| R2 `firewood-orders-photos` | **not created**: R2 is not enabled on the Cloudflare account (dashboard step). The production env has no `PHOTOS` binding; the Worker answers 503 `photos_off` to a photo upload and 404 to a photo read, everything else works. |
+| Secrets, cron | none |
+| SAMPLE orders | not loaded: the fortnight of SAMPLE orders is only reachable through the `TEST_MODE` seed route, which is never on live. See "Loading SAMPLE orders" below. |
+
+`worker/wrangler.toml` has two levels: the top level for `wrangler dev --local` (with the R2 binding, which Miniflare stands in
+for), and `[env.production]` for the live Worker (wrangler environments do not inherit bindings, so D1, assets and vars are
+repeated there). Deploy with `cd worker && npx wrangler deploy --env production`.
+
+## Loading SAMPLE orders on the live copy
+
+Seed a local copy (`npm run demo -- --fresh`), dump the rows of every table as `INSERT OR REPLACE` statements, and apply them
+with `npx wrangler d1 execute firewood-orders --remote --env production --file <dump.sql>`. The seed is relative to "today", so
+do it the day it is shown. Photos in the seed need the R2 bucket; without it the delivered orders show no photo.
+
+## Turning on photos
+
+Enable R2 in the Cloudflare dashboard, then `cd worker && npx wrangler r2 bucket create firewood-orders-photos`, add to
+`wrangler.toml` under the production env:
+
+```toml
+[[env.production.r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "firewood-orders-photos"
+```
+
+and deploy again.
+
+## The original checklist
 
 ## Cloudflare pieces
 

@@ -19,7 +19,9 @@ Read PLAN.md first (the Rig contract), then docs/API.md (the contract between sl
 
 ## Rules that bite here
 
-- **Local only.** `wrangler dev --local`. No `wrangler deploy`, `secret put`, `d1 create`, `r2 bucket create`, `--remote`, Pages or DNS.
+- **Deploys only when Alexander says so (he did on 2026-09-15).** Dev and tests stay `wrangler dev --local`. The live Worker is
+  `cd worker && npx wrangler deploy --env production`; D1 migrations do not run on deploy (`wrangler d1 migrations apply firewood-orders --remote --env production`).
+- **Public repo.** No secrets, machine names, home-folder paths or real people; run `check-no-personal-data .` before every push.
 - **Nothing is sent and no payment is taken.** Messages are "Copy text" buttons. The deposit is text the dealer writes.
 - **SAMPLE on every screen.** Dealer "SAMPLE Wood & Pellets — Springdale (demo)"; customer names end in "(SAMPLE)"; no house numbers.
 - **Money is integer cents, wood is integer cubic inches, pellets are bags.** HST 15 % half-up per order. No floats in sums.

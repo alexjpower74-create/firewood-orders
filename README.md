@@ -4,8 +4,10 @@ An order book and delivery route for a small Newfoundland firewood and wood-pell
 dealer plans delivery days by what the truck can carry, the driver works the route even with no signal, and the dealer always
 knows who has paid and who still owes.
 
-**Local build from the 2026-09-14 overnight sprint.** Nothing is deployed, nothing is sent to anyone, and the app never takes a
-payment. Every business and person on screen is SAMPLE.
+**Live (SAMPLE data): <https://firewood-orders.alexjpower74.workers.dev/>** — dealer side at [/dealer/](https://firewood-orders.alexjpower74.workers.dev/dealer/) (PIN 1357),
+driver's phone at [/driver/](https://firewood-orders.alexjpower74.workers.dev/driver/) (PIN 2580). Deployed 2026-09-15 on Alexander's go, from the
+2026-09-14 overnight build. Nothing is sent to anyone and the app never takes a payment. Every business and person on screen is SAMPLE.
+Delivery photos are off on the live copy until R2 is enabled on the account (the delivery itself still saves).
 
 ## Run it on this computer
 
@@ -86,11 +88,12 @@ affected specs (order, targets, dealer, journey) passed 70 / 0 / 2 skipped, and 
 Map tiles switched to OpenFreeMap (`164b9ad`): Worker unit 34 / 0 / 0, API 76 / 0 / 0, Playwright 198 passed / 0 failed / 6
 skipped (a new map spec in every project), and a 29th negative control (the attribution) went red.
 
-## What deploying needs
+## Deploying
 
-Not done tonight; Alexander decides. Full checklist in `docs/DEPLOY.md`. In short: a D1 database `firewood-orders` (create, put
+Done 2026-09-15 (Worker `firewood-orders`, D1 `firewood-orders`; R2 pending). Full checklist and what was created in
+`docs/DEPLOY.md`. In short: a D1 database `firewood-orders` (create, put
 its id in `worker/wrangler.toml`, apply the migrations remotely), an R2 bucket `firewood-orders-photos`, deploy the Worker
-`firewood-orders` (it serves the pages too). No secrets and no cron. Then change both PINs, enter the real dealer's settings and
+`firewood-orders` (it serves the pages too) with `npx wrangler deploy --env production`. No secrets and no cron. Then change both PINs, enter the real dealer's settings and
 turn SAMPLE off. Never set `TEST_MODE`. Map tiles need nothing: OpenFreeMap is free with commercial use
 allowed and no key, but has no SLA; switching provider is two lines under `[vars]` in `worker/wrangler.toml`.
 

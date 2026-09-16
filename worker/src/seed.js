@@ -155,7 +155,7 @@ export async function seedDemo(c) {
   }
   await db.batch(stmts)
   const png = samplePng()
-  for (const key of photos) await c.env.PHOTOS.put(key, png, { httpMetadata: { contentType: 'image/png' } })
+  if (c.env.PHOTOS) for (const key of photos) await c.env.PHOTOS.put(key, png, { httpMetadata: { contentType: 'image/png' } })
 
   return { today, customers: customers.length, orders: orders.length, busy_day: busy,
     status_url: `/o/?t=${orders[9].token}` }

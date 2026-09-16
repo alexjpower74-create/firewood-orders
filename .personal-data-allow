@@ -1,0 +1,2 @@
+# CSS class / JS property "local" on the driver offline queue (a delivery saved on the phone), not a LAN hostname.
+^app/public/driver/driver\.(css|js):[0-9]+: (li|s)\.local$
