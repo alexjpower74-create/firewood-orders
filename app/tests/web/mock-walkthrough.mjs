@@ -9,7 +9,12 @@ import { guardContext, assertNoThirdParty, tap, type, tapMap, shot, contrastOf }
 
 const BASE = `http://127.0.0.1:${process.env.MOCK_PORT || 7701}`
 const PROJECTS = [
-  { name: 'mock-chromium-390', engine: chromium, use: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true }, clipboard: true },
+  {
+    name: 'mock-chromium-390',
+    engine: chromium,
+    use: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true },
+    clipboard: true,
+  },
   { name: 'mock-chromium-1280', engine: chromium, use: { viewport: { width: 1280, height: 800 } }, clipboard: true },
   { name: 'mock-webkit-390', engine: webkit, use: { ...devices['iPhone 14'] }, clipboard: false },
   { name: 'mock-webkit-1280', engine: webkit, use: { viewport: { width: 1280, height: 800 } }, clipboard: false },
@@ -33,19 +38,31 @@ const BUCHANS = { lat: 48.8238, lng: -56.8490694 }
 
 async function run(p) {
   const state = {}
-  try { await walk(p, state) } catch (e) { e.page = state.page; e.problems = state.problems; throw e }
+  try {
+    await walk(p, state)
+  } catch (e) {
+    e.page = state.page
+    e.problems = state.problems
+    throw e
+  }
 }
 
 async function walk(p, state) {
   const browser = await p.engine.launch()
-  const context = await browser.newContext({ ...p.use, baseURL: BASE, ...(p.clipboard ? { permissions: ['clipboard-read', 'clipboard-write'] } : {}) })
+  const context = await browser.newContext({
+    ...p.use,
+    baseURL: BASE,
+    ...(p.clipboard ? { permissions: ['clipboard-read', 'clipboard-write'] } : {}),
+  })
   await guardContext(context)
   const page = await context.newPage()
   const problems = []
   state.page = page
   state.problems = problems
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`))
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`console: ${m.text()}`) })
+  page.on('console', (m) => {
+    if (m.type() === 'error') problems.push(`console: ${m.text()}`)
+  })
   const info = { project: { name: p.name } }
   const S = (name) => shot(page, info, 'web', name)
   const log = (s) => console.log(`[${p.name}] ${s}`)
@@ -64,7 +81,9 @@ async function walk(p, state) {
   await tap(page, page.locator('button.unit[data-unit="face_cord"]'))
   await expect(page.locator('#unit-explain')).toContainText('(16 inches). That is 0.33 of a full cord.')
   await tap(page, page.locator('button.unit[data-unit="load"]'))
-  await expect(page.locator('#unit-explain')).toHaveText('A load is what our dump truck carries in one trip, dumped in a pile, not stacked. We count a load as 1.5 cords.')
+  await expect(page.locator('#unit-explain')).toHaveText(
+    'A load is what our dump truck carries in one trip, dumped in a pile, not stacked. We count a load as 1.5 cords.',
+  )
   await tap(page, page.locator('button.unit[data-unit="cord"]'))
   await expect(page.locator('#quote-goods')).toContainText('$300.00')
   await S('order-2-how-much')
@@ -82,7 +101,7 @@ async function walk(p, state) {
   log(`distance: ${await page.locator('#distance').textContent()}`)
   await tap(page, page.locator('#next'), 'Next without address')
   await expect(page.locator('[data-error-for="address"]')).toBeVisible()
-  await type(page, page.locator('#address'), "Up the lane past the church (SAMPLE)")
+  await type(page, page.locator('#address'), 'Up the lane past the church (SAMPLE)')
   await type(page, page.locator('#dump-notes'), 'By the shed, not on the lawn')
   await S('order-3-where')
   await tap(page, page.locator('#next'))
@@ -116,7 +135,12 @@ async function walk(p, state) {
   await expect(page.locator('#owing')).toHaveText('Balance owing $373.75')
   await expect(page.locator('#deposit')).toContainText('This page takes no payments.')
   await S('status-requested')
-  for (const [tok, label] of [['demo-scheduled-sample', 'Scheduled for Tuesday, September 15'], ['demo-out-sample', 'Out for delivery'], ['demo-delivered-sample', 'Delivered'], ['demo-cancelled-sample', 'Cancelled']]) {
+  for (const [tok, label] of [
+    ['demo-scheduled-sample', 'Scheduled for Tuesday, September 15'],
+    ['demo-out-sample', 'Out for delivery'],
+    ['demo-delivered-sample', 'Delivered'],
+    ['demo-cancelled-sample', 'Cancelled'],
+  ]) {
     await page.goto(`/o/?t=${tok}`)
     await expect(page.locator('#status')).toHaveText(label)
     await S(`status-${tok.split('-')[1]}`)
@@ -136,10 +160,15 @@ async function walk(p, state) {
   await expect(page.locator('[data-error-for="qty"]')).toBeHidden()
   await tap(page, page.locator('#next'))
   await page.waitForTimeout(400)
-  for (let i = 0; i < 3; i++) { await tap(page, page.locator('.leaflet-control-zoom-out'), 'zoom out'); await page.waitForTimeout(450) }
+  for (let i = 0; i < 3; i++) {
+    await tap(page, page.locator('.leaflet-control-zoom-out'), 'zoom out')
+    await page.waitForTimeout(450)
+  }
   box = await page.locator('#map').boundingBox()
   await tapMap(page, page.locator('#map'), ...fractionFor(box, YARD, BUCHANS, 7))
-  await expect(page.locator('[data-error-for="pin"]')).toHaveText("That's farther than we deliver. Call us at 709-555-0100 and we'll see what we can do.")
+  await expect(page.locator('[data-error-for="pin"]')).toHaveText(
+    "That's farther than we deliver. Call us at 709-555-0100 and we'll see what we can do.",
+  )
   await expect(page.locator('#quote-total')).toHaveText('—')
   await S('order-outside-area')
 
@@ -179,7 +208,9 @@ async function walk(p, state) {
   const wade = page.locator('.order-card', { hasText: 'Wade R. (SAMPLE)' })
   await tap(page, wade.getByRole('button', { name: 'Schedule' }))
   await tap(page, wade.locator('button.day[data-date="2026-09-15"]'))
-  await expect(wade.getByRole('alert')).toHaveText("That's more than the truck can carry that day: 4.50 of 4.50 cords already planned, this order needs 1.00.")
+  await expect(wade.getByRole('alert')).toHaveText(
+    "That's more than the truck can carry that day: 4.50 of 4.50 cords already planned, this order needs 1.00.",
+  )
   await expect(page.locator('#order-list[data-bucket="new"] .order-card', { hasText: 'Wade R. (SAMPLE)' })).toBeVisible()
   await S('dealer-over-capacity')
 
@@ -196,7 +227,10 @@ async function walk(p, state) {
   const copy = page.getByRole('button', { name: 'Copy text' })
   await tap(page, copy)
   await expect(page.getByRole('button', { name: 'Copied' })).toBeVisible()
-  if (p.clipboard) expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Hi Joan, this is SAMPLE Wood & Pellets\. Your order \(1 cord of Mixed softwood, dry\) is booked for delivery on Tuesday, September 15\. Amount owing: \$373\.75\. Check your order: http/)
+  if (p.clipboard)
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
+      /^Hi Joan, this is SAMPLE Wood & Pellets\. Your order \(1 cord of Mixed softwood, dry\) is booked for delivery on Tuesday, September 15\. Amount owing: \$373\.75\. Check your order: http/,
+    )
   await tap(page, page.getByRole('button', { name: 'Take off the schedule' }))
   await expect(page.locator('.detail .pill.status')).toHaveText('Requested')
   if (await page.locator('.back').isVisible()) await tap(page, page.locator('.back'))
@@ -231,16 +265,25 @@ async function walk(p, state) {
 
 let failed = 0
 for (const p of PROJECTS.filter((x) => !only || x.name.includes(only))) {
-  try { await run(p) } catch (e) {
+  try {
+    await run(p)
+  } catch (e) {
     failed++
     console.error(`[${p.name}] FAILED: ${e.message}`)
     const page = e.page
     if (page) {
-      const visible = await page.locator('[data-error-for]:visible, [role="alert"]:visible').allTextContents().catch(() => [])
+      const visible = await page
+        .locator('[data-error-for]:visible, [role="alert"]:visible')
+        .allTextContents()
+        .catch(() => [])
       console.error(`[${p.name}] visible errors: ${JSON.stringify(visible)}`)
       console.error(`[${p.name}] page problems: ${JSON.stringify(e.problems)}`)
       await page.screenshot({ path: `tests/results/walkthrough-failure-${p.name}.png`, fullPage: true }).catch(() => {})
-      await page.context().browser().close().catch(() => {})
+      await page
+        .context()
+        .browser()
+        .close()
+        .catch(() => {})
     }
   }
 }

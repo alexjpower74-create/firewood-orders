@@ -7,7 +7,8 @@ import { esc, cords, icon } from '/ui.js'
 import { addBaseLayer } from '/map.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
-const grip = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>'
+const grip =
+  '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>'
 
 let root = null
 let info = null
@@ -84,7 +85,10 @@ function renderRoute(r) {
   route = r
   const fresh = !$('#route-map', root)
   if (fresh) {
-    if (map) { map.remove(); map = null }
+    if (map) {
+      map.remove()
+      map = null
+    }
     root.innerHTML = `
       <div class="route-head">
         <button type="button" class="btn btn-ghost" data-action="days">${icon.back}<span>Back to days</span></button>
@@ -123,10 +127,14 @@ function stopItem(s, i, locked, count) {
       <span class="small">${esc(s.address)}</span>
       ${s.status !== 'scheduled' ? `<span class="pill status" data-status="${esc(s.status)}">${esc(s.status_label)}</span>` : ''}
     </span>
-    ${isLocked ? '' : `<span class="stop-moves">
+    ${
+      isLocked
+        ? ''
+        : `<span class="stop-moves">
       <button type="button" class="btn btn-secondary" data-action="up" ${i <= locked ? 'disabled' : ''}>Move up</button>
       <button type="button" class="btn btn-secondary" data-action="down" ${i >= count - 1 ? 'disabled' : ''}>Move down</button>
-    </span>`}
+    </span>`
+    }
   </li>`
 }
 
@@ -145,11 +153,18 @@ function drawMap(r) {
   const points = r.stops.map((s) => [s.lat, s.lng])
   L.polyline([yard, ...points, yard], { color: '#fb923c', weight: 3, opacity: 0.85 }).addTo(layers)
   L.circleMarker(yard, { radius: 9, color: '#1a0e02', weight: 2, fillColor: '#fb923c', fillOpacity: 1 })
-    .addTo(layers).bindTooltip(esc(r.yard.label))
+    .addTo(layers)
+    .bindTooltip(esc(r.yard.label))
   r.stops.forEach((s, i) => {
     L.marker([s.lat, s.lng], {
-      icon: L.divIcon({ className: 'stop-marker', html: `<span data-status="${esc(s.status)}">${i + 1}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] }),
-      title: `${i + 1}. ${s.name}`, keyboard: false,
+      icon: L.divIcon({
+        className: 'stop-marker',
+        html: `<span data-status="${esc(s.status)}">${i + 1}</span>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      }),
+      title: `${i + 1}. ${s.name}`,
+      keyboard: false,
     }).addTo(layers)
   })
   map.invalidateSize()

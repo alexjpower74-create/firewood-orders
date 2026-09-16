@@ -4,8 +4,25 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { SAMPLE_SETTINGS } from '../src/sample.js'
 import {
-  call, checkin, CORD, detail, order, orderBody, place, productMoves, put, reset, scheduled, signin, stock, stockMoves, SUN, T0,
-  TUE, uuid, WED,
+  call,
+  checkin,
+  CORD,
+  detail,
+  order,
+  orderBody,
+  place,
+  productMoves,
+  put,
+  reset,
+  scheduled,
+  signin,
+  stock,
+  stockMoves,
+  SUN,
+  T0,
+  TUE,
+  uuid,
+  WED,
 } from './api-helpers.mjs'
 
 const D = SAMPLE_SETTINGS.delivery
@@ -29,8 +46,10 @@ test('customer cancel: only while requested; once scheduled the plain 409', asyn
   assert.deepEqual([again.status, again.body.code], [409, 'bad_state'])
   const b = await scheduled(dealer, {}, TUE)
   const no = await call('POST', `/api/o/${b.token}/cancel`)
-  assert.deepEqual([no.status, no.body.code, no.body.error],
-    [409, 'bad_state', 'This order is already on the schedule. Call us to change it.'])
+  assert.deepEqual(
+    [no.status, no.body.code, no.body.error],
+    [409, 'bad_state', 'This order is already on the schedule. Call us to change it.'],
+  )
   assert.equal((await call('GET', `/api/o/${b.token}`)).body.order.status, 'scheduled')
   assert.equal((await call('POST', '/api/o/not-a-token/cancel')).status, 404)
   const board = await call('GET', '/api/dealer/board', { token: dealer })
@@ -47,13 +66,17 @@ test('dealer cancel: from requested and scheduled (frees the day), not once out 
   assert.equal((await pay(dealer, { customer_id: cust, order_id: a.id, amount_cents: 5000, method: 'cash' })).status, 201)
   const r = await call('POST', `/api/dealer/orders/${a.id}/cancel`, { token: dealer })
   assert.equal(r.status, 200, JSON.stringify(r.body))
-  assert.deepEqual([r.body.order.status, r.body.order.delivery_date, r.body.order.route_pos, r.body.order.owing_cents],
-    ['cancelled', null, null, -5000])
+  assert.deepEqual(
+    [r.body.order.status, r.body.order.delivery_date, r.body.order.route_pos, r.body.order.owing_cents],
+    ['cancelled', null, null, -5000],
+  )
   assert.equal((await call('GET', `/api/o/${a.token}`)).body.order.owing_label, 'Credit $50.00')
   const days = await call('GET', '/api/dealer/days', { token: dealer })
   assert.equal(days.body.days.find((d) => d.date === TUE).wood.used_cords, 1)
-  assert.deepEqual((await call('GET', `/api/dealer/days/${TUE}/route`, { token: dealer })).body.stops.map((s) => [s.id, s.route_pos]),
-    [[b.id, 1]])
+  assert.deepEqual(
+    (await call('GET', `/api/dealer/days/${TUE}/route`, { token: dealer })).body.stops.map((s) => [s.id, s.route_pos]),
+    [[b.id, 1]],
+  )
   assert.equal((await call('GET', `/api/dealer/customers/${cust}/ledger`, { token: dealer })).body.balance_cents, -5000)
   const fresh = await order()
   assert.equal((await call('POST', `/api/dealer/orders/${fresh.id}/cancel`, { token: dealer })).body.order.status, 'cancelled')
@@ -70,21 +93,40 @@ test('edit: money recomputed; a delivered order refuses amount changes but takes
   let r = await put(`/api/dealer/orders/${o.id}`, { qty: 2, stacking: true, address: 'Behind the school', note: 'Call first' }, dealer)
   assert.equal(r.status, 200, JSON.stringify(r.body))
   // 2 cords 600.00 + stacking 2 × 60.00 = 720.00, free delivery, HST 108.00, total 828.00
-  assert.deepEqual([r.body.order.qty_label, r.body.order.wood_cu_in, r.body.order.goods_cents, r.body.order.stacking_cents,
-    r.body.order.delivery_cents, r.body.order.hst_cents, r.body.order.total_cents], ['2 cords', 2 * CORD, 60000, 12000, 0, 10800, 82800])
+  assert.deepEqual(
+    [
+      r.body.order.qty_label,
+      r.body.order.wood_cu_in,
+      r.body.order.goods_cents,
+      r.body.order.stacking_cents,
+      r.body.order.delivery_cents,
+      r.body.order.hst_cents,
+      r.body.order.total_cents,
+    ],
+    ['2 cords', 2 * CORD, 60000, 12000, 0, 10800, 82800],
+  )
   assert.deepEqual([r.body.order.address, r.body.order.note, r.body.order.stacking], ['Behind the school', 'Call first', true])
   // moving the pin to King's Point recomputes the band ($25.00): subtotal 745.00, HST 111.75, total 856.75
   const kp = place("King's Point")
   r = await put(`/api/dealer/orders/${o.id}`, { lat: kp.lat, lng: kp.lng }, dealer)
-  assert.deepEqual([r.body.order.distance_km, r.body.order.delivery_cents, r.body.order.subtotal_cents, r.body.order.hst_cents,
-    r.body.order.total_cents], [12.9, 2500, 74500, 11175, 85675])
+  assert.deepEqual(
+    [r.body.order.distance_km, r.body.order.delivery_cents, r.body.order.subtotal_cents, r.body.order.hst_cents, r.body.order.total_cents],
+    [12.9, 2500, 74500, 11175, 85675],
+  )
   // a dealer fee of 10.00: subtotal 730.00, HST 109.50, total 839.50
   r = await put(`/api/dealer/orders/${o.id}`, { delivery_cents: 1000 }, dealer)
-  assert.deepEqual([r.body.order.delivery_cents, r.body.order.subtotal_cents, r.body.order.hst_cents, r.body.order.total_cents],
-    [1000, 73000, 10950, 83950])
+  assert.deepEqual(
+    [r.body.order.delivery_cents, r.body.order.subtotal_cents, r.body.order.hst_cents, r.body.order.total_cents],
+    [1000, 73000, 10950, 83950],
+  )
   assert.equal((await call('GET', `/api/o/${o.token}`)).body.order.owing_cents, 83950)
-  for (const [field, change] of [['qty', { qty: 0 }], ['phone', { phone: 'x' }], ['preferred', { preferred: { any: false, dates: [SUN] } }],
-    ['unit', { unit: 'bag' }], ['delivery_cents', { delivery_cents: -1 }]]) {
+  for (const [field, change] of [
+    ['qty', { qty: 0 }],
+    ['phone', { phone: 'x' }],
+    ['preferred', { preferred: { any: false, dates: [SUN] } }],
+    ['unit', { unit: 'bag' }],
+    ['delivery_cents', { delivery_cents: -1 }],
+  ]) {
     const bad = await put(`/api/dealer/orders/${o.id}`, change, dealer)
     assert.deepEqual([bad.status, bad.body.field], [400, field], JSON.stringify(change))
   }
@@ -104,8 +146,10 @@ test('edit: money recomputed; a delivered order refuses amount changes but takes
   assert.equal(r.status, 200, JSON.stringify(r.body))
   const d = await detail(dealer, o.id)
   assert.notEqual(d.body.customer.id, oldCustomer)
-  assert.deepEqual([d.body.customer.name, d.body.customer.phone, d.body.customer.balance_cents],
-    ['Wade Rideout (SAMPLE)', '709-555-0199', 82950])
+  assert.deepEqual(
+    [d.body.customer.name, d.body.customer.phone, d.body.customer.balance_cents],
+    ['Wade Rideout (SAMPLE)', '709-555-0199', 82950],
+  )
   assert.equal(d.body.payments.length, 1)
   assert.equal((await call('GET', `/api/dealer/customers/${oldCustomer}/ledger`, { token: dealer })).body.balance_cents, 0)
   const cancelled = await order()
@@ -155,10 +199,15 @@ test('undeliver and driver undo each put stock back and void the door payment (o
   assert.equal((await stock('p_softwood_dry', dealer)).stock_cu_in, wood0 - 73728)
   const u = await call('DELETE', `/api/driver/checkins/${opA}`, { token: driver, now: minutesAfter(T0, 10) })
   assert.equal(u.status, 200, JSON.stringify(u.body))
-  assert.deepEqual([u.body.order.status, u.body.order.paid_cents, u.body.order.owing_cents, u.body.order.door_payment,
-    u.body.order.delivered_at], ['out_for_delivery', 0, 16675, null, null])
+  assert.deepEqual(
+    [u.body.order.status, u.body.order.paid_cents, u.body.order.owing_cents, u.body.order.door_payment, u.body.order.delivered_at],
+    ['out_for_delivery', 0, 16675, null, null],
+  )
   assert.equal((await stock('p_softwood_dry', dealer)).stock_cu_in, wood0)
-  assert.deepEqual((await detail(dealer, a.id)).body.payments.map((p) => [p.amount_cents, p.source, p.voided]), [[16675, 'door', true]])
+  assert.deepEqual(
+    (await detail(dealer, a.id)).body.payments.map((p) => [p.amount_cents, p.source, p.voided]),
+    [[16675, 'door', true]],
+  )
   assert.equal((await call('GET', `/api/o/${a.token}`)).body.order.owing_label, 'Balance owing $166.75')
   const twice = await call('DELETE', `/api/driver/checkins/${opA}`, { token: driver, now: minutesAfter(T0, 11) })
   assert.deepEqual([twice.status, twice.body.code], [409, 'bad_state'])
@@ -171,8 +220,15 @@ test('undeliver and driver undo each put stock back and void the door payment (o
   assert.equal(un.status, 200, JSON.stringify(un.body))
   assert.deepEqual([un.body.order.status, un.body.order.paid_cents, un.body.order.owing_cents], ['out_for_delivery', 0, 16675])
   assert.equal((await stock('p_softwood_dry', dealer)).stock_cu_in, wood0)
-  assert.deepEqual(stockMoves(a.id).map((m) => [m.change, m.reason]),
-    [[-73728, 'delivered'], [73728, 'undo'], [-73728, 'delivered'], [73728, 'undo']])
+  assert.deepEqual(
+    stockMoves(a.id).map((m) => [m.change, m.reason]),
+    [
+      [-73728, 'delivered'],
+      [73728, 'undo'],
+      [-73728, 'delivered'],
+      [73728, 'undo'],
+    ],
+  )
   assert.equal((await call('POST', `/api/dealer/orders/${a.id}/undeliver`, { token: dealer })).body.code, 'bad_state')
 
   // pellets on a day not started go back to scheduled
@@ -194,8 +250,7 @@ test('driver undo: 15 minutes after the server got it is still fine, 16 is too l
   // the phone tapped an hour earlier; the 15 minutes count from when the server received it (T0)
   assert.equal((await checkin(driver, a.id, { method: 'cash' }, { op, at: minutesAfter(T0, -60) })).status, 201)
   const late = await call('DELETE', `/api/driver/checkins/${op}`, { token: driver, now: minutesAfter(T0, 16) })
-  assert.deepEqual([late.status, late.body.code, late.body.error],
-    [409, 'too_late', 'Too late to undo here. Ask the dealer to change it.'])
+  assert.deepEqual([late.status, late.body.code, late.body.error], [409, 'too_late', 'Too late to undo here. Ask the dealer to change it.'])
   assert.equal((await detail(dealer, a.id)).body.order.status, 'delivered')
   const b = await scheduled(dealer, {}, TUE)
   const op2 = uuid()
@@ -227,15 +282,29 @@ test('voided payments leave every sum', async () => {
 
   const d = await detail(dealer, o.id)
   assert.deepEqual([d.body.order.paid_cents, d.body.order.owing_cents, d.body.customer.balance_cents], [24500, 10000, 10000])
-  assert.deepEqual(d.body.payments.map((p) => [p.amount_cents, p.voided]), [[10000, true], [24500, false]])
+  assert.deepEqual(
+    d.body.payments.map((p) => [p.amount_cents, p.voided]),
+    [
+      [10000, true],
+      [24500, false],
+    ],
+  )
   assert.equal((await call('GET', `/api/o/${o.token}`)).body.order.owing_label, 'Balance owing $100.00')
   const ledger = await call('GET', `/api/dealer/customers/${cust}/ledger`, { token: dealer })
-  assert.deepEqual(ledger.body.entries.map((e) => [e.kind, e.charge_cents, e.payment_cents, e.balance_cents]),
-    [['order', 34500, 0, 34500], ['payment', 0, 24500, 10000]])
+  assert.deepEqual(
+    ledger.body.entries.map((e) => [e.kind, e.charge_cents, e.payment_cents, e.balance_cents]),
+    [
+      ['order', 34500, 0, 34500],
+      ['payment', 0, 24500, 10000],
+    ],
+  )
   const list = await call('GET', '/api/dealer/customers', { token: dealer })
   assert.deepEqual([list.body.customers[0].paid_cents, list.body.customers[0].balance_cents], [24500, 10000])
   const board = await call('GET', '/api/dealer/board', { token: dealer })
-  assert.deepEqual(board.body.owing.map((x) => [x.id, x.owing_cents]), [[o.id, 10000]])
+  assert.deepEqual(
+    board.body.owing.map((x) => [x.id, x.owing_cents]),
+    [[o.id, 10000]],
+  )
   const t = await call('GET', '/api/dealer/totals?season=2026', { token: dealer })
   assert.deepEqual([t.body.months[0].payments_cents, t.body.totals.payments_cents, t.body.totals.owing_cents], [24500, 24500, 10000])
   const csv = text((await call('GET', '/api/dealer/export/payments.csv?season=2026', { token: dealer })).body)
@@ -249,8 +318,13 @@ test('messages: the balance reminder is exact; paid in full and new orders have 
   const o = await scheduled(dealer, {}, TUE)
   await checkin(driver, o.id, { method: 'owes' })
   const d = await detail(dealer, o.id)
-  assert.deepEqual(d.body.messages, [{ kind: 'balance', label: 'Balance reminder',
-    text: `Hi Wade, this is SAMPLE Wood & Pellets. Thanks again for your order. The balance of $373.75 is still owing. ${SAMPLE_SETTINGS.deposit_text}` }])
+  assert.deepEqual(d.body.messages, [
+    {
+      kind: 'balance',
+      label: 'Balance reminder',
+      text: `Hi Wade, this is SAMPLE Wood & Pellets. Thanks again for your order. The balance of $373.75 is still owing. ${SAMPLE_SETTINGS.deposit_text}`,
+    },
+  ])
   await pay(dealer, { customer_id: d.body.customer.id, order_id: o.id, amount_cents: 37375, method: 'cash' })
   assert.deepEqual((await detail(dealer, o.id)).body.messages, [])
   assert.deepEqual((await detail(dealer, (await order()).id)).body.messages, [])
@@ -264,9 +338,27 @@ test('settings: GET shape; PUT saves; info, status page and driver follow (sampl
   const driver = await signin('2580')
   const g = await call('GET', '/api/dealer/settings', { token: dealer })
   assert.equal(g.status, 200)
-  assert.deepEqual(Object.keys(g.body.settings).sort(), ['name', 'short_name', 'sample', 'phone', 'deposit_text', 'season_open',
-    'season_message', 'season_start', 'min_order_cents', 'hst_registered', 'yard', 'delivery', 'load', 'truck', 'delivery_weekdays',
-    'window_days'].sort())
+  assert.deepEqual(
+    Object.keys(g.body.settings).sort(),
+    [
+      'name',
+      'short_name',
+      'sample',
+      'phone',
+      'deposit_text',
+      'season_open',
+      'season_message',
+      'season_start',
+      'min_order_cents',
+      'hst_registered',
+      'yard',
+      'delivery',
+      'load',
+      'truck',
+      'delivery_weekdays',
+      'window_days',
+    ].sort(),
+  )
   assert.equal(g.body.settings.sample, true)
   assert.ok(!/pin_hash|pin_salt/.test(JSON.stringify(g.body)), 'no PIN hashes or salts')
   const soft = g.body.products.find((p) => p.id === 'p_softwood_dry')
@@ -274,8 +366,16 @@ test('settings: GET shape; PUT saves; info, status page and driver follow (sampl
   assert.equal(g.body.products.find((p) => p.id === 'p_pellets').stock_bags, 600)
 
   const o = await scheduled(dealer, {}, TUE)
-  const r = await put('/api/dealer/settings', { sample: false, name: 'SAMPLE Wood & Pellets — edited (demo)', min_order_cents: 5000,
-    truck: { ...TR, wood_cords_per_day: 3.25, pellet_skids_per_day: 2 } }, dealer)
+  const r = await put(
+    '/api/dealer/settings',
+    {
+      sample: false,
+      name: 'SAMPLE Wood & Pellets — edited (demo)',
+      min_order_cents: 5000,
+      truck: { ...TR, wood_cords_per_day: 3.25, pellet_skids_per_day: 2 },
+    },
+    dealer,
+  )
   assert.equal(r.status, 200, JSON.stringify(r.body))
   assert.deepEqual([r.body.settings.sample, r.body.settings.min_order_cents, r.body.settings.truck.wood_cords_per_day], [false, 5000, 3.25])
   assert.deepEqual(r.body.settings.delivery, D, 'groups not sent are kept')
@@ -293,27 +393,80 @@ test('settings: GET shape; PUT saves; info, status page and driver follow (sampl
 })
 
 const SETTINGS_GROUPS = {
-  names: [['name', { name: '' }], ['short_name', { short_name: 'x'.repeat(41) }], ['sample', { sample: 'yes' }]],
-  contact: [['phone', { phone: 'x'.repeat(33) }], ['deposit_text', { deposit_text: 'x'.repeat(401) }]],
-  season: [['season_open', { season_open: 1 }], ['season_message', { season_message: 'x'.repeat(201) }],
-    ['season_start', { season_start: '9-1' }], ['season_start', { season_start: '02-30' }]],
-  money: [['min_order_cents', { min_order_cents: 100001 }], ['min_order_cents', { min_order_cents: 50.5 }],
-    ['hst_registered', { hst_registered: 'true' }]],
-  yard: [['yard', { yard: { lat: 44.65, lng: -63.57, label: 'Too far south' } }], ['yard', { yard: { ...SAMPLE_SETTINGS.yard, label: '' } }]],
-  delivery: [['delivery.mode', { delivery: { ...D, mode: 'miles' } }], ['delivery.bands', { delivery: { ...D, bands: [] } }],
-    ['delivery.bands', { delivery: { ...D, bands: [{ up_to_km: 30, fee_cents: 0 }, { up_to_km: 10, fee_cents: 2500 }] } }],
+  names: [
+    ['name', { name: '' }],
+    ['short_name', { short_name: 'x'.repeat(41) }],
+    ['sample', { sample: 'yes' }],
+  ],
+  contact: [
+    ['phone', { phone: 'x'.repeat(33) }],
+    ['deposit_text', { deposit_text: 'x'.repeat(401) }],
+  ],
+  season: [
+    ['season_open', { season_open: 1 }],
+    ['season_message', { season_message: 'x'.repeat(201) }],
+    ['season_start', { season_start: '9-1' }],
+    ['season_start', { season_start: '02-30' }],
+  ],
+  money: [
+    ['min_order_cents', { min_order_cents: 100001 }],
+    ['min_order_cents', { min_order_cents: 50.5 }],
+    ['hst_registered', { hst_registered: 'true' }],
+  ],
+  yard: [
+    ['yard', { yard: { lat: 44.65, lng: -63.57, label: 'Too far south' } }],
+    ['yard', { yard: { ...SAMPLE_SETTINGS.yard, label: '' } }],
+  ],
+  delivery: [
+    ['delivery.mode', { delivery: { ...D, mode: 'miles' } }],
+    ['delivery.bands', { delivery: { ...D, bands: [] } }],
+    [
+      'delivery.bands',
+      {
+        delivery: {
+          ...D,
+          bands: [
+            { up_to_km: 30, fee_cents: 0 },
+            { up_to_km: 10, fee_cents: 2500 },
+          ],
+        },
+      },
+    ],
     ['delivery.bands', { delivery: { ...D, bands: [{ up_to_km: 10, fee_cents: 50001 }] } }],
     ['delivery.bands', { delivery: { ...D, bands: Array.from({ length: 7 }, (_, i) => ({ up_to_km: i + 1, fee_cents: 0 })) } }],
     ['delivery.zones', { delivery: { ...D, mode: 'zones', zones: [] } }],
-    ['delivery.zones', { delivery: { ...D, zones: [{ id: 'a', name: 'A', fee_cents: 0 }, { id: 'a', name: 'B', fee_cents: 0 }] } }],
-    ['delivery.beyond_message', { delivery: { ...D, beyond_message: 'x'.repeat(201) } }]],
-  load: [['load.cords', { load: { ...L, cords: 0.2 } }], ['load.cords', { load: { ...L, cords: 1.234 } }],
-    ['load.description', { load: { ...L, description: '' } }]],
-  truck: [['truck.name', { truck: { ...TR, name: '' } }], ['truck.wood_cords_per_day', { truck: { ...TR, wood_cords_per_day: 40.5 } }],
+    [
+      'delivery.zones',
+      {
+        delivery: {
+          ...D,
+          zones: [
+            { id: 'a', name: 'A', fee_cents: 0 },
+            { id: 'a', name: 'B', fee_cents: 0 },
+          ],
+        },
+      },
+    ],
+    ['delivery.beyond_message', { delivery: { ...D, beyond_message: 'x'.repeat(201) } }],
+  ],
+  load: [
+    ['load.cords', { load: { ...L, cords: 0.2 } }],
+    ['load.cords', { load: { ...L, cords: 1.234 } }],
+    ['load.description', { load: { ...L, description: '' } }],
+  ],
+  truck: [
+    ['truck.name', { truck: { ...TR, name: '' } }],
+    ['truck.wood_cords_per_day', { truck: { ...TR, wood_cords_per_day: 40.5 } }],
     ['truck.wood_cords_per_day', { truck: { ...TR, wood_cords_per_day: 4.555 } }],
-    ['truck.pellet_skids_per_day', { truck: { ...TR, pellet_skids_per_day: 21 } }]],
-  calendar: [['delivery_weekdays', { delivery_weekdays: [] }], ['delivery_weekdays', { delivery_weekdays: [0, 1] }],
-    ['delivery_weekdays', { delivery_weekdays: [1, 1] }], ['window_days', { window_days: 6 }], ['window_days', { window_days: 43 }]],
+    ['truck.pellet_skids_per_day', { truck: { ...TR, pellet_skids_per_day: 21 } }],
+  ],
+  calendar: [
+    ['delivery_weekdays', { delivery_weekdays: [] }],
+    ['delivery_weekdays', { delivery_weekdays: [0, 1] }],
+    ['delivery_weekdays', { delivery_weekdays: [1, 1] }],
+    ['window_days', { window_days: 6 }],
+    ['window_days', { window_days: 43 }],
+  ],
 }
 
 for (const [group, cases] of Object.entries(SETTINGS_GROUPS)) {
@@ -334,14 +487,17 @@ for (const [group, cases] of Object.entries(SETTINGS_GROUPS)) {
 test('zones mode end to end: info lists the zones, quote and order need one, and the zone fee applies even far away', async () => {
   await reset()
   const dealer = await signin('1357')
-  const zones = [{ id: 'springdale', name: 'Springdale', fee_cents: 0 }, { id: 'green-bay', name: 'Green Bay shore', fee_cents: 3500 }]
+  const zones = [
+    { id: 'springdale', name: 'Springdale', fee_cents: 0 },
+    { id: 'green-bay', name: 'Green Bay shore', fee_cents: 3500 },
+  ]
   const r = await put('/api/dealer/settings', { delivery: { ...D, mode: 'zones', zones } }, dealer)
   assert.equal(r.status, 200, JSON.stringify(r.body))
   const info = (await call('GET', '/api/info')).body
   assert.deepEqual([info.delivery.mode, info.delivery.zones], ['zones', zones])
   const bu = place('Buchans')
-  const q = (zoneId) => call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: bu.lat,
-    lng: bu.lng, zone_id: zoneId } })
+  const q = (zoneId) =>
+    call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: bu.lat, lng: bu.lng, zone_id: zoneId } })
   const none = await q(undefined)
   assert.deepEqual([none.status, none.body.field], [400, 'zone_id'])
   assert.equal((await q('nowhere')).body.field, 'zone_id')
@@ -376,8 +532,17 @@ test('season closed: a public order is 403 with the dealer message; quotes still
 test('products: add firewood and pellets, edit (kind fixed), a not-sold unit and a deactivated product leave the order page', async () => {
   await reset()
   const dealer = await signin('1357')
-  let r = await call('POST', '/api/dealer/products', { token: dealer, body: { kind: 'wood', name: 'Mixed hardwood, dry',
-    species: 'Maple and birch', cut_in: 12, stacking_cents_per_cord: 5000, price_cents: { cord: 40000, face_cord: 11000 } } })
+  let r = await call('POST', '/api/dealer/products', {
+    token: dealer,
+    body: {
+      kind: 'wood',
+      name: 'Mixed hardwood, dry',
+      species: 'Maple and birch',
+      cut_in: 12,
+      stacking_cents_per_cord: 5000,
+      price_cents: { cord: 40000, face_cord: 11000 },
+    },
+  })
   assert.equal(r.status, 201, JSON.stringify(r.body))
   const p = r.body.product
   assert.match(p.id, /^p_/)
@@ -385,28 +550,50 @@ test('products: add firewood and pellets, edit (kind fixed), a not-sold unit and
   assert.deepEqual(p.price_cents, { cord: 40000, half_cord: null, face_cord: 11000, load: null })
   const card = async () => (await call('GET', '/api/info')).body.products.find((x) => x.id === p.id)
   let c1 = await card()
-  assert.deepEqual(c1.units.map((u) => [u.unit, u.price_cents, u.wood_cu_in]), [['cord', 40000, CORD], ['face_cord', 11000, 12 * 4608]])
+  assert.deepEqual(
+    c1.units.map((u) => [u.unit, u.price_cents, u.wood_cu_in]),
+    [
+      ['cord', 40000, CORD],
+      ['face_cord', 11000, 12 * 4608],
+    ],
+  )
   assert.match(c1.units[1].explain, /\(12 inches\)\. That is 0\.25 of a full cord\.$/)
 
-  for (const [field, change] of [['kind', { kind: 'pellets' }], ['cut_in', { cut_in: 25 }], ['price_cents.cord', { price_cents: { cord: 0 } }],
-    ['dryness', { dryness: 'wet' }], ['stacking_cents_per_cord', { stacking_cents_per_cord: 50001 }], ['name', { name: '' }]]) {
+  for (const [field, change] of [
+    ['kind', { kind: 'pellets' }],
+    ['cut_in', { cut_in: 25 }],
+    ['price_cents.cord', { price_cents: { cord: 0 } }],
+    ['dryness', { dryness: 'wet' }],
+    ['stacking_cents_per_cord', { stacking_cents_per_cord: 50001 }],
+    ['name', { name: '' }],
+  ]) {
     const bad = await put(`/api/dealer/products/${p.id}`, change, dealer)
     assert.deepEqual([bad.status, bad.body.field], [400, field], JSON.stringify(change))
   }
   r = await put(`/api/dealer/products/${p.id}`, { price_cents: { face_cord: null }, name: 'Hardwood, dry' }, dealer)
   assert.equal(r.status, 200, JSON.stringify(r.body))
-  assert.deepEqual([r.body.product.name, r.body.product.price_cents.cord, r.body.product.price_cents.face_cord], ['Hardwood, dry', 40000, null])
+  assert.deepEqual(
+    [r.body.product.name, r.body.product.price_cents.cord, r.body.product.price_cents.face_cord],
+    ['Hardwood, dry', 40000, null],
+  )
   c1 = await card()
-  assert.deepEqual(c1.units.map((u) => u.unit), ['cord'])
+  assert.deepEqual(
+    c1.units.map((u) => u.unit),
+    ['cord'],
+  )
   assert.equal((await put(`/api/dealer/products/${p.id}`, { active: false }, dealer)).status, 200)
   assert.equal(await card(), undefined)
   assert.equal((await call('POST', '/api/orders', { body: orderBody({ product_id: p.id }) })).body.field, 'product_id')
 
-  r = await call('POST', '/api/dealer/products', { token: dealer, body: { kind: 'pellets', name: 'SAMPLE Budget wood pellets',
-    brand: 'SAMPLE Budget', bags_per_skid: 60, price_cents: { bag: 699 } } })
+  r = await call('POST', '/api/dealer/products', {
+    token: dealer,
+    body: { kind: 'pellets', name: 'SAMPLE Budget wood pellets', brand: 'SAMPLE Budget', bags_per_skid: 60, price_cents: { bag: 699 } },
+  })
   assert.equal(r.status, 201, JSON.stringify(r.body))
-  assert.deepEqual([r.body.product.bag_lb, r.body.product.bags_per_ton, r.body.product.bags_per_skid, r.body.product.price_cents],
-    [40, 50, 60, { bag: 699, ton: null, skid: null }])
+  assert.deepEqual(
+    [r.body.product.bag_lb, r.body.product.bags_per_ton, r.body.product.bags_per_skid, r.body.product.price_cents],
+    [40, 50, 60, { bag: 699, ton: null, skid: null }],
+  )
   assert.equal((await call('POST', '/api/dealer/products', { token: dealer, body: { kind: 'coal', name: 'Coal' } })).body.field, 'kind')
   assert.equal((await call('POST', '/api/dealer/products', { token: dealer, body: { kind: 'wood' } })).body.field, 'name')
   assert.equal((await put('/api/dealer/products/p_nope', { name: 'x' }, dealer)).status, 404)
@@ -425,11 +612,21 @@ test('stock count: set and add, cords for firewood and bags for pellets, each wr
   assert.equal(r.body.product.stock_bags, 670)
   r = await adj('p_pellets', { mode: 'set', bags: 500 })
   assert.equal(r.body.product.stock_bags, 500)
-  assert.deepEqual(productMoves('p_softwood_dry'), [[2764800 - 40 * CORD, 'adjust', 'Counted the yard'], [-CORD / 2, 'adjust', '']])
-  assert.deepEqual(productMoves('p_pellets'), [[70, 'adjust', ''], [-170, 'adjust', '']])
-  for (const [id, body, field] of [['p_softwood_dry', { mode: 'set', bags: 5 }, 'cords'], ['p_pellets', { mode: 'set', cords: 1 }, 'bags'],
-    ['p_softwood_dry', { mode: 'count', cords: 1 }, 'mode'], ['p_softwood_dry', { mode: 'add', cords: 1.234 }, 'cords'],
-    ['p_pellets', { mode: 'set', bags: -1 }, 'bags']]) {
+  assert.deepEqual(productMoves('p_softwood_dry'), [
+    [2764800 - 40 * CORD, 'adjust', 'Counted the yard'],
+    [-CORD / 2, 'adjust', ''],
+  ])
+  assert.deepEqual(productMoves('p_pellets'), [
+    [70, 'adjust', ''],
+    [-170, 'adjust', ''],
+  ])
+  for (const [id, body, field] of [
+    ['p_softwood_dry', { mode: 'set', bags: 5 }, 'cords'],
+    ['p_pellets', { mode: 'set', cords: 1 }, 'bags'],
+    ['p_softwood_dry', { mode: 'count', cords: 1 }, 'mode'],
+    ['p_softwood_dry', { mode: 'add', cords: 1.234 }, 'cords'],
+    ['p_pellets', { mode: 'set', bags: -1 }, 'bags'],
+  ]) {
     const bad = await adj(id, body)
     assert.deepEqual([bad.status, bad.body.field], [400, field], JSON.stringify(body))
   }
@@ -465,8 +662,10 @@ test('sign-in guard: 5 wrong PINs from one place → 429, then even the right PI
   const from = (ip, pin, now = T0) => call('POST', '/api/signin', { body: { pin }, now, headers: { 'X-Test-IP': ip } })
   for (let i = 0; i < 5; i++) assert.equal((await from('phone-a', '0000')).status, 401, `wrong try ${i + 1}`)
   const locked = await from('phone-a', '1357')
-  assert.deepEqual([locked.status, locked.body.code, locked.body.error],
-    [429, 'rate_limited', 'Too many tries. Wait 15 minutes and try again.'])
+  assert.deepEqual(
+    [locked.status, locked.body.code, locked.body.error],
+    [429, 'rate_limited', 'Too many tries. Wait 15 minutes and try again.'],
+  )
   assert.equal((await from('phone-b', '1357')).status, 200)
   assert.equal((await from('phone-a', '1357', minutesAfter(T0, 14))).status, 429)
   assert.equal((await from('phone-a', '1357', minutesAfter(T0, 16))).status, 200)
@@ -509,9 +708,15 @@ test('totals: HST and totals equal row sums, zero months present, NL month bound
   const dealerOct = await signin('1357', oct)
   const driverOct = await signin('2580', oct)
   const bCustomer = await customerOf(dealer, b.id)
-  assert.equal((await pay(dealerOct, { customer_id: bCustomer, amount_cents: 5000, method: 'cheque', date: '2026-10-10' }, oct)).status, 201)
+  assert.equal(
+    (await pay(dealerOct, { customer_id: bCustomer, amount_cents: 5000, method: 'cheque', date: '2026-10-10' }, oct)).status,
+    201,
+  )
   // Nov 3: half a cord of birch to St. Patrick's, 200.00 + HST 30.00 = 230.00, e-Transfer of 100.00 at the door
-  const c = await call('POST', '/api/orders', { now: oct, body: orderBody({ product_id: 'p_birch_dry', unit: 'half_cord', place: "St. Patrick's" }) })
+  const c = await call('POST', '/api/orders', {
+    now: oct,
+    body: orderBody({ product_id: 'p_birch_dry', unit: 'half_cord', place: "St. Patrick's" }),
+  })
   assert.equal(c.status, 201, JSON.stringify(c.body))
   const sch = await call('POST', `/api/dealer/orders/${c.body.id}/schedule`, { token: dealerOct, now: oct, body: { date: '2026-11-03' } })
   assert.equal(sch.status, 200, JSON.stringify(sch.body))
@@ -523,17 +728,38 @@ test('totals: HST and totals equal row sums, zero months present, NL month bound
   const t = await call('GET', '/api/dealer/totals?season=2026', { token: dealerNov, now: nov })
   assert.equal(t.status, 200, JSON.stringify(t.body))
   assert.deepEqual(t.body.season, { year: 2026, from: '2026-09-01', to: '2027-08-31', label: '2026–27 season' })
-  const row = (month, label, delivered, goods, stacking, delivery, subtotal, hst, total, payments) => ({ month, label, delivered,
-    goods_cents: goods, stacking_cents: stacking, delivery_cents: delivery, subtotal_cents: subtotal, hst_cents: hst,
-    total_cents: total, payments_cents: payments })
+  const row = (month, label, delivered, goods, stacking, delivery, subtotal, hst, total, payments) => ({
+    month,
+    label,
+    delivered,
+    goods_cents: goods,
+    stacking_cents: stacking,
+    delivery_cents: delivery,
+    subtotal_cents: subtotal,
+    hst_cents: hst,
+    total_cents: total,
+    payments_cents: payments,
+  })
   assert.deepEqual(t.body.months, [
     row('2026-09', 'September 2026', 2, 30000 + 11186, 0, 2500 + 2500, 32500 + 13686, 4875 + 2053, 37375 + 15739, 37375),
     row('2026-10', 'October 2026', 0, 0, 0, 0, 0, 0, 0, 5000),
     row('2026-11', 'November 2026', 1, 20000, 0, 0, 20000, 3000, 23000, 10000),
   ])
-  for (const k of ['delivered', 'goods_cents', 'stacking_cents', 'delivery_cents', 'subtotal_cents', 'hst_cents', 'total_cents',
-    'payments_cents']) {
-    assert.equal(t.body.totals[k], t.body.months.reduce((sum, m) => sum + m[k], 0), `totals.${k} is the sum of the rows`)
+  for (const k of [
+    'delivered',
+    'goods_cents',
+    'stacking_cents',
+    'delivery_cents',
+    'subtotal_cents',
+    'hst_cents',
+    'total_cents',
+    'payments_cents',
+  ]) {
+    assert.equal(
+      t.body.totals[k],
+      t.body.months.reduce((sum, m) => sum + m[k], 0),
+      `totals.${k} is the sum of the rows`,
+    )
   }
   for (const m of t.body.months) assert.equal(m.total_cents, m.subtotal_cents + m.hst_cents)
   assert.equal(t.body.totals.hst_cents, 4875 + 2053 + 3000)
@@ -551,13 +777,20 @@ test('CSV exports: header exact, CRLF, quoting, formula guard, filename, money a
   const dealer = await signin('1357')
   const driver = await signin('2580')
   const a = await scheduled(dealer, { name: 'Smith, "Junior" (SAMPLE)', phone: '709-555-0161' }, TUE)
-  const b = await scheduled(dealer, { name: '=SUM(A1) (SAMPLE)', phone: '709-555-0162', place: "St. Patrick's",
-    address: 'Up the hill\nleft at the pond' }, TUE)
+  const b = await scheduled(
+    dealer,
+    { name: '=SUM(A1) (SAMPLE)', phone: '709-555-0162', place: "St. Patrick's", address: 'Up the hill\nleft at the pond' },
+    TUE,
+  )
   assert.equal((await checkin(driver, a.id, { method: 'cash' })).status, 201)
   const t1 = minutesAfter(T0, 1)
   assert.equal((await checkin(driver, b.id, { method: 'etransfer', amount_cents: 10000 }, { at: t1, now: t1 })).status, 201)
   const cust = await customerOf(dealer, b.id)
-  const cheque = await pay(dealer, { customer_id: cust, order_id: b.id, amount_cents: 5000, method: 'cheque', note: '+ extra' }, minutesAfter(T0, 2))
+  const cheque = await pay(
+    dealer,
+    { customer_id: cust, order_id: b.id, amount_cents: 5000, method: 'cheque', note: '+ extra' },
+    minutesAfter(T0, 2),
+  )
   assert.equal(cheque.status, 201)
 
   const orders = await call('GET', '/api/dealer/export/orders.csv?season=2026', { token: dealer })
@@ -583,8 +816,10 @@ test('CSV exports: header exact, CRLF, quoting, formula guard, filename, money a
     '',
   ])
   const empty = await call('GET', '/api/dealer/export/orders.csv?season=2025', { token: dealer })
-  assert.equal(text(empty.body),
-    'Order,Delivered,Customer,Phone,Address,Product,Quantity,Goods,Stacking,Delivery,Subtotal,HST,Total,Paid,Owing,Door payment\r\n')
+  assert.equal(
+    text(empty.body),
+    'Order,Delivered,Customer,Phone,Address,Product,Quantity,Goods,Stacking,Delivery,Subtotal,HST,Total,Paid,Owing,Door payment\r\n',
+  )
   assert.equal((await call('GET', '/api/dealer/export/orders.csv', { token: driver })).status, 403)
 })
 
@@ -601,7 +836,10 @@ test('demo seed: 12 SAMPLE customers, every status, a day at 4.00 of 4.50 cords,
   const customers = (await call('GET', '/api/dealer/customers', { token: dealer })).body.customers
   assert.equal(customers.length, 12)
   assert.ok(customers.every((c) => c.name.endsWith('(SAMPLE)')))
-  assert.ok(customers.some((c) => c.balance_cents < 0), 'a credit')
+  assert.ok(
+    customers.some((c) => c.balance_cents < 0),
+    'a credit',
+  )
   const board = (await call('GET', '/api/dealer/board', { token: dealer })).body
   assert.deepEqual(board.counts, { new: 4, scheduled: 8, delivered: 7, owing: 3, cancelled: 1 })
   const statuses = new Set([...board.new, ...board.scheduled, ...board.delivered].map((o) => o.status))
@@ -638,10 +876,20 @@ test('quote without a pin: goods and stacking, the money that needs a pin is nul
   const q = (body) => call('POST', '/api/quote', { body })
   let r = await q({ product_id: 'p_birch_dry', unit: 'face_cord', qty: 3, stacking: true })
   assert.equal(r.status, 200, JSON.stringify(r.body))
-  assert.deepEqual(r.body, { product_label: 'Birch, dry', qty_label: '3 face cords',
+  assert.deepEqual(r.body, {
+    product_label: 'Birch, dry',
+    qty_label: '3 face cords',
     explain: 'A face cord: one row 4 feet high and 8 feet long, as deep as the pieces are long (16 inches). That is 0.33 of a full cord.',
-    wood_cu_in: CORD, pellet_bags: 0, distance_km: null, goods_cents: 42000, stacking_cents: 6000, delivery_cents: null,
-    subtotal_cents: null, hst_cents: null, total_cents: null })
+    wood_cu_in: CORD,
+    pellet_bags: 0,
+    distance_km: null,
+    goods_cents: 42000,
+    stacking_cents: 6000,
+    delivery_cents: null,
+    subtotal_cents: null,
+    hst_cents: null,
+    total_cents: null,
+  })
   r = await q({ product_id: 'p_birch_dry', unit: 'face_cord', qty: 3, lat: null, lng: null, delivery_cents: 1000 })
   assert.deepEqual([r.status, r.body.distance_km, r.body.delivery_cents, r.body.total_cents], [200, null, null, null])
   r = await q({ product_id: 'p_pellets', unit: 'bag', qty: 13 })
@@ -659,7 +907,8 @@ test('quote with a delivery_cents override skips the band lookup, even past the 
   await reset()
   const dealer = await signin('1357')
   const bu = place('Buchans')
-  const q = (extra) => call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: bu.lat, lng: bu.lng, ...extra } })
+  const q = (extra) =>
+    call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: bu.lat, lng: bu.lng, ...extra } })
   assert.equal((await q({})).body.code, 'outside_area')
   let r = await q({ delivery_cents: 1000 })
   // 300.00 + 10.00 = 310.00; HST 46.50; total 356.50
@@ -667,7 +916,9 @@ test('quote with a delivery_cents override skips the band lookup, even past the 
   assert.deepEqual([r.body.delivery_cents, r.body.subtotal_cents, r.body.hst_cents, r.body.total_cents], [1000, 31000, 4650, 35650])
   assert.ok(r.body.distance_km > 60)
   const kp = place("King's Point")
-  r = await call('POST', '/api/quote', { body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: kp.lat, lng: kp.lng, delivery_cents: 0 } })
+  r = await call('POST', '/api/quote', {
+    body: { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, lat: kp.lat, lng: kp.lng, delivery_cents: 0 },
+  })
   assert.deepEqual([r.body.delivery_cents, r.body.total_cents], [0, 34500])
   assert.equal((await q({ delivery_cents: 50000 })).status, 200)
   r = await q({ delivery_cents: 50001 })
@@ -687,15 +938,27 @@ test('over-capacity wording names the limit that is exceeded: bags when only pel
   for (let i = 0; i < 3; i++) await scheduled(dealer, { product_id: 'p_pellets', unit: 'skid', qty: 1 }, TUE)
   assert.equal((await put('/api/dealer/settings', { truck: { ...TR, pellet_skids_per_day: 2 } }, dealer)).status, 200)
   let r = await schedule((await order()).id, TUE)
-  assert.deepEqual([r.status, r.body.error], [409, "That's more than the truck can carry that day: 210 of 140 bags already planned, this order needs 0."])
+  assert.deepEqual(
+    [r.status, r.body.error],
+    [409, "That's more than the truck can carry that day: 210 of 140 bags already planned, this order needs 0."],
+  )
   // Wednesday: 4 cords, then the truck drops to 3 cords. Pellets fit the bags but the day is over on wood.
   for (let i = 0; i < 4; i++) await scheduled(dealer, {}, WED)
-  assert.equal((await put('/api/dealer/settings', { truck: { ...TR, wood_cords_per_day: 3, pellet_skids_per_day: 2 } }, dealer)).status, 200)
+  assert.equal(
+    (await put('/api/dealer/settings', { truck: { ...TR, wood_cords_per_day: 3, pellet_skids_per_day: 2 } }, dealer)).status,
+    200,
+  )
   const bags = await order({ product_id: 'p_pellets', unit: 'bag', qty: 14 })
   r = await schedule(bags.id, WED)
-  assert.deepEqual([r.status, r.body.error], [409, "That's more than the truck can carry that day: 4.00 of 3.00 cords already planned, this order needs 0.00."])
+  assert.deepEqual(
+    [r.status, r.body.error],
+    [409, "That's more than the truck can carry that day: 4.00 of 3.00 cords already planned, this order needs 0.00."],
+  )
   // both short (no skids at all): cords
-  assert.equal((await put('/api/dealer/settings', { truck: { ...TR, wood_cords_per_day: 3, pellet_skids_per_day: 0 } }, dealer)).status, 200)
+  assert.equal(
+    (await put('/api/dealer/settings', { truck: { ...TR, wood_cords_per_day: 3, pellet_skids_per_day: 0 } }, dealer)).status,
+    200,
+  )
   r = await schedule(bags.id, WED)
   assert.equal(r.body.error, "That's more than the truck can carry that day: 4.00 of 3.00 cords already planned, this order needs 0.00.")
 })
@@ -720,11 +983,14 @@ test('ledger entries carry order_id and payment_id: null payment_id on orders, n
   const onAccount = await pay(dealer, { customer_id: cust, amount_cents: 2500, method: 'cash', note: 'On account' }, minutesAfter(T0, 2))
   const l = await call('GET', `/api/dealer/customers/${cust}/ledger`, { token: dealer })
   assert.equal(l.status, 200)
-  assert.deepEqual(l.body.entries.map((e) => [e.kind, e.order_id, e.payment_id, e.charge_cents, e.payment_cents, e.balance_cents]), [
-    ['order', o.id, null, 37375, 0, 37375],
-    ['payment', o.id, onOrder.body.payment.id, 0, 10000, 27375],
-    ['payment', null, onAccount.body.payment.id, 0, 2500, 24875],
-  ])
+  assert.deepEqual(
+    l.body.entries.map((e) => [e.kind, e.order_id, e.payment_id, e.charge_cents, e.payment_cents, e.balance_cents]),
+    [
+      ['order', o.id, null, 37375, 0, 37375],
+      ['payment', o.id, onOrder.body.payment.id, 0, 10000, 27375],
+      ['payment', null, onAccount.body.payment.id, 0, 2500, 24875],
+    ],
+  )
   // the id is what the ledger needs to void a payment made on account
   assert.equal((await call('DELETE', `/api/dealer/payments/${l.body.entries[2].payment_id}`, { token: dealer })).status, 200)
   assert.equal((await call('GET', `/api/dealer/customers/${cust}/ledger`, { token: dealer })).body.balance_cents, 27375)

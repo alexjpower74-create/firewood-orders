@@ -10,7 +10,8 @@ const DAY = '2026-09-15'
 const PLACES = ['Little Bay', 'South Brook', "King's Point", "Robert's Arm"]
 
 const stopIds = (page) => page.locator('#stops .stop').evaluateAll((els) => els.map((el) => el.dataset.stop))
-const apiStopIds = async (request, token) => (await api(request, 'GET', `/api/dealer/days/${DAY}/route`, undefined, bearer(token))).body.stops.map((s) => s.id)
+const apiStopIds = async (request, token) =>
+  (await api(request, 'GET', `/api/dealer/days/${DAY}/route`, undefined, bearer(token))).body.stops.map((s) => s.id)
 
 async function openDay(page) {
   await tap(page, page.getByRole('tab', { name: 'Plan' }))
@@ -41,12 +42,14 @@ test('day bars, the route, and Put in best order matches the API', async ({ page
   const before = (await api(request, 'GET', `/api/dealer/days/${DAY}/route`, undefined, bearer(token))).body
   await expect(page.locator('#route-km')).toHaveText(`${before.total_km.toFixed(1)} km`)
 
-  const optimized = page.waitForResponse((r) => r.url().endsWith(`/api/dealer/days/${DAY}/route/optimize`) && r.request().method() === 'POST')
+  const optimized = page.waitForResponse(
+    (r) => r.url().endsWith(`/api/dealer/days/${DAY}/route/optimize`) && r.request().method() === 'POST',
+  )
   await tap(page, page.getByRole('button', { name: 'Put in best order' }))
   const answer = await (await optimized).json()
   const best = answer.stops.map((s) => s.id)
   expect(best, 'optimizing must change this order, or the check below proves nothing').not.toEqual(ids)
-  await expect.poll(() => stopIds(page), 'the list is in the API\'s optimized order').toEqual(best)
+  await expect.poll(() => stopIds(page), "the list is in the API's optimized order").toEqual(best)
   expect(await apiStopIds(request, token), 'and the API kept it').toEqual(best)
   await expect(page.locator('#route-km')).toHaveText(`${answer.total_km.toFixed(1)} km`)
   expect(answer.total_km).toBeLessThan(before.total_km)
@@ -57,7 +60,10 @@ test('day bars, the route, and Put in best order matches the API', async ({ page
 })
 
 test('1280: a mouse drag of stop 3 above stop 1 is saved and still there after a reload', async ({ page, context, request }, testInfo) => {
-  test.skip(testInfo.project.name.endsWith('-390'), 'At phone width the stops move with Move up / Move down (next test); the drag is checked at 1280.')
+  test.skip(
+    testInfo.project.name.endsWith('-390'),
+    'At phone width the stops move with Move up / Move down (next test); the drag is checked at 1280.',
+  )
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)
@@ -90,7 +96,10 @@ test('1280: a mouse drag of stop 3 above stop 1 is saved and still there after a
 })
 
 test('390: Move up and Move down are saved and still there after a reload', async ({ page, context, request }, testInfo) => {
-  test.skip(!testInfo.project.name.endsWith('-390'), 'At 1280 the stops are dragged (previous test); Move up / Move down are checked at phone width.')
+  test.skip(
+    !testInfo.project.name.endsWith('-390'),
+    'At 1280 the stops are dragged (previous test); Move up / Move down are checked at phone width.',
+  )
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)

@@ -56,9 +56,22 @@ export function orderBody(over = {}) {
   seq++
   const at = place(over.place || "King's Point")
   const { place: _p, ...rest } = over
-  return { product_id: 'p_softwood_dry', unit: 'cord', qty: 1, stacking: false, lat: at.lat, lng: at.lng,
-    address: 'Up the lane past the church', dump_notes: 'By the shed, not on the lawn', zone_id: null,
-    preferred: { any: true }, name: `Wade R. (SAMPLE)`, phone: `709-555-${String(1000 + seq).slice(-4)}`, note: '', ...rest }
+  return {
+    product_id: 'p_softwood_dry',
+    unit: 'cord',
+    qty: 1,
+    stacking: false,
+    lat: at.lat,
+    lng: at.lng,
+    address: 'Up the lane past the church',
+    dump_notes: 'By the shed, not on the lawn',
+    zone_id: null,
+    preferred: { any: true },
+    name: `Wade R. (SAMPLE)`,
+    phone: `709-555-${String(1000 + seq).slice(-4)}`,
+    note: '',
+    ...rest,
+  }
 }
 
 export async function order(over = {}) {
@@ -95,14 +108,22 @@ function withDb(fn) {
 }
 
 export function stockMoves(orderId) {
-  return withDb((db) => db.prepare('SELECT product_id, change, reason FROM stock_moves WHERE order_id = ? ORDER BY id')
-    .all(orderId).map((r) => ({ ...r })))
+  return withDb((db) =>
+    db
+      .prepare('SELECT product_id, change, reason FROM stock_moves WHERE order_id = ? ORDER BY id')
+      .all(orderId)
+      .map((r) => ({ ...r })),
+  )
 }
 
 // [change, reason, note] for every stock move of a product, oldest first.
 export function productMoves(productId) {
-  return withDb((db) => db.prepare('SELECT change, reason, note FROM stock_moves WHERE product_id = ? ORDER BY id')
-    .all(productId).map((r) => [r.change, r.reason, r.note]))
+  return withDb((db) =>
+    db
+      .prepare('SELECT change, reason, note FROM stock_moves WHERE product_id = ? ORDER BY id')
+      .all(productId)
+      .map((r) => [r.change, r.reason, r.note]),
+  )
 }
 
 export const put = (url, body, token, now = T0) => call('PUT', url, { body, token, now })

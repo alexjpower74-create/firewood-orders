@@ -28,7 +28,11 @@ test('a wrong PIN says so and the sign-in answers 401', async ({ page, context, 
   assertNoThirdParty(context)
 })
 
-test('a new online order shows under New; Schedule into Tue Sep 15 moves it and the status page says so', async ({ page, context, request }, testInfo) => {
+test('a new online order shows under New; Schedule into Tue Sep 15 moves it and the status page says so', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const o = await orderViaApi(request)
@@ -59,7 +63,11 @@ test('a new online order shows under New; Schedule into Tue Sep 15 moves it and 
   assertNoThirdParty(context)
 })
 
-test('capacity: with the day at 4.00 cords a 1-cord order shows the API message in role=alert and stays under New', async ({ page, context, request }, testInfo) => {
+test('capacity: with the day at 4.00 cords a 1-cord order shows the API message in role=alert and stays under New', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)
@@ -89,7 +97,11 @@ test('capacity: with the day at 4.00 cords a 1-cord order shows the API message 
   assertNoThirdParty(context)
 })
 
-test('Record a payment of $100.00 drops what is owing by exactly 10 000 cents on the card and the status page', async ({ page, context, request }, testInfo) => {
+test('Record a payment of $100.00 drops what is owing by exactly 10 000 cents on the card and the status page', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)
@@ -122,7 +134,7 @@ test('Record a payment of $100.00 drops what is owing by exactly 10 000 cents on
   assertNoThirdParty(context)
 })
 
-test('Copy text puts the API\'s exact scheduled message on the clipboard', async ({ page, context, request, browserName }, testInfo) => {
+test("Copy text puts the API's exact scheduled message on the clipboard", async ({ page, context, request, browserName }, testInfo) => {
   await fresh(context, request)
   if (browserName === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   const w = watch(page)
@@ -142,13 +154,21 @@ test('Copy text puts the API\'s exact scheduled message on the clipboard', async
   if (browserName === 'chromium') {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(text)
   } else {
-    testInfo.annotations.push({ type: 'clipboard read skipped', description: 'Playwright cannot grant clipboard-read to WebKit, so the page\'s "Copied" is checked and the clipboard itself is read in chromium only.' })
+    testInfo.annotations.push({
+      type: 'clipboard read skipped',
+      description:
+        'Playwright cannot grant clipboard-read to WebKit, so the page\'s "Copied" is checked and the clipboard itself is read in chromium only.',
+    })
   }
   w.expectClean()
   assertNoThirdParty(context)
 })
 
-test('Change order: 1 cord to 2 works the price out again, equal to the API and to the hand-worked total', async ({ page, context, request }, testInfo) => {
+test('Change order: 1 cord to 2 works the price out again, equal to the API and to the hand-worked total', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)
@@ -192,15 +212,24 @@ test('Cancel order takes it off New and shows Cancelled', async ({ page, context
   assertNoThirdParty(context)
 })
 
-test('Mark not delivered puts a delivered order back on its day and voids the door payment', async ({ page, context, request }, testInfo) => {
+test('Mark not delivered puts a delivered order back on its day and voids the door payment', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)
   const driver = await driverToken(request)
   const o = await orderViaApi(request)
   await scheduleViaApi(request, token, o.id, DAY)
-  const checkin = await api(request, 'POST', '/api/driver/checkins',
-    { op_id: `undeliver-${testInfo.project.name}`, order_id: o.id, at: NOW, payment: { method: 'cash' }, note: '' }, bearer(driver))
+  const checkin = await api(
+    request,
+    'POST',
+    '/api/driver/checkins',
+    { op_id: `undeliver-${testInfo.project.name}`, order_id: o.id, at: NOW, payment: { method: 'cash' }, note: '' },
+    bearer(driver),
+  )
   expect(checkin.status, JSON.stringify(checkin.body)).toBe(201)
 
   await signInDealer(page)
@@ -239,8 +268,12 @@ test('a phone order through the dealer form appears under New with source phone'
   await typeIn(page, page.locator('#phone'), '709-555-0111')
   // The quote now takes the dealer's fee: the total shown before saving already includes it.
   // By hand: birch half cord 20 000 + the $10.00 fee = 21 000, HST 3 150 → $241.50 (the distance fee would make $270.25).
-  const feeQuote = page.waitForResponse((r) => r.url().endsWith('/api/quote') && r.request().method() === 'POST' &&
-    JSON.parse(r.request().postData() || '{}').delivery_cents === 1000)
+  const feeQuote = page.waitForResponse(
+    (r) =>
+      r.url().endsWith('/api/quote') &&
+      r.request().method() === 'POST' &&
+      JSON.parse(r.request().postData() || '{}').delivery_cents === 1000,
+  )
   await typeIn(page, page.locator('#delivery-fee'), '10.00')
   const feeRes = await feeQuote
   expect((await feeRes.json()).total_cents).toBe(21000 + hstOf(21000))

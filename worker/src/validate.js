@@ -12,8 +12,13 @@ export function phoneDigits(phone) {
 }
 
 export function validPhone(phone) {
-  return typeof phone === 'string' && phone.trim().length >= 7 && phone.trim().length <= 32 &&
-    /^[0-9 +\-().]+$/.test(phone.trim()) && phoneDigits(phone).length >= 7
+  return (
+    typeof phone === 'string' &&
+    phone.trim().length >= 7 &&
+    phone.trim().length <= 32 &&
+    /^[0-9 +\-().]+$/.test(phone.trim()) &&
+    phoneDigits(phone).length >= 7
+  )
 }
 
 // What is ordered and where: product, unit, qty, stacking, pin, zone, and (dealer only) a delivery fee override.
@@ -54,8 +59,16 @@ export function parseProductInput(body, { products, settings, dealer, quote }) {
     if (!known && deliveryOverride === null && !noPin) throw bad('zone_id', 'Pick your area.')
     zoneId = known ? b.zone_id : null
   }
-  return { product, unit: b.unit, qty: b.qty, stacking, lat: noPin ? null : b.lat, lng: noPin ? null : b.lng, zone_id: zoneId,
-    delivery_override: deliveryOverride }
+  return {
+    product,
+    unit: b.unit,
+    qty: b.qty,
+    stacking,
+    lat: noPin ? null : b.lat,
+    lng: noPin ? null : b.lng,
+    zone_id: zoneId,
+    delivery_override: deliveryOverride,
+  }
 }
 
 // Who and when: address, dump notes, preferred days, name, phone, note.
@@ -84,8 +97,7 @@ export function parseContactInput(body, { deliveryDates }) {
   if (!validPhone(b.phone)) throw bad('phone', 'Enter a phone number we can call, with at least 7 digits.')
   const note = b.note === undefined || b.note === null ? '' : str(b.note)
   if (note === null || note.length > 280) throw bad('note', 'Keep the note to 280 characters.')
-  return { address, dump_notes: dumpNotes, preferred_any: preferredAny, preferred_dates: preferred, name,
-    phone: b.phone.trim(), note }
+  return { address, dump_notes: dumpNotes, preferred_any: preferredAny, preferred_dates: preferred, name, phone: b.phone.trim(), note }
 }
 
 // `full` = an order (name, phone, address…); otherwise a quote. `dealer` allows a delivery_cents override.

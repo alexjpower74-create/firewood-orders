@@ -14,7 +14,8 @@ const ok = runNegative({
     {
       file: 'index.html',
       find: '</head>',
-      replace: '<style>.bar-actions{position:relative}.send-cover{display:none}#send:not([hidden])~.send-cover{display:block;position:absolute;inset:0;z-index:5;background:transparent}</style></head>',
+      replace:
+        '<style>.bar-actions{position:relative}.send-cover{display:none}#send:not([hidden])~.send-cover{display:block;position:absolute;inset:0;z-index:5;background:transparent}</style></head>',
     },
   ],
   spec: 'tests/web/order.spec.mjs',

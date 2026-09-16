@@ -42,7 +42,9 @@ export function samplePng(width = 240, height = 120, word = 'SAMPLE') {
   ihdr.set([8, 2, 0, 0, 0], 8) // 8-bit RGB
   return concat([
     new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
-    chunk('IHDR', ihdr), chunk('IDAT', zlibStored(raw)), chunk('IEND', new Uint8Array(0)),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlibStored(raw)),
+    chunk('IEND', new Uint8Array(0)),
   ])
 }
 

@@ -5,7 +5,11 @@ import { api, assertNoThirdParty, bearer, dealerToken, fresh, orderViaApi, shot,
 import { hstOf, signInDealer, typeIn, watch } from './web-helpers.mjs'
 import { money } from '../../public/ui.js'
 
-test('payments and a void move the balance to the cent, and the running balance column equals the API', async ({ page, context, request }, testInfo) => {
+test('payments and a void move the balance to the cent, and the running balance column equals the API', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)
@@ -49,7 +53,10 @@ test('payments and a void move the balance to the cent, and the running balance 
   let api1 = await ledger()
   expect(api1.balance_cents).toBe(firstTotal + secondTotal - 5000 - 10000)
   expect(await runningCells(), 'running column = the API').toEqual(api1.entries.map((e) => money(e.balance_cents)))
-  expect(api1.entries.map((e) => e.balance_cents), 'and = by hand').toEqual([37375, 59800, 54800, 44800])
+  expect(
+    api1.entries.map((e) => e.balance_cents),
+    'and = by hand',
+  ).toEqual([37375, 59800, 54800, 44800])
   await shot(page, testInfo, 'web', 'dealer-ledger')
 
   // Void the $50.00 made on account from its ledger row, while the $100.00 on the first order is still in the ledger:
@@ -63,12 +70,15 @@ test('payments and a void move the balance to the cent, and the running balance 
   await tap(page, page.locator(`#ledger tr[data-confirm-for="${onAccount.payment_id}"]`).getByRole('button', { name: 'Void payment' }))
   const voidRes = await voided
   expect(voidRes.status()).toBe(200)
-  expect(new URL(voidRes.url()).pathname, 'the void names the row\'s own payment').toBe(`/api/dealer/payments/${onAccount.payment_id}`)
+  expect(new URL(voidRes.url()).pathname, "the void names the row's own payment").toBe(`/api/dealer/payments/${onAccount.payment_id}`)
   await expect(balance).toHaveText('Balance owing $498.00')
   await expect(page.locator(`.cust-order[data-order="${first.id}"] .order-owing`)).toHaveText('Owing $273.75')
   api1 = await ledger()
   expect(api1.balance_cents).toBe(firstTotal + secondTotal - 10000)
-  expect(api1.entries.map((e) => e.balance_cents), 'by hand, after the void').toEqual([37375, 59800, 49800])
+  expect(
+    api1.entries.map((e) => e.balance_cents),
+    'by hand, after the void',
+  ).toEqual([37375, 59800, 49800])
   expect(await runningCells(), 'running column = the API, after the void').toEqual(api1.entries.map((e) => money(e.balance_cents)))
 
   // Void the $100.00 from the order's detail (where payments have their ids): back up by exactly 10 000.

@@ -22,10 +22,12 @@ const split = `  // CAPACITY-GUARD:BEGIN (negative copy: read, wait, then write)
     : { meta: { changes: 0 } }
   // CAPACITY-GUARD:END`
 
-process.exit(await negative({
-  name: 'race',
-  why: 'the one-statement check-and-write is split into SELECT use → await scheduler.wait(25) → UPDATE',
-  patches: [{ file: 'src/index.js', from: guarded, to: split }],
-  args: ['--api-only', '--grep', '^the race'],
-  expectRed: ['the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409'],
-}))
+process.exit(
+  await negative({
+    name: 'race',
+    why: 'the one-statement check-and-write is split into SELECT use → await scheduler.wait(25) → UPDATE',
+    patches: [{ file: 'src/index.js', from: guarded, to: split }],
+    args: ['--api-only', '--grep', '^the race'],
+    expectRed: ['the race: 8 concurrent schedule calls into an empty day → exactly 4 × 200 and 4 × 409'],
+  }),
+)

@@ -39,7 +39,8 @@ async function twoDeliveriesWithNoSignal(page, context, request, { photo, withSe
   await deliver(page, 'cash')
   await expect(page.locator('#all-done')).toBeVisible()
   await expect(page.locator('#sync-strip')).toHaveText(
-    'No signal. 2 deliveries saved on this phone. They send when signal comes back and keep the time you tapped.')
+    'No signal. 2 deliveries saved on this phone. They send when signal comes back and keep the time you tapped.',
+  )
   return plan
 }
 
@@ -47,7 +48,12 @@ async function statuses(request, orders) {
   return Promise.all(orders.map(async (o) => (await api(request, 'GET', `/api/o/${o.token}`)).body.order.status))
 }
 
-test('no signal: two deliveries are saved with the tap time, survive a reload, and send once signal is back', async ({ page, context, request, browserName }, testInfo) => {
+test('no signal: two deliveries are saved with the tap time, survive a reload, and send once signal is back', async ({
+  page,
+  context,
+  request,
+  browserName,
+}, testInfo) => {
   await fresh(context, request)
   const { dealer, orders } = await twoDeliveriesWithNoSignal(page, context, request, { photo: true })
   const before = (await stockOf(request, dealer, 'p_softwood_dry')).stock_cu_in
@@ -57,7 +63,10 @@ test('no signal: two deliveries are saved with the tap time, survive a reload, a
     // Reload step skipped on WebKit only. Checked with a probe (2026-09-14): the page IS controlled by the service worker,
     // but under Playwright's context.setOffline(true) WebKit's page.reload fails with "WebKit encountered an internal error"
     // instead of asking the service worker. Chromium serves the reload from the service worker, so the step runs there.
-    testInfo.annotations.push({ type: 'skip-step', description: 'offline reload: WebKit page.reload fails under setOffline even with the service worker in control' })
+    testInfo.annotations.push({
+      type: 'skip-step',
+      description: 'offline reload: WebKit page.reload fails under setOffline even with the service worker in control',
+    })
   } else {
     await page.reload()
     await expect(page.locator('#sync-strip')).toContainText('2 deliveries saved on this phone')
@@ -90,29 +99,32 @@ test.describe('with the service worker blocked', () => {
   // engine, so the service worker is blocked here (it is not what this test is about; the reload test above covers it).
   test.use({ serviceWorkers: 'block' })
 
-test('a 500 from the office leaves both deliveries queued; they send on the next try', async ({ page, context, request }) => {
-  await fresh(context, request)
-  const { dealer, orders } = await twoDeliveriesWithNoSignal(page, context, request, { photo: false, withServiceWorker: false })
-  let failed = 0
-  await page.route('**/api/driver/checkins', (route) => {
-    if (failed++ === 0) {
-      return route.fulfill({ status: 500, contentType: 'application/json',
-        body: JSON.stringify({ error: 'Something went wrong on our side. Try again.', code: 'server_error' }) })
-    }
-    return route.continue()
-  })
-  await context.setExtraHTTPHeaders({ 'X-Test-Now': SERVER_LATER })
-  await context.setOffline(false)
-  await expect.poll(() => failed, { message: 'the first check-in reached the route' }).toBeGreaterThan(0)
-  await expect(page.locator('#sync-strip')).toContainText('2 deliveries saved on this phone')
-  expect(await statuses(request, orders)).toEqual(['out_for_delivery', 'out_for_delivery'])
+  test('a 500 from the office leaves both deliveries queued; they send on the next try', async ({ page, context, request }) => {
+    await fresh(context, request)
+    const { dealer, orders } = await twoDeliveriesWithNoSignal(page, context, request, { photo: false, withServiceWorker: false })
+    let failed = 0
+    await page.route('**/api/driver/checkins', (route) => {
+      if (failed++ === 0) {
+        return route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Something went wrong on our side. Try again.', code: 'server_error' }),
+        })
+      }
+      return route.continue()
+    })
+    await context.setExtraHTTPHeaders({ 'X-Test-Now': SERVER_LATER })
+    await context.setOffline(false)
+    await expect.poll(() => failed, { message: 'the first check-in reached the route' }).toBeGreaterThan(0)
+    await expect(page.locator('#sync-strip')).toContainText('2 deliveries saved on this phone')
+    expect(await statuses(request, orders)).toEqual(['out_for_delivery', 'out_for_delivery'])
 
-  await page.clock.fastForward('00:30') // the next try
-  await expect(page.locator('#sync-strip')).toHaveText('All sent', { timeout: 20_000 })
-  for (const o of orders) {
-    const d = await detailOf(request, dealer, o.id)
-    expect([d.order.status, d.order.delivered_at]).toEqual(['delivered', T])
-  }
-  assertNoThirdParty(context)
-})
+    await page.clock.fastForward('00:30') // the next try
+    await expect(page.locator('#sync-strip')).toHaveText('All sent', { timeout: 20_000 })
+    for (const o of orders) {
+      const d = await detailOf(request, dealer, o.id)
+      expect([d.order.status, d.order.delivered_at]).toEqual(['delivered', T])
+    }
+    assertNoThirdParty(context)
+  })
 })

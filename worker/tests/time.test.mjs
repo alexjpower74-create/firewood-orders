@@ -2,7 +2,17 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  addDays, dateTimeLabel, isoWeekday, isValidDate, longLabel, monthLabel, nextMonth, nlDate, nlMonth, shortLabel, timeLabel,
+  addDays,
+  dateTimeLabel,
+  isoWeekday,
+  isValidDate,
+  longLabel,
+  monthLabel,
+  nextMonth,
+  nlDate,
+  nlMonth,
+  shortLabel,
+  timeLabel,
 } from '../src/time.js'
 
 test('labels', () => {

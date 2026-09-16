@@ -7,10 +7,27 @@ import { esc, money, cords, clearErrors, showError, dollarsToCents } from '/ui.j
 import { addBaseLayer } from '/map.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
-const WEEKDAYS = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [7, 'Sun']]
+const WEEKDAYS = [
+  [1, 'Mon'],
+  [2, 'Tue'],
+  [3, 'Wed'],
+  [4, 'Thu'],
+  [5, 'Fri'],
+  [6, 'Sat'],
+  [7, 'Sun'],
+]
 const UNITS = {
-  wood: [['cord', 'Cord'], ['half_cord', 'Half cord'], ['face_cord', 'Face cord'], ['load', 'Load']],
-  pellets: [['bag', 'Bag'], ['ton', 'Ton'], ['skid', 'Skid']],
+  wood: [
+    ['cord', 'Cord'],
+    ['half_cord', 'Half cord'],
+    ['face_cord', 'Face cord'],
+    ['load', 'Load'],
+  ],
+  pellets: [
+    ['bag', 'Bag'],
+    ['ton', 'Ton'],
+    ['skid', 'Skid'],
+  ],
 }
 
 let root = null
@@ -84,14 +101,15 @@ function zoneRow(z = { id: '', name: '', fee_cents: null }) {
 
 function productBlock(p) {
   const id = esc(p.id)
-  const kindFields = p.kind === 'wood'
-    ? `${textField(`p-${id}-species`, 'species', 'Species or mix', p.species, 'maxlength="80"')}
+  const kindFields =
+    p.kind === 'wood'
+      ? `${textField(`p-${id}-species`, 'species', 'Species or mix', p.species, 'maxlength="80"')}
        <label class="field"><span class="field-label">Dry or green</span><select id="p-${id}-dryness" class="input" data-field="dryness">
          <option value="dry"${p.dryness === 'dry' ? ' selected' : ''}>Dry</option><option value="green"${p.dryness === 'green' ? ' selected' : ''}>Green</option></select>${err('dryness')}</label>
        ${textField(`p-${id}-cut`, 'cut_in', 'Piece length (inches)', p.cut_in, 'inputmode="numeric"')}
        ${checkField(`p-${id}-split`, 'split', 'Split', p.split)}
        ${moneyField(`p-${id}-stacking`, 'stacking_cents_per_cord', 'Stacking, per cord', p.stacking_cents_per_cord, 'No stacking')}`
-    : `${textField(`p-${id}-brand`, 'brand', 'Brand', p.brand, 'maxlength="80"')}
+      : `${textField(`p-${id}-brand`, 'brand', 'Brand', p.brand, 'maxlength="80"')}
        ${textField(`p-${id}-bag-lb`, 'bag_lb', 'Bag weight (lb)', p.bag_lb, 'inputmode="numeric"')}
        ${textField(`p-${id}-per-ton`, 'bags_per_ton', 'Bags in a ton', p.bags_per_ton, 'inputmode="numeric"')}
        ${textField(`p-${id}-per-skid`, 'bags_per_skid', 'Bags on a skid', p.bags_per_skid, 'inputmode="numeric"')}`
@@ -114,9 +132,11 @@ function productBlock(p) {
       <div class="settings-grid">
         <label class="field"><span class="field-label">Count</span><select class="input" data-field="mode">
           <option value="set">Set the count</option><option value="add">Add or take off</option></select>${err('mode')}</label>
-        ${p.kind === 'wood'
-          ? textField(`p-${id}-stock`, 'cords', 'Cords', '', 'inputmode="decimal" autocomplete="off" placeholder="40.00"')
-          : textField(`p-${id}-stock`, 'bags', 'Bags', '', 'inputmode="numeric" autocomplete="off" placeholder="600"')}
+        ${
+          p.kind === 'wood'
+            ? textField(`p-${id}-stock`, 'cords', 'Cords', '', 'inputmode="decimal" autocomplete="off" placeholder="40.00"')
+            : textField(`p-${id}-stock`, 'bags', 'Bags', '', 'inputmode="numeric" autocomplete="off" placeholder="600"')
+        }
         ${textField(`p-${id}-stock-note`, 'note', 'Note (optional)', '', 'maxlength="200"')}
       </div>
       ${saveRow('Save count')}
@@ -241,7 +261,10 @@ function render() {
 
 function mountYardMap() {
   const el = $('#yard-map', root)
-  if (yardMap) { yardMap.remove(); yardMap = null }
+  if (yardMap) {
+    yardMap.remove()
+    yardMap = null
+  }
   const y = data.settings.yard
   yardPoint = { lat: y.lat, lng: y.lng }
   if (!el || typeof L === 'undefined') return
@@ -265,7 +288,14 @@ function zonesFrom(form) {
   const used = new Set()
   return [...form.querySelectorAll('.zone-row')].map((row, i) => {
     const name = row.querySelector('.zone-name').value
-    let id = row.dataset.id || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || `zone-${i + 1}`
+    let id =
+      row.dataset.id ||
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40) ||
+      `zone-${i + 1}`
     while (used.has(id)) id = `${id.slice(0, 36)}-${i + 1}`
     used.add(id)
     return { id, name, fee_cents: cents(row.querySelector('.zone-fee').value) }
@@ -277,25 +307,50 @@ function groupBody(group, f) {
   const on = (sel) => $(sel, f).checked
   switch (group) {
     case 'business':
-      return { name: val('#set-name'), short_name: val('#set-short-name'), phone: val('#set-phone'), deposit_text: val('#set-deposit'), sample: on('#set-sample') }
+      return {
+        name: val('#set-name'),
+        short_name: val('#set-short-name'),
+        phone: val('#set-phone'),
+        deposit_text: val('#set-deposit'),
+        sample: on('#set-sample'),
+      }
     case 'season':
-      return { season_open: on('#set-season-open'), season_message: val('#set-season-message'), season_start: val('#set-season-start').trim(),
-        min_order_cents: cents(val('#set-min-order')), hst_registered: on('#set-hst') }
+      return {
+        season_open: on('#set-season-open'),
+        season_message: val('#set-season-message'),
+        season_start: val('#set-season-start').trim(),
+        min_order_cents: cents(val('#set-min-order')),
+        hst_registered: on('#set-hst'),
+      }
     case 'yard':
       return { yard: { lat: yardPoint.lat, lng: yardPoint.lng, label: val('#set-yard-label') } }
     case 'delivery':
-      return { delivery: {
-        mode: $('input[name="delivery-mode"]:checked', f)?.value ?? '',
-        bands: [...f.querySelectorAll('.band-list .band-row')].map((r) => ({ up_to_km: number($('.band-km', r).value), fee_cents: cents($('.band-fee', r).value) })),
-        zones: zonesFrom(f),
-        beyond_message: val('#set-beyond'),
-      } }
+      return {
+        delivery: {
+          mode: $('input[name="delivery-mode"]:checked', f)?.value ?? '',
+          bands: [...f.querySelectorAll('.band-list .band-row')].map((r) => ({
+            up_to_km: number($('.band-km', r).value),
+            fee_cents: cents($('.band-fee', r).value),
+          })),
+          zones: zonesFrom(f),
+          beyond_message: val('#set-beyond'),
+        },
+      }
     case 'load':
       return { load: { cords: number(val('#set-load-cords')), description: val('#set-load-description') } }
     case 'truck':
-      return { truck: { name: val('#set-truck-name'), wood_cords_per_day: number(val('#set-truck-cords')), pellet_skids_per_day: number(val('#set-truck-skids')) } }
+      return {
+        truck: {
+          name: val('#set-truck-name'),
+          wood_cords_per_day: number(val('#set-truck-cords')),
+          pellet_skids_per_day: number(val('#set-truck-skids')),
+        },
+      }
     case 'days':
-      return { delivery_weekdays: [...f.querySelectorAll('.weekday[aria-pressed="true"]')].map((b) => Number(b.dataset.day)), window_days: number(val('#set-window')) }
+      return {
+        delivery_weekdays: [...f.querySelectorAll('.weekday[aria-pressed="true"]')].map((b) => Number(b.dataset.day)),
+        window_days: number(val('#set-window')),
+      }
   }
   return {}
 }
@@ -310,11 +365,20 @@ function productBody(f) {
   }
   if (p.kind === 'wood') {
     const stacking = field('stacking_cents_per_cord').value.trim()
-    Object.assign(body, { species: field('species').value, dryness: field('dryness').value, cut_in: number(field('cut_in').value),
-      split: field('split').checked, stacking_cents_per_cord: stacking === '' ? null : cents(stacking) })
+    Object.assign(body, {
+      species: field('species').value,
+      dryness: field('dryness').value,
+      cut_in: number(field('cut_in').value),
+      split: field('split').checked,
+      stacking_cents_per_cord: stacking === '' ? null : cents(stacking),
+    })
   } else {
-    Object.assign(body, { brand: field('brand').value, bag_lb: number(field('bag_lb').value),
-      bags_per_ton: number(field('bags_per_ton').value), bags_per_skid: number(field('bags_per_skid').value) })
+    Object.assign(body, {
+      brand: field('brand').value,
+      bag_lb: number(field('bag_lb').value),
+      bags_per_ton: number(field('bags_per_ton').value),
+      bags_per_skid: number(field('bags_per_skid').value),
+    })
   }
   return body
 }
@@ -330,7 +394,10 @@ function replaceProduct(product) {
   return root.querySelector(`[data-product-block="${CSS.escape(product.id)}"]`)
 }
 
-const savedNote = (el, text) => { const n = el?.querySelector('.saved'); if (n) n.textContent = text }
+const savedNote = (el, text) => {
+  const n = el?.querySelector('.saved')
+  if (n) n.textContent = text
+}
 
 async function submit(ev) {
   const form = ev.target.closest('form')
@@ -361,7 +428,11 @@ async function submit(ev) {
       savedNote(form, `Added ${r.product.name}. Give it a price below to put it on the order page.`)
       onSaved()
     } else if (group === 'pin') {
-      await api.changePin({ which: $('#pin-which', form).value, current_dealer_pin: $('#pin-current', form).value, new_pin: $('#pin-new', form).value })
+      await api.changePin({
+        which: $('#pin-which', form).value,
+        current_dealer_pin: $('#pin-current', form).value,
+        new_pin: $('#pin-new', form).value,
+      })
       $('#pin-current', form).value = ''
       $('#pin-new', form).value = ''
       savedNote(form, `The ${$('#pin-which', form).value} PIN is changed.`)

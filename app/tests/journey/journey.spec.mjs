@@ -4,7 +4,19 @@
 // the driver tapped, with the balance owing. Lead-owned; it crosses both slices on purpose.
 import { test, expect } from '@playwright/test'
 import {
-  NOW, DEALER, DEALER_PIN, DRIVER_PIN, fresh, newContext, tap, type, tapMap, api, dealerToken, bearer, shot, assertNoThirdParty,
+  DEALER,
+  DEALER_PIN,
+  DRIVER_PIN,
+  fresh,
+  newContext,
+  tap,
+  type,
+  tapMap,
+  api,
+  dealerToken,
+  bearer,
+  shot,
+  assertNoThirdParty,
 } from '../helpers.mjs'
 
 const TODAY = '2026-09-14'

@@ -11,7 +11,7 @@ const WORKER = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const LOG = path.join(WORKER, 'tests', 'negative-control.log')
 const SKIP = new Set(['.negative', '.wrangler', 'node_modules', '.logs', '.scratch'])
 
-const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // patches: [{ file, from, to }] — `from` must occur exactly once in the file.
 export async function negative({ name, why, patches, args, expectRed, port = 7705 }) {
@@ -44,7 +44,8 @@ export async function negative({ name, why, patches, args, expectRed, port = 770
   const out = await new Promise((resolve) => {
     let buf = ''
     const child = spawn(process.execPath, [path.join(copy, 'tests', 'run.mjs'), '--fresh', ...args], {
-      cwd: copy, env: { ...process.env, PORT: String(port), TEST_REPORTER: 'tap', NO_COLOR: '1' },
+      cwd: copy,
+      env: { ...process.env, PORT: String(port), TEST_REPORTER: 'tap', NO_COLOR: '1' },
     })
     child.stdout.on('data', (d) => (buf += d))
     child.stderr.on('data', (d) => (buf += d))
@@ -52,7 +53,7 @@ export async function negative({ name, why, patches, args, expectRed, port = 770
   })
 
   const lines = out.buf.split('\n')
-  const missing = expectRed.filter((t) => !new RegExp(`not ok \\d+ - ${escape(t)}`).test(out.buf))
+  const missing = expectRed.filter((t) => !new RegExp(`not ok \\d+ - ${escapeRe(t)}`).test(out.buf))
   const red = out.code !== 0 && missing.length === 0
   // Keep the red lines and the assertion detail under each, not the whole run.
   const detail = []
@@ -63,7 +64,8 @@ export async function negative({ name, why, patches, args, expectRed, port = 770
   const result = red
     ? `RESULT: RED as intended (exit ${out.code}); red tests: ${expectRed.join(' | ')}`
     : `RESULT: STAYED GREEN — the check measured nothing (exit ${out.code}; not red: ${missing.join(' | ') || 'none'})`
-  const text = `${header}patched: ${patches.map((p) => p.file).join(', ')}\nrun: node tests/run.mjs --fresh ${args.join(' ')} (PORT ${port})\n` +
+  const text =
+    `${header}patched: ${patches.map((p) => p.file).join(', ')}\nrun: node tests/run.mjs --fresh ${args.join(' ')} (PORT ${port})\n` +
     `${summary.join('\n')}\n${detail.join('\n')}\n${result}\n`
   appendFileSync(LOG, text)
   console.log(text)

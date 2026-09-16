@@ -6,7 +6,11 @@ import { deliver, detailOf, orderView, planDay, signIn } from './driver-helpers.
 
 const TAPPED = '2026-09-14T11:20:00.000Z' // the phone's clock at Save: 8:50 AM, before the server's 9:00 AM
 
-test('a 401 while deliveries wait: sign-in shows again, the queue is kept, and after signing in it sends with the tap time', async ({ page, context, request }) => {
+test('a 401 while deliveries wait: sign-in shows again, the queue is kept, and after signing in it sends with the tap time', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const { dealer, orders } = await planDay(request, 2)
   await page.clock.install({ time: new Date(Date.parse(TAPPED) - 60_000) })
@@ -17,7 +21,13 @@ test('a 401 while deliveries wait: sign-in shows again, the queue is kept, and a
   await expect(page.locator('#sync-strip')).toContainText('1 delivery saved on this phone')
 
   // Meanwhile the dealer changes the driver PIN, which ends the phone's session.
-  const change = await api(request, 'PUT', '/api/dealer/pin', { which: 'driver', current_dealer_pin: DEALER_PIN, new_pin: '4680' }, bearer(dealer))
+  const change = await api(
+    request,
+    'PUT',
+    '/api/dealer/pin',
+    { which: 'driver', current_dealer_pin: DEALER_PIN, new_pin: '4680' },
+    bearer(dealer),
+  )
   expect(change.status).toBe(200)
 
   await context.setOffline(false)
@@ -36,7 +46,11 @@ test('a 401 while deliveries wait: sign-in shows again, the queue is kept, and a
   assertNoThirdParty(context)
 })
 
-test('Undo of a delivery still on the phone: it is removed, never reaches the office, and the stop comes back', async ({ page, context, request }) => {
+test('Undo of a delivery still on the phone: it is removed, never reaches the office, and the stop comes back', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const { dealer, orders } = await planDay(request, 2)
   await signIn(page)
@@ -60,7 +74,11 @@ test('Undo of a delivery still on the phone: it is removed, never reaches the of
   assertNoThirdParty(context)
 })
 
-test('Not accepted with a real 409: the dealer cancels while the driver has no signal; Remove from this phone clears it', async ({ page, context, request }) => {
+test('Not accepted with a real 409: the dealer cancels while the driver has no signal; Remove from this phone clears it', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const { dealer, orders } = await planDay(request, 2)
   await signIn(page)
@@ -91,11 +109,20 @@ test.describe('with the service worker blocked', () => {
   // Routes one request; see offline.spec.mjs for why the service worker is blocked when routing.
   test.use({ serviceWorkers: 'block' })
 
-  test('a refused photo (415) is not a refused delivery: the delivery is saved and the page says the photo could not be used', async ({ page, context, request }) => {
+  test('a refused photo (415) is not a refused delivery: the delivery is saved and the page says the photo could not be used', async ({
+    page,
+    context,
+    request,
+  }) => {
     await fresh(context, request)
     const { dealer, orders } = await planDay(request, 2)
-    await page.route('**/api/driver/checkins/*/photo', (route) => route.fulfill({ status: 415, contentType: 'application/json',
-      body: JSON.stringify({ error: 'Send the photo as a JPEG, PNG or WebP picture.', code: 'unsupported_media' }) }))
+    await page.route('**/api/driver/checkins/*/photo', (route) =>
+      route.fulfill({
+        status: 415,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Send the photo as a JPEG, PNG or WebP picture.', code: 'unsupported_media' }),
+      }),
+    )
     await signIn(page)
     await deliver(page, 'owes', { photo: samplePhotoPng() })
     await expect(page.locator('#sync-strip')).toHaveText('All sent')

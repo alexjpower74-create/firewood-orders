@@ -18,7 +18,7 @@ async function save(page, form, label = 'Save', saved = 'Saved.') {
   return res
 }
 
-test('a new load description shows in the order page\'s load explanation', async ({ page, context, request }, testInfo) => {
+test("a new load description shows in the order page's load explanation", async ({ page, context, request }, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   await openSettings(page)
@@ -37,7 +37,7 @@ test('a new load description shows in the order page\'s load explanation', async
   assertNoThirdParty(context)
 })
 
-test('closing the season puts the dealer\'s message on the order page', async ({ page, context, request }, testInfo) => {
+test("closing the season puts the dealer's message on the order page", async ({ page, context, request }, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   await openSettings(page)
@@ -80,7 +80,11 @@ test('a new price changes the quote on the order page', async ({ page, context, 
   assertNoThirdParty(context)
 })
 
-test('a band list that isn\'t farther each time gets the API\'s message under the bands, and nothing is saved', async ({ page, context, request }) => {
+test("a band list that isn't farther each time gets the API's message under the bands, and nothing is saved", async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)

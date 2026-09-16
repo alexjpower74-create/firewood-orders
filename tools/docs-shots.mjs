@@ -21,7 +21,11 @@ async function json(url, opts = {}) {
 }
 
 // Pick real SAMPLE rows from the demo: a scheduled order for the status page, the busiest delivery day for the route.
-const { token } = await json('/api/signin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pin: '1357' }) })
+const { token } = await json('/api/signin', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ pin: '1357' }),
+})
 const auth = { Authorization: `Bearer ${token}` }
 const board = await json('/api/dealer/board', { headers: auth })
 const sample = board.scheduled[0] || board.new[0] || board.delivered[0]

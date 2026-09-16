@@ -1,11 +1,13 @@
 // The driver page against the real Worker: sign-in, the day in route order, Start, Delivered with each way to pay, Undo.
 import { test, expect } from '@playwright/test'
-import {
-  api, assertNoThirdParty, bearer, DEALER, DRIVER_PIN, driverToken, fresh, samplePhotoPng, shot, tap, type,
-} from '../helpers.mjs'
+import { api, assertNoThirdParty, bearer, DEALER, DRIVER_PIN, driverToken, fresh, samplePhotoPng, shot, tap, type } from '../helpers.mjs'
 import { CORD, deliver, detailOf, orderView, planDay, signIn, stockOf, TODAY } from './driver-helpers.mjs'
 
-test("sign-in: a wrong PIN says so and the API answered 401; the right PIN shows today's stops in route order", async ({ page, context, request }, testInfo) => {
+test("sign-in: a wrong PIN says so and the API answered 401; the right PIN shows today's stops in route order", async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const { orders } = await planDay(request)
   await page.goto('/driver/')
@@ -43,7 +45,11 @@ test("sign-in: a wrong PIN says so and the API answered 401; the right PIN shows
   assertNoThirdParty(context)
 })
 
-test('Start → the status page says Out for delivery; Delivered + Cash → the next stop, and the office has the payment and Paid in full', async ({ page, context, request }, testInfo) => {
+test('Start → the status page says Out for delivery; Delivered + Cash → the next stop, and the office has the payment and Paid in full', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const { dealer, orders } = await planDay(request)
   await signIn(page)
@@ -74,7 +80,11 @@ test('Start → the status page says Out for delivery; Delivered + Cash → the 
   assertNoThirdParty(context)
 })
 
-test('Delivered + e-Transfer of part with a photo from the file chooser → owing to the cent, photo stored', async ({ page, context, request }) => {
+test('Delivered + e-Transfer of part with a photo from the file chooser → owing to the cent, photo stored', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const { orders } = await planDay(request)
   await signIn(page)

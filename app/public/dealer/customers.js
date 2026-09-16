@@ -38,12 +38,16 @@ async function showList() {
   }
   root.innerHTML = customers.length
     ? `<p class="small plan-intro">Everyone who has ordered, most owing first.</p>
-       <ul class="customers" aria-label="Customers">${customers.map((c) => `<li>
+       <ul class="customers" aria-label="Customers">${customers
+         .map(
+           (c) => `<li>
         <button type="button" class="customer" data-customer="${esc(c.id)}">
           <span class="customer-main"><strong>${esc(c.name)}</strong>
             <span class="small">${esc(c.phone)} · ${c.orders} ${c.orders === 1 ? 'order' : 'orders'}${c.last_order_label ? ` · last ${esc(c.last_order_label)}` : ''}</span></span>
           <span class="pill balance-pill" data-kind="${kindOf(c.balance_cents)}">${balanceLabel(c.balance_cents)}</span>
-        </button></li>`).join('')}</ul>`
+        </button></li>`,
+         )
+         .join('')}</ul>`
     : '<p class="empty">No customers yet. They appear here with their first order.</p>'
 }
 
@@ -80,7 +84,9 @@ function owingPill(o) {
 
 function render({ customer: c, entries, balance_cents: balance }, board) {
   const orders = customerOrders(board, c.id)
-  const methodOptions = Object.entries(METHODS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')
+  const methodOptions = Object.entries(METHODS)
+    .map(([k, v]) => `<option value="${k}">${v}</option>`)
+    .join('')
   root.innerHTML = `
     <button type="button" class="btn btn-ghost" data-action="list">${icon.back}<span>Back to customers</span></button>
     <div class="ledger-head" data-customer="${esc(c.id)}">
@@ -91,12 +97,20 @@ function render({ customer: c, entries, balance_cents: balance }, board) {
 
     <section class="card">
       <h3 class="card-title">Recent and unpaid orders</h3>
-      ${orders.length ? `<ul class="cust-orders">${orders.map((o) => `<li class="cust-order" data-order="${esc(o.id)}" data-status="${esc(o.status)}">
+      ${
+        orders.length
+          ? `<ul class="cust-orders">${orders
+              .map(
+                (o) => `<li class="cust-order" data-order="${esc(o.id)}" data-status="${esc(o.status)}">
           <span class="cust-order-main"><strong>${esc(o.qty_label)} of ${esc(o.product_label)}</strong>
             <span class="small">${esc(o.status_label)} · total ${money(o.total_cents)}</span></span>
           ${owingPill(o)}
           <button type="button" class="btn btn-secondary" data-action="open-order" data-id="${esc(o.id)}">Open</button>
-        </li>`).join('')}</ul>` : '<p class="small">Nothing open or recent. Older paid orders are in the ledger below.</p>'}
+        </li>`,
+              )
+              .join('')}</ul>`
+          : '<p class="small">Nothing open or recent. Older paid orders are in the ledger below.</p>'
+      }
     </section>
 
     <section class="card">
@@ -104,8 +118,7 @@ function render({ customer: c, entries, balance_cents: balance }, board) {
       <div class="table-wrap">
         <table id="ledger" class="money-table">
           <thead><tr><th scope="col">Date</th><th scope="col">What</th><th scope="col" class="num">Charge</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Balance</th><th scope="col"><span class="sr-only">Void</span></th></tr></thead>
-          <tbody>${entries.length ? entries.map(ledgerRow).join('')
-            : '<tr><td colspan="6" class="small">Nothing yet.</td></tr>'}</tbody>
+          <tbody>${entries.length ? entries.map(ledgerRow).join('') : '<tr><td colspan="6" class="small">Nothing yet.</td></tr>'}</tbody>
         </table>
       </div>
       <p class="alert" id="ledger-error" role="alert" hidden></p>
@@ -153,11 +166,15 @@ function ledgerRow(e) {
       <td class="num payment">${e.payment_cents ? money(e.payment_cents) : ''}</td>
       <td class="num running">${money(e.balance_cents)}</td>
       <td class="act">${payment ? `<button type="button" class="btn btn-ghost btn-small" data-action="void" data-payment="${esc(e.payment_id)}" aria-label="Void the payment of ${money(e.payment_cents)} on ${esc(e.label)}">Void</button>` : ''}</td></tr>
-    ${payment ? `<tr class="confirm-row" data-confirm-for="${esc(e.payment_id)}" hidden><td colspan="6"><div class="confirm">
+    ${
+      payment
+        ? `<tr class="confirm-row" data-confirm-for="${esc(e.payment_id)}" hidden><td colspan="6"><div class="confirm">
       <p><strong>Void this payment of ${money(e.payment_cents)}${onAccount ? ' made on account' : ''}?</strong> It stays on record but no longer counts.</p>
       <div class="confirm-buttons"><button type="button" class="btn btn-danger" data-action="void-yes" data-payment="${esc(e.payment_id)}">Void payment</button>
         <button type="button" class="btn btn-ghost" data-action="void-no" data-payment="${esc(e.payment_id)}">Keep it</button></div>
-    </div></td></tr>` : ''}`
+    </div></td></tr>`
+        : ''
+    }`
 }
 
 /** Void the payment of the row that was confirmed, by that row's own payment_id, then show the ledger the API sends back. */

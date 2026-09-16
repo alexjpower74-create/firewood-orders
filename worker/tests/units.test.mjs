@@ -22,23 +22,31 @@ test('every unit has the volume in the table', () => {
 })
 
 test('a face cord is 48 in × 96 in × the piece length', () => {
-  for (const [cut, cuIn, f] of [[12, 55296, '0.25'], [16, 73728, '0.33'], [18, 82944, '0.38'], [24, 110592, '0.50']]) {
+  for (const [cut, cuIn, f] of [
+    [12, 55296, '0.25'],
+    [16, 73728, '0.33'],
+    [18, 82944, '0.38'],
+    [24, 110592, '0.50'],
+  ]) {
     const p = { ...wood, cut_in: cut }
     assert.equal(unitVolume(p, 'face_cord', 0).wood_cu_in, 48 * 96 * cut)
     assert.equal(unitVolume(p, 'face_cord', 0).wood_cu_in, cuIn)
-    assert.equal(explain(p, 'face_cord', load),
-      `A face cord: one row 4 feet high and 8 feet long, as deep as the pieces are long (${cut} inches). That is ${f} of a full cord.`)
+    assert.equal(
+      explain(p, 'face_cord', load),
+      `A face cord: one row 4 feet high and 8 feet long, as deep as the pieces are long (${cut} inches). That is ${f} of a full cord.`,
+    )
   }
   // 16 in is exactly a third of a cord
   assert.equal(73728 * 3, 221184)
 })
 
 test('explain texts are exact', () => {
-  assert.equal(explain(wood, 'cord', load),
-    'A full cord: a stack 4 feet high, 4 feet wide and 8 feet long (128 cubic feet).')
+  assert.equal(explain(wood, 'cord', load), 'A full cord: a stack 4 feet high, 4 feet wide and 8 feet long (128 cubic feet).')
   assert.equal(explain(wood, 'half_cord', load), 'Half a cord: 64 cubic feet, half of a full cord.')
-  assert.equal(explain(wood, 'load', load),
-    'A load is what our dump truck carries in one trip, dumped in a pile, not stacked. We count a load as 1.5 cords.')
+  assert.equal(
+    explain(wood, 'load', load),
+    'A load is what our dump truck carries in one trip, dumped in a pile, not stacked. We count a load as 1.5 cords.',
+  )
   assert.equal(explain(wood, 'load', { cords: 2, description: 'Our load.' }), 'Our load. We count a load as 2 cords.')
   assert.equal(explain(pellets, 'bag', load), 'One 40 lb bag.')
   assert.equal(explain(pellets, 'ton', load), 'A ton: 50 bags of 40 lb.')
@@ -61,7 +69,7 @@ test('qty_label singular and plural', () => {
 test('cords shown to people and cords typed by the dealer', () => {
   assert.equal(cordsToCuIn(4.5), 995328)
   assert.equal(cordsToCuIn(1.5), 331776)
-  assert.equal(cordsToCuIn(0.33), Math.round(33 * 221184 / 100))
+  assert.equal(cordsToCuIn(0.33), Math.round((33 * 221184) / 100))
   assert.equal(cordsOf(884736), 4)
   assert.equal(cordsOf(995328), 4.5)
   assert.equal(cordsOf(73728), 0.33)

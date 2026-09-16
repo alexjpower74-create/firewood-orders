@@ -23,8 +23,11 @@ const env = { ...process.env, CI: '1', WRANGLER_SEND_METRICS: 'false', NO_COLOR:
 const reporter = process.env.TEST_REPORTER ? [`--test-reporter=${process.env.TEST_REPORTER}`] : []
 
 function runNodeTests(files, extra = [], extraEnv = {}) {
-  const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...reporter, ...extra, ...files],
-    { cwd: WORKER, stdio: 'inherit', env: { ...env, ...extraEnv } })
+  const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...reporter, ...extra, ...files], {
+    cwd: WORKER,
+    stdio: 'inherit',
+    env: { ...env, ...extraEnv },
+  })
   return r.status ?? 1
 }
 
@@ -41,9 +44,12 @@ let failed = 0
 
 if (!flag('--api-only')) {
   const unit = opt('--unit')
-    ? opt('--unit').split(',').map((f) => path.join('tests', f))
-    : readdirSync(path.join(WORKER, 'tests')).filter((f) => f.endsWith('.test.mjs') && !f.startsWith('api'))
-      .map((f) => path.join('tests', f))
+    ? opt('--unit')
+        .split(',')
+        .map((f) => path.join('tests', f))
+    : readdirSync(path.join(WORKER, 'tests'))
+        .filter((f) => f.endsWith('.test.mjs') && !f.startsWith('api'))
+        .map((f) => path.join('tests', f))
   console.log(`\n== unit: ${unit.join(' ')}`)
   failed |= runNodeTests(unit)
 }
@@ -60,35 +66,60 @@ if (!flag('--unit-only')) {
     console.log(`\n== api: fresh Worker on ${BASE} (state ${path.relative(WORKER, STATE)})`)
     rmSync(STATE, { recursive: true, force: true })
     mkdirSync(STATE, { recursive: true })
-    const m = spawnSync('wrangler', ['d1', 'migrations', 'apply', 'firewood-orders', '--local', '--persist-to', STATE],
-      { cwd: WORKER, stdio: ['ignore', 'ignore', 'inherit'], env })
+    const m = spawnSync('wrangler', ['d1', 'migrations', 'apply', 'firewood-orders', '--local', '--persist-to', STATE], {
+      cwd: WORKER,
+      stdio: ['ignore', 'ignore', 'inherit'],
+      env,
+    })
     if (m.status !== 0) {
       console.error('migrations failed')
       process.exit(1)
     }
-    dev = spawn('wrangler', ['dev', '--local', '--port', String(PORT), '--inspector-port', String(PORT + 10), '--persist-to',
-      STATE, '--var', 'TEST_MODE:1', '--show-interactive-dev-session=false'],
-    { cwd: WORKER, stdio: ['ignore', 'ignore', 'inherit'], env, detached: true })
+    dev = spawn(
+      'wrangler',
+      [
+        'dev',
+        '--local',
+        '--port',
+        String(PORT),
+        '--inspector-port',
+        String(PORT + 10),
+        '--persist-to',
+        STATE,
+        '--var',
+        'TEST_MODE:1',
+        '--show-interactive-dev-session=false',
+      ],
+      { cwd: WORKER, stdio: ['ignore', 'ignore', 'inherit'], env, detached: true },
+    )
     const t0 = Date.now()
     while (!(await answers())) {
       if (dev.exitCode !== null || Date.now() - t0 > 90000) {
         console.error('the Worker did not start')
-        try { process.kill(-dev.pid, 'SIGTERM') } catch {}
+        try {
+          process.kill(-dev.pid, 'SIGTERM')
+        } catch {}
         process.exit(1)
       }
       await new Promise((r) => setTimeout(r, 300))
     }
   }
   const grep = opt('--grep')
-  failed |= runNodeTests(['tests/api.test.mjs', 'tests/api-m2.test.mjs'], grep ? [`--test-name-pattern=${grep}`] : [],
-    { API_BASE: BASE, STATE_DIR: STATE })
+  failed |= runNodeTests(['tests/api.test.mjs', 'tests/api-m2.test.mjs'], grep ? [`--test-name-pattern=${grep}`] : [], {
+    API_BASE: BASE,
+    STATE_DIR: STATE,
+  })
   if (dev) {
-    try { process.kill(-dev.pid, 'SIGTERM') } catch {}
+    try {
+      process.kill(-dev.pid, 'SIGTERM')
+    } catch {}
     // Wait until the port is really free, so the next run cannot talk to this Worker.
     const t0 = Date.now()
     while ((await answers()) && Date.now() - t0 < 20000) await new Promise((r) => setTimeout(r, 200))
     if (await answers()) {
-      try { process.kill(-dev.pid, 'SIGKILL') } catch {}
+      try {
+        process.kill(-dev.pid, 'SIGKILL')
+      } catch {}
       await new Promise((r) => setTimeout(r, 1000))
     }
   }

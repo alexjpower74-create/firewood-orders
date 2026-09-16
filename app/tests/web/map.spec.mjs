@@ -29,7 +29,11 @@ async function expectBaseMap(page, mapLocator, context) {
   expect(hit, 'the attribution is not covered').toBe('')
 }
 
-test('order page: the pin step draws the OpenFreeMap style with its attribution, and a tap still places the pin', async ({ page, context, request }) => {
+test('order page: the pin step draws the OpenFreeMap style with its attribution, and a tap still places the pin', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const w = watch(page)
   const info = (await api(request, 'GET', '/api/info')).body
@@ -51,7 +55,11 @@ test('order page: the pin step draws the OpenFreeMap style with its attribution,
   assertNoThirdParty(context)
 })
 
-test('dealer plan: the route map draws the OpenFreeMap style with its attribution and the stop markers', async ({ page, context, request }) => {
+test('dealer plan: the route map draws the OpenFreeMap style with its attribution and the stop markers', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const w = watch(page)
   const token = await dealerToken(request)

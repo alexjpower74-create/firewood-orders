@@ -20,8 +20,12 @@ function flatten(suite, out = []) {
   for (const spec of suite.specs || []) {
     for (const t of spec.tests || []) {
       const last = t.results?.[t.results.length - 1]
-      out.push({ title: spec.title, project: t.projectName, status: last?.status || 'none',
-        message: stripAnsi(last?.error?.message || '') })
+      out.push({
+        title: spec.title,
+        project: t.projectName,
+        status: last?.status || 'none',
+        message: stripAnsi(last?.error?.message || ''),
+      })
     }
   }
   for (const child of suite.suites || []) flatten(child, out)
@@ -59,7 +63,8 @@ export async function negative({ name, why, patches = [], overwrite = [], spec, 
   const args = ['playwright', 'test', spec, `--project=${project}`, '--reporter=json', '-g', grep]
   const code = await new Promise((resolve) => {
     const child = spawn('npx', args, {
-      cwd: APP, stdio: ['ignore', 'ignore', 'inherit'],
+      cwd: APP,
+      stdio: ['ignore', 'ignore', 'inherit'],
       env: { ...process.env, E2E_PORT: String(PORT), E2E_WORKER_DIR: path.join(root, 'worker'), PLAYWRIGHT_JSON_OUTPUT_NAME: report },
     })
     child.on('close', resolve)
@@ -68,12 +73,22 @@ export async function negative({ name, why, patches = [], overwrite = [], spec, 
   const failed = (title) => results.some((r) => r.title === title && !['passed', 'skipped'].includes(r.status))
   const missing = expectRed.filter((t) => !failed(t))
   const red = code !== 0 && results.length > 0 && missing.length === 0
-  const lines = results.map((r) => `  ${r.status.toUpperCase()}  [${r.project}] ${r.title}` +
-    (r.message ? `\n${r.message.split('\n').slice(0, 10).map((l) => `      ${l}`).join('\n')}` : ''))
+  const lines = results.map(
+    (r) =>
+      `  ${r.status.toUpperCase()}  [${r.project}] ${r.title}` +
+      (r.message
+        ? `\n${r.message
+            .split('\n')
+            .slice(0, 10)
+            .map((l) => `      ${l}`)
+            .join('\n')}`
+        : ''),
+  )
   const result = red
     ? `RESULT: RED as intended (exit ${code})`
     : `RESULT: STAYED GREEN — the check measured nothing (exit ${code}; not red: ${missing.join(' | ') || 'no results'})`
-  const text = `${header}patched: ${[...overwrite, ...patches].map((p) => p.file).join(', ')}\n` +
+  const text =
+    `${header}patched: ${[...overwrite, ...patches].map((p) => p.file).join(', ')}\n` +
     `run: E2E_PORT=${PORT} E2E_WORKER_DIR=app/.negative/${name}/worker npx ${args.join(' ')}\n${lines.join('\n')}\n${result}\n`
   appendFileSync(LOG, text)
   console.log(text)

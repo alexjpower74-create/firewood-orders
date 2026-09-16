@@ -27,17 +27,39 @@ if (text.split(find).length - 1 !== 1) {
   console.error(`negative-journey: anchor found ${text.split(find).length - 1} times in o/status.js, expected exactly once`)
   process.exit(2)
 }
-writeFileSync(file, text.replace(find, () => "  pill.textContent = o.status === 'delivered' ? 'Out for delivery' : o.status_label\n"))
+writeFileSync(
+  file,
+  text.replace(find, () => "  pill.textContent = o.status === 'delivered' ? 'Out for delivery' : o.status_label\n"),
+)
 
-const r = spawnSync('npx', ['playwright', 'test', 'tests/journey/journey.spec.mjs', '--project', 'chromium-390', '--reporter=list',
-  '--output', path.join(APP, '.negative', 'journey-results')], {
-  cwd: APP, encoding: 'utf8', env: { ...process.env, E2E_PORT: '7708', E2E_WORKER_DIR: path.join(base, 'worker') },
-})
+const r = spawnSync(
+  'npx',
+  [
+    'playwright',
+    'test',
+    'tests/journey/journey.spec.mjs',
+    '--project',
+    'chromium-390',
+    '--reporter=list',
+    '--output',
+    path.join(APP, '.negative', 'journey-results'),
+  ],
+  {
+    cwd: APP,
+    encoding: 'utf8',
+    env: { ...process.env, E2E_PORT: '7708', E2E_WORKER_DIR: path.join(base, 'worker') },
+  },
+)
 const out = `${r.stdout}\n${r.stderr}`
 const red = r.status !== 0 && /Expected: "Delivered"/.test(out) && /Received: "Out for delivery"/.test(out)
-const lines = out.split('\n').filter((l) => /✘|✓|Expected:|Received:|passed|failed/.test(l)).join('\n')
-appendFileSync(path.join(HERE, 'negative-control.log'),
-  `\n== ${new Date().toISOString()} journey: the copy's status page shows delivered as "Out for delivery"\n${lines}\nRESULT: ${red ? 'RED (good: the journey caught the break)' : 'NOT RED (bad)'}\n`)
+const lines = out
+  .split('\n')
+  .filter((l) => /✘|✓|Expected:|Received:|passed|failed/.test(l))
+  .join('\n')
+appendFileSync(
+  path.join(HERE, 'negative-control.log'),
+  `\n== ${new Date().toISOString()} journey: the copy's status page shows delivered as "Out for delivery"\n${lines}\nRESULT: ${red ? 'RED (good: the journey caught the break)' : 'NOT RED (bad)'}\n`,
+)
 console.log(lines)
 console.log(red ? 'RED (good): the journey caught the break' : 'NOT RED (bad)')
 process.exit(red ? 0 : 1)

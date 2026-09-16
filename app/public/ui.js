@@ -65,11 +65,15 @@ export const icon = {
   calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
   truck: svg('<path d="M2 6h11v10H2zM13 10h5l3 3v3h-8z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>'),
   done: svg('<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/>'),
-  dollar: svg('<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2.1 0 2.9 5.8 1.5 5.8 4.3 0 1.3-1.2 2.2-3 2.2-1.4 0-2.5-.6-3-1.6M12 6v1.8M12 16.4V18"/>'),
+  dollar: svg(
+    '<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2.1 0 2.9 5.8 1.5 5.8 4.3 0 1.3-1.2 2.2-3 2.2-1.4 0-2.5-.6-3-1.6M12 6v1.8M12 16.4V18"/>',
+  ),
   phone: svg('<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>', 18),
   pin: svg('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', 18),
   // A woodpile seen end-on: three log ends with a ring each (the earlier single log read as a toggle switch).
-  wood: svg('<circle cx="8" cy="15.5" r="3.8"/><circle cx="16" cy="15.5" r="3.8"/><circle cx="12" cy="8.5" r="3.8"/><circle cx="8" cy="15.5" r="1.2"/><circle cx="16" cy="15.5" r="1.2"/><circle cx="12" cy="8.5" r="1.2"/>'),
+  wood: svg(
+    '<circle cx="8" cy="15.5" r="3.8"/><circle cx="16" cy="15.5" r="3.8"/><circle cx="12" cy="8.5" r="3.8"/><circle cx="8" cy="15.5" r="1.2"/><circle cx="16" cy="15.5" r="1.2"/><circle cx="12" cy="8.5" r="1.2"/>',
+  ),
   pellets: svg('<path d="M6 4h12l1 4v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8z"/><path d="M5 8h14M9 13h6"/>'),
   signout: svg('<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/>', 18),
 }
@@ -94,7 +98,9 @@ export async function copyText(text) {
     document.body.append(ta)
     ta.select()
     let ok = false
-    try { ok = document.execCommand('copy') } catch {}
+    try {
+      ok = document.execCommand('copy')
+    } catch {}
     ta.remove()
     return ok
   }
@@ -107,12 +113,17 @@ export async function copyButton(button, text) {
   const ok = await copyText(text)
   button.textContent = ok ? 'Copied' : 'Could not copy. Select the text and copy it.'
   clearTimeout(button._copyTimer)
-  button._copyTimer = setTimeout(() => { button.textContent = label }, 2500)
+  button._copyTimer = setTimeout(() => {
+    button.textContent = label
+  }, 2500)
 }
 
 /** Remove every inline error inside root. */
 export function clearErrors(root) {
-  for (const el of root.querySelectorAll('[data-error-for]')) { el.textContent = ''; el.hidden = true }
+  for (const el of root.querySelectorAll('[data-error-for]')) {
+    el.textContent = ''
+    el.hidden = true
+  }
   for (const el of root.querySelectorAll('[aria-invalid="true"]')) el.removeAttribute('aria-invalid')
 }
 
@@ -129,5 +140,8 @@ export function showError(root, field, message) {
 
 export function debounce(fn, ms) {
   let t
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms) }
+  return (...args) => {
+    clearTimeout(t)
+    t = setTimeout(() => fn(...args), ms)
+  }
 }

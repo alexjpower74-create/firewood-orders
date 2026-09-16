@@ -18,7 +18,10 @@ let shown = false
 let loading = false
 
 function tel(el, phone, text) {
-  if (!phone) { el.hidden = true; return }
+  if (!phone) {
+    el.hidden = true
+    return
+  }
   el.href = `tel:${phone.replace(/[^\d+]/g, '')}`
   el.innerHTML = `${icon.phone}<span>${esc(text)}</span>`
   el.hidden = false
@@ -46,7 +49,7 @@ function render({ dealer, deposit_text: depositText, order: o }) {
 
   const at = STEPS.findIndex(([s]) => s === o.status)
   $('#timeline').hidden = o.status === 'cancelled'
-  $('#timeline').innerHTML = STEPS.map(([s, label], i) => {
+  $('#timeline').innerHTML = STEPS.map(([_s, label], i) => {
     const state = i < at || o.status === 'delivered' ? 'done' : i === at ? 'current' : 'todo'
     return `<li data-state="${state}"${i === at ? ' aria-current="step"' : ''}><span class="dot" aria-hidden="true">${state === 'done' ? icon.check : ''}</span><span>${label}</span></li>`
   }).join('')
@@ -98,7 +101,9 @@ async function load() {
   try {
     if (!token) {
       let dealer = null
-      try { dealer = await api.info() } catch {}
+      try {
+        dealer = await api.info()
+      } catch {}
       showDealer(dealer)
       return showMissing(dealer)
     }
@@ -108,7 +113,9 @@ async function load() {
   } catch (e) {
     if (e.status === 404) {
       let dealer = null
-      try { dealer = await api.info() } catch {}
+      try {
+        dealer = await api.info()
+      } catch {}
       showDealer(dealer)
       showMissing(dealer)
     } else if (shown) {
@@ -154,4 +161,6 @@ $('#cancel-yes').addEventListener('click', async () => {
 
 load()
 setInterval(load, 30_000)
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load() })
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') load()
+})

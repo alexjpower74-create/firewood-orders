@@ -26,10 +26,15 @@ function loadMapLibre() {
     css.rel = 'stylesheet'
     css.href = MAPLIBRE_CSS
     document.head.append(css)
-    loading = addScript(MAPLIBRE_JS).then(() => addScript(BINDING_JS)).then(() => true, (e) => {
-      console.warn('[map] the base map could not load', e)
-      return false
-    })
+    loading = addScript(MAPLIBRE_JS)
+      .then(() => addScript(BINDING_JS))
+      .then(
+        () => true,
+        (e) => {
+          console.warn('[map] the base map could not load', e)
+          return false
+        },
+      )
   }
   return loading
 }
@@ -40,7 +45,9 @@ export function addBaseLayer(map, mapInfo) {
   if (!mapInfo?.style) return
   map.attributionControl.addAttribution(mapInfo.attribution)
   let removed = false
-  map.once('unload', () => { removed = true })
+  map.once('unload', () => {
+    removed = true
+  })
   loadMapLibre().then((ok) => {
     if (!ok || removed) return
     try {

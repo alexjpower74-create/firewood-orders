@@ -49,7 +49,11 @@ test('the primary buttons have contrast of at least 4.5', async ({ page, context
   assertNoThirdParty(context)
 })
 
-test('390: every button and tab on every screen is at least 44 px and hit-tests to itself, with no sideways scroll', async ({ page, context, request }, testInfo) => {
+test('390: every button and tab on every screen is at least 44 px and hit-tests to itself, with no sideways scroll', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   test.skip(!phone(testInfo), 'Tap targets and sideways scroll are checked at phone width (390).')
   test.setTimeout(420_000)
   await fresh(context, request)

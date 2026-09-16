@@ -28,6 +28,15 @@ test('formula guard: = + - @ tab CR get a leading apostrophe', () => {
 })
 
 test('text: CRLF after every row, including the last', () => {
-  assert.equal(csvText(['A', 'B'], [['1', { cents: 250 }], ['x, y', null]]), 'A,B\r\n1,2.50\r\n"x, y",\r\n')
+  assert.equal(
+    csvText(
+      ['A', 'B'],
+      [
+        ['1', { cents: 250 }],
+        ['x, y', null],
+      ],
+    ),
+    'A,B\r\n1,2.50\r\n"x, y",\r\n',
+  )
   assert.equal(csvText(['Only'], []), 'Only\r\n')
 })

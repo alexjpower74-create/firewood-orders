@@ -9,7 +9,11 @@ async function noSideScroll(page, testInfo, where) {
   expect(width, `${where}: page wider than the phone`).toBeLessThanOrEqual(page.viewportSize().width)
 }
 
-test('every driver button is at least 56 px and hit-tests to itself; SAMPLE visible; no sideways scroll at 390', async ({ page, context, request }, testInfo) => {
+test('every driver button is at least 56 px and hit-tests to itself; SAMPLE visible; no sideways scroll at 390', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   await planDay(request)
   await page.goto('/driver/')
@@ -26,8 +30,15 @@ test('every driver button is at least 56 px and hit-tests to itself; SAMPLE visi
 
   await tap(page, page.locator('#delivered'), 'Delivered')
   await tap(page, page.locator('button.pay[data-method="cash"]'), 'Cash')
-  for (const sel of ['button.pay[data-method="cash"]', 'button.pay[data-method="etransfer"]', 'button.pay[data-method="owes"]',
-    '#amount', '#take-photo', '#save-delivery', '#sheet-cancel']) {
+  for (const sel of [
+    'button.pay[data-method="cash"]',
+    'button.pay[data-method="etransfer"]',
+    'button.pay[data-method="owes"]',
+    '#amount',
+    '#take-photo',
+    '#save-delivery',
+    '#sheet-cancel',
+  ]) {
     await expectTapTarget(page, page.locator(sel), 56, sel)
   }
   await noSideScroll(page, testInfo, 'pay sheet')
@@ -37,7 +48,11 @@ test('every driver button is at least 56 px and hit-tests to itself; SAMPLE visi
   assertNoThirdParty(context)
 })
 
-test('action buttons keep a contrast of at least 4.5 in dark and in Daylight; Daylight is remembered', async ({ page, context, request }, testInfo) => {
+test('action buttons keep a contrast of at least 4.5 in dark and in Daylight; Daylight is remembered', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   await planDay(request)
   await signIn(page)
@@ -47,8 +62,14 @@ test('action buttons keep a contrast of at least 4.5 in dark and in Daylight; Da
     }
     await tap(page, page.locator('#delivered'), 'Delivered')
     await tap(page, page.locator('button.pay[data-method="cash"]'), 'Cash')
-    for (const sel of ['button.pay[data-method="cash"]', 'button.pay[data-method="etransfer"]', 'button.pay[data-method="owes"]',
-      '#take-photo', '#save-delivery', '#sheet-cancel']) {
+    for (const sel of [
+      'button.pay[data-method="cash"]',
+      'button.pay[data-method="etransfer"]',
+      'button.pay[data-method="owes"]',
+      '#take-photo',
+      '#save-delivery',
+      '#sheet-cancel',
+    ]) {
       expect(await contrastOf(page.locator(sel)), `${theme} ${sel}`).toBeGreaterThanOrEqual(4.5)
     }
     await tap(page, page.locator('#sheet-cancel'), 'Cancel')

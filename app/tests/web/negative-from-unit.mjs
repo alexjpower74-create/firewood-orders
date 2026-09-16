@@ -5,11 +5,13 @@ import { runNegative } from './negative-lib.mjs'
 const ok = runNegative({
   name: 'from-unit',
   what: 'product cards show the from price without its unit',
-  breaks: [{
-    file: 'order/form.js',
-    find: "</strong> ${esc(UNIT_EACH[from.unit] || '')}</span>",
-    replace: '</strong></span>',
-  }],
+  breaks: [
+    {
+      file: 'order/form.js',
+      find: "</strong> ${esc(UNIT_EACH[from.unit] || '')}</span>",
+      replace: '</strong></span>',
+    },
+  ],
   spec: 'tests/web/order.spec.mjs',
   grep: 'each product card names the unit',
   red: /from \$120\.00 a face cord/,

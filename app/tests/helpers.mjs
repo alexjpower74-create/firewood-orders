@@ -25,24 +25,42 @@ export const place = (name) => {
 
 // ---------- tiny PNG encoder (placeholder tiles and generated photos; no files, no third-party images) ----------
 function chunk(type, data) {
-  const len = Buffer.alloc(4); len.writeUInt32BE(data.length)
+  const len = Buffer.alloc(4)
+  len.writeUInt32BE(data.length)
   const td = Buffer.concat([Buffer.from(type, 'ascii'), data])
-  const crc = Buffer.alloc(4); crc.writeUInt32BE(zlib.crc32(td) >>> 0)
+  const crc = Buffer.alloc(4)
+  crc.writeUInt32BE(zlib.crc32(td) >>> 0)
   return Buffer.concat([len, td, crc])
 }
 export function solidPng(width, height, [r, g, b]) {
   const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4)
-  ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0
+  ihdr.writeUInt32BE(width, 0)
+  ihdr.writeUInt32BE(height, 4)
+  ihdr[8] = 8
+  ihdr[9] = 2
+  ihdr[10] = 0
+  ihdr[11] = 0
+  ihdr[12] = 0
   const row = Buffer.alloc(1 + width * 3)
-  for (let x = 0; x < width; x++) { row[1 + x * 3] = r; row[2 + x * 3] = g; row[3 + x * 3] = b }
+  for (let x = 0; x < width; x++) {
+    row[1 + x * 3] = r
+    row[2 + x * 3] = g
+    row[3 + x * 3] = b
+  }
   const raw = Buffer.concat(Array.from({ length: height }, () => row))
-  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ])
 }
 export const TILE_PNG = solidPng(256, 256, [30, 41, 59])
 /** A stand-in MapLibre style: one background layer, no sources (so no tile, glyph or sprite requests). */
 export const TEST_STYLE = JSON.stringify({
-  version: 8, name: 'Firewood Orders test stand-in', sources: {},
+  version: 8,
+  name: 'Firewood Orders test stand-in',
+  sources: {},
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#dfe6e9' } }],
 })
 /** A generated stand-in for a delivery photo (never a real picture). */
@@ -103,17 +121,22 @@ export async function tap(page, locator, label = String(locator)) {
   expect(box, `tap(${label}): no box`).not.toBeNull()
   // "In view" to Playwright includes under a sticky header, where a person could not tap it. Pages mark sticky headers
   // with data-sticky-header; only in that case scroll the target to the middle first. Anything else on top still fails.
-  const headerBottom = await page.evaluate(() => Math.max(0, ...[...document.querySelectorAll('[data-sticky-header]')].map((h) => h.getBoundingClientRect().bottom)))
+  const headerBottom = await page.evaluate(() =>
+    Math.max(0, ...[...document.querySelectorAll('[data-sticky-header]')].map((h) => h.getBoundingClientRect().bottom)),
+  )
   if (box.y + box.height / 2 < headerBottom) {
     await locator.evaluate((el) => el.scrollIntoView({ block: 'center' }))
     box = await locator.boundingBox()
   }
   const x = box.x + box.width / 2
   const y = box.y + box.height / 2
-  const hit = await locator.evaluate((el, [px, py]) => {
-    const t = document.elementFromPoint(px, py)
-    return t === el || el.contains(t) ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
-  }, [x, y])
+  const hit = await locator.evaluate(
+    (el, [px, py]) => {
+      const t = document.elementFromPoint(px, py)
+      return t === el || el.contains(t) ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
+    },
+    [x, y],
+  )
   expect(hit, `tap(${label}) hit-test at ${Math.round(x)},${Math.round(y)}: something else is on top`).toBe('')
   if (await isCoarse(page)) await page.touchscreen.tap(x, y)
   else await page.mouse.click(x, y)
@@ -126,7 +149,10 @@ export async function type(page, locator, text, { clear = false } = {}) {
   await tap(page, locator)
   await expect(locator).toBeFocused()
   const before = clear ? '' : await locator.inputValue()
-  if (clear) { await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.press('Backspace') }
+  if (clear) {
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('Backspace')
+  }
   // Touch projects send text the way a phone's on-screen keyboard does (insertText). Chromium's emulated touch silently
   // dropped key presses typed straight after a touch tap (keydown, no input event; fo2 M2 bisected it, a 1 s wait did not
   // help). Mouse projects use real key presses. Either way the field must then hold exactly what was typed.
@@ -142,37 +168,46 @@ export async function tapMap(page, mapLocator, fx = 0.5, fy = 0.5) {
   const box = await mapLocator.boundingBox()
   const x = box.x + box.width * fx
   const y = box.y + box.height * fy
-  const hit = await mapLocator.evaluate((el, [px, py]) => {
-    const t = document.elementFromPoint(px, py)
-    return t && el.contains(t) && !t.closest('.leaflet-control') ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
-  }, [x, y])
+  const hit = await mapLocator.evaluate(
+    (el, [px, py]) => {
+      const t = document.elementFromPoint(px, py)
+      return t && el.contains(t) && !t.closest('.leaflet-control') ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
+    },
+    [x, y],
+  )
   expect(hit, `tapMap at ${Math.round(x)},${Math.round(y)}: not the map`).toBe('')
   // WebKit's touch adjustment moves a tap that lands a few px beside a control onto the control (fo2 M1: a pin 3 px from
   // the zoom-out button zoomed the map instead). elementFromPoint cannot see that, so refuse points that close.
-  const near = await mapLocator.evaluate((el, [px, py]) => {
-    const M = 16
-    for (const c of el.querySelectorAll('.leaflet-control')) {
-      const r = c.getBoundingClientRect()
-      if (r.width && px > r.left - M && px < r.right + M && py > r.top - M && py < r.bottom + M) return String(c.className)
-    }
-    return ''
-  }, [x, y])
+  const near = await mapLocator.evaluate(
+    (el, [px, py]) => {
+      const M = 16
+      for (const c of el.querySelectorAll('.leaflet-control')) {
+        const r = c.getBoundingClientRect()
+        if (r.width && px > r.left - M && px < r.right + M && py > r.top - M && py < r.bottom + M) return String(c.className)
+      }
+      return ''
+    },
+    [x, y],
+  )
   expect(near, `tapMap at ${Math.round(x)},${Math.round(y)}: within 16 px of a map control, where WebKit would send the tap`).toBe('')
   if (await isCoarse(page)) await page.touchscreen.tap(x, y)
   else await page.mouse.click(x, y)
 }
 
 /** Size + hit-test for a tap target (size from the box is fine; occlusion only from elementFromPoint). */
-export async function expectTapTarget(page, locator, min = 44, label = String(locator)) {
+export async function expectTapTarget(_page, locator, min = 44, label = String(locator)) {
   await locator.scrollIntoViewIfNeeded()
   const box = await locator.boundingBox()
   expect(box, `${label}: no box`).not.toBeNull()
   expect(box.height, `${label} height`).toBeGreaterThanOrEqual(min)
   expect(box.width, `${label} width`).toBeGreaterThanOrEqual(min)
-  const hit = await locator.evaluate((el, [px, py]) => {
-    const t = document.elementFromPoint(px, py)
-    return t === el || el.contains(t) ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
-  }, [box.x + box.width / 2, box.y + box.height / 2])
+  const hit = await locator.evaluate(
+    (el, [px, py]) => {
+      const t = document.elementFromPoint(px, py)
+      return t === el || el.contains(t) ? '' : t ? t.outerHTML.slice(0, 160) : 'nothing'
+    },
+    [box.x + box.width / 2, box.y + box.height / 2],
+  )
   expect(hit, `${label}: something else is on top`).toBe('')
 }
 
@@ -181,18 +216,29 @@ export async function contrastOf(locator) {
   return locator.evaluate((el) => {
     const parse = (s) => (s.match(/[\d.]+/g) || []).map(Number)
     const lum = ([r, g, b]) => {
-      const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
+      const f = (c) => {
+        c /= 255
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      }
       return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
     }
     const fg = parse(getComputedStyle(el).color)
-    let n = el; let bg = null
+    let n = el
+    let bg = null
     while (n && n.nodeType === 1) {
       const cs = getComputedStyle(n)
       const c = parse(cs.backgroundColor)
-      if (c.length >= 3 && (c.length === 3 || c[3] > 0.99)) { bg = c; break }
+      if (c.length >= 3 && (c.length === 3 || c[3] > 0.99)) {
+        bg = c
+        break
+      }
       if (cs.backgroundImage && cs.backgroundImage.includes('gradient')) {
         const stops = cs.backgroundImage.match(/rgba?\([^)]*\)/g) || []
-        const ratios = stops.map((s) => { const b = parse(s); const [a, d] = [lum(fg), lum(b)].sort((x, y) => y - x); return (a + 0.05) / (d + 0.05) })
+        const ratios = stops.map((s) => {
+          const b = parse(s)
+          const [a, d] = [lum(fg), lum(b)].sort((x, y) => y - x)
+          return (a + 0.05) / (d + 0.05)
+        })
         if (ratios.length) return Math.min(...ratios)
       }
       n = n.parentElement
@@ -208,7 +254,11 @@ export async function api(request, method, url, data, headers = {}) {
   const r = await request.fetch(url, { method, data, headers: { 'X-Test-Now': NOW, ...headers } })
   let body = null
   const text = await r.text()
-  try { body = JSON.parse(text) } catch { body = text }
+  try {
+    body = JSON.parse(text)
+  } catch {
+    body = text
+  }
   return { status: r.status(), body, type: r.headers()['content-type'] || '' }
 }
 
@@ -225,9 +275,19 @@ export const bearer = (token) => ({ Authorization: `Bearer ${token}` })
 export async function orderViaApi(request, overrides = {}) {
   const p = place(overrides.place || "King's Point")
   const body = {
-    product_id: 'p_softwood_dry', unit: 'cord', qty: 1, stacking: false,
-    lat: p.lat, lng: p.lng, address: `Near ${p.name} (SAMPLE)`, dump_notes: 'By the shed, not on the lawn',
-    zone_id: null, preferred: { any: true }, name: 'Wade R. (SAMPLE)', phone: '709-555-0142', note: '',
+    product_id: 'p_softwood_dry',
+    unit: 'cord',
+    qty: 1,
+    stacking: false,
+    lat: p.lat,
+    lng: p.lng,
+    address: `Near ${p.name} (SAMPLE)`,
+    dump_notes: 'By the shed, not on the lawn',
+    zone_id: null,
+    preferred: { any: true },
+    name: 'Wade R. (SAMPLE)',
+    phone: '709-555-0142',
+    note: '',
     ...overrides,
   }
   delete body.place

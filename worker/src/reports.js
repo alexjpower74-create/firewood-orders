@@ -29,13 +29,18 @@ export function seasonFor(s, today, param) {
 async function seasonData(c) {
   const s = await loadSettings(c.db)
   const season = seasonFor(s, c.today, c.url.searchParams.get('season'))
-  const { results: delivered } = await c.db.prepare(`${ORDER_SELECT}
-    WHERE o.status = 'delivered' AND o.delivered_at IS NOT NULL ORDER BY o.delivered_at, o.id`).all()
-  const { results: payments } = await c.db.prepare(`SELECT p.*, c.name AS name, c.phone AS phone FROM payments p
-    JOIN customers c ON c.id = p.customer_id ORDER BY p.date, p.created_at, p.id`).all()
+  const { results: delivered } = await c.db
+    .prepare(`${ORDER_SELECT}
+    WHERE o.status = 'delivered' AND o.delivered_at IS NOT NULL ORDER BY o.delivered_at, o.id`)
+    .all()
+  const { results: payments } = await c.db
+    .prepare(`SELECT p.*, c.name AS name, c.phone AS phone FROM payments p
+    JOIN customers c ON c.id = p.customer_id ORDER BY p.date, p.created_at, p.id`)
+    .all()
   const inSeason = (date) => date >= season.from && date <= season.to
   return {
-    season, payments,
+    season,
+    payments,
     orders: delivered.filter((o) => inSeason(nlDate(o.delivered_at))),
     seasonPayments: payments.filter((p) => counts(p) && inSeason(p.date)),
   }
@@ -76,25 +81,61 @@ export async function totals(c) {
 
 function csvResponse(text, filename) {
   return new Response(text, {
-    headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${filename}"`,
-      'Cache-Control': 'no-store' },
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Cache-Control': 'no-store',
+    },
   })
 }
 
 export async function ordersCsv(c) {
   const { season, orders, payments } = await seasonData(c)
-  const header = ['Order', 'Delivered', 'Customer', 'Phone', 'Address', 'Product', 'Quantity', 'Goods', 'Stacking', 'Delivery',
-    'Subtotal', 'HST', 'Total', 'Paid', 'Owing', 'Door payment']
-  const rows = orders.map((o) => [o.id, nlDate(o.delivered_at), o.name, o.phone, o.address, o.product_label, qtyLabelOf(o),
-    ...MONEY.map((k) => ({ cents: o[k] })), { cents: paidCents(o.id, payments) }, { cents: owingCents(o, payments) },
-    o.door_payment ? METHOD_LABELS[o.door_payment] : ''])
+  const header = [
+    'Order',
+    'Delivered',
+    'Customer',
+    'Phone',
+    'Address',
+    'Product',
+    'Quantity',
+    'Goods',
+    'Stacking',
+    'Delivery',
+    'Subtotal',
+    'HST',
+    'Total',
+    'Paid',
+    'Owing',
+    'Door payment',
+  ]
+  const rows = orders.map((o) => [
+    o.id,
+    nlDate(o.delivered_at),
+    o.name,
+    o.phone,
+    o.address,
+    o.product_label,
+    qtyLabelOf(o),
+    ...MONEY.map((k) => ({ cents: o[k] })),
+    { cents: paidCents(o.id, payments) },
+    { cents: owingCents(o, payments) },
+    o.door_payment ? METHOD_LABELS[o.door_payment] : '',
+  ])
   return csvResponse(csvText(header, rows), `firewood-orders-${season.year}-orders.csv`)
 }
 
 export async function paymentsCsv(c) {
   const { season, seasonPayments } = await seasonData(c)
   const header = ['Date', 'Customer', 'Phone', 'Order', 'Method', 'Amount', 'Note']
-  const rows = seasonPayments.map((p) => [p.date, p.name, p.phone, p.order_id || '', METHOD_LABELS[p.method],
-    { cents: p.amount_cents }, p.note])
+  const rows = seasonPayments.map((p) => [
+    p.date,
+    p.name,
+    p.phone,
+    p.order_id || '',
+    METHOD_LABELS[p.method],
+    { cents: p.amount_cents },
+    p.note,
+  ])
   return csvResponse(csvText(header, rows), `firewood-orders-${season.year}-payments.csv`)
 }

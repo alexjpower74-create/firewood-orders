@@ -1,7 +1,19 @@
 // The customer's status page against the real Worker: each status label as the API moves the order (the page's own
 // 30-second poll brings the change, fast-forwarded with page.clock), the photo when delivered, and a bad link.
 import { test, expect } from '@playwright/test'
-import { api, assertNoThirdParty, bearer, dealerToken, driverToken, fresh, NOW, orderViaApi, samplePhotoPng, shot, tap } from '../helpers.mjs'
+import {
+  api,
+  assertNoThirdParty,
+  bearer,
+  dealerToken,
+  driverToken,
+  fresh,
+  NOW,
+  orderViaApi,
+  samplePhotoPng,
+  shot,
+  tap,
+} from '../helpers.mjs'
 import { watch } from './web-helpers.mjs'
 
 test('each status label as the API moves the order, with the photo once delivered', async ({ page, context, request }, testInfo) => {
@@ -33,12 +45,19 @@ test('each status label as the API moves the order, with the photo once delivere
   await shot(page, testInfo, 'web', 'status-out-for-delivery')
 
   const op = `status-spec-${testInfo.project.name}`
-  const checkin = await api(request, 'POST', '/api/driver/checkins',
-    { op_id: op, order_id: o.id, at: NOW, payment: { method: 'owes' }, note: '' }, bearer(driver))
+  const checkin = await api(
+    request,
+    'POST',
+    '/api/driver/checkins',
+    { op_id: op, order_id: o.id, at: NOW, payment: { method: 'owes' }, note: '' },
+    bearer(driver),
+  )
   expect(checkin.status, JSON.stringify(checkin.body)).toBe(201)
   const photo = samplePhotoPng()
   const put = await request.fetch(`/api/driver/checkins/${op}/photo`, {
-    method: 'PUT', data: photo.buffer, headers: { ...bearer(driver), 'Content-Type': photo.mimeType, 'X-Test-Now': NOW },
+    method: 'PUT',
+    data: photo.buffer,
+    headers: { ...bearer(driver), 'Content-Type': photo.mimeType, 'X-Test-Now': NOW },
   })
   expect(put.status()).toBe(200)
 
@@ -54,7 +73,11 @@ test('each status label as the API moves the order, with the photo once delivere
   assertNoThirdParty(context)
 })
 
-test('Cancel my order while Requested cancels it; once it is scheduled the API\'s refusal shows', async ({ page, context, request }, testInfo) => {
+test("Cancel my order while Requested cancels it; once it is scheduled the API's refusal shows", async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const dealer = await dealerToken(request)

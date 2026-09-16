@@ -6,7 +6,11 @@ import { deliver, detailOf, planDay, signIn } from './driver-helpers.mjs'
 
 const pay = (request, dealer, body) => api(request, 'POST', '/api/dealer/payments', body, bearer(dealer))
 
-test("review #1: right after a Save, the next stop's Delivered hit-tests to itself while the Undo bar shows", async ({ page, context, request }) => {
+test("review #1: right after a Save, the next stop's Delivered hit-tests to itself while the Undo bar shows", async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   await planDay(request, 3)
   await signIn(page)
@@ -18,14 +22,23 @@ test("review #1: right after a Save, the next stop's Delivered hit-tests to itse
   assertNoThirdParty(context)
 })
 
-test('review #2: Cash with the prefilled amount records exactly that amount, even after the dealer took a payment', async ({ page, context, request }) => {
+test('review #2: Cash with the prefilled amount records exactly that amount, even after the dealer took a payment', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const { dealer, orders } = await planDay(request, 2)
   await signIn(page)
   await expect(page.locator('#next-owing')).toHaveText('Balance owing $373.75')
   // While the day sits on the phone, the office records $100.00 on that order.
   const detail = await detailOf(request, dealer, orders[0].id)
-  const office = await pay(request, dealer, { customer_id: detail.customer.id, order_id: orders[0].id, amount_cents: 10000, method: 'etransfer' })
+  const office = await pay(request, dealer, {
+    customer_id: detail.customer.id,
+    order_id: orders[0].id,
+    amount_cents: 10000,
+    method: 'etransfer',
+  })
   expect(office.status).toBe(201)
 
   await tap(page, page.locator('#delivered'), 'Delivered')
@@ -38,12 +51,19 @@ test('review #2: Cash with the prefilled amount records exactly that amount, eve
   await expect(page.locator('#sync-strip')).toHaveText('All sent')
   const d = await detailOf(request, dealer, orders[0].id)
   const door = d.payments.filter((p) => p.source === 'door')
-  expect(door.map((p) => [p.amount_cents, p.method]), 'the cash the driver collected, to the cent').toEqual([[37375, 'cash']])
+  expect(
+    door.map((p) => [p.amount_cents, p.method]),
+    'the cash the driver collected, to the cent',
+  ).toEqual([[37375, 'cash']])
   expect(d.order.owing_cents).toBe(37375 - 10000 - 37375)
   assertNoThirdParty(context)
 })
 
-test('review #3: a prepaid order is saved as Cash or e-Transfer with no amount: no payment row, and door_payment is the method', async ({ page, context, request }) => {
+test('review #3: a prepaid order is saved as Cash or e-Transfer with no amount: no payment row, and door_payment is the method', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const { dealer, orders } = await planDay(request, 2)
   const totals = [37375, 34500]
@@ -69,10 +89,16 @@ test('review #3: a prepaid order is saved as Cash or e-Transfer with no amount: 
   await expect(page.locator('#sheet')).toBeHidden()
   await expect(page.locator('#sync-strip')).toHaveText('All sent')
 
-  for (const [i, method] of [[0, 'cash'], [1, 'etransfer']]) {
+  for (const [i, method] of [
+    [0, 'cash'],
+    [1, 'etransfer'],
+  ]) {
     const d = await detailOf(request, dealer, orders[i].id)
     expect([d.order.status, d.order.door_payment, d.order.owing_cents]).toEqual(['delivered', method, 0])
-    expect(d.payments.map((p) => p.source), 'only the office payment, no door row').toEqual(['dealer'])
+    expect(
+      d.payments.map((p) => p.source),
+      'only the office payment, no door row',
+    ).toEqual(['dealer'])
   }
   assertNoThirdParty(context)
 })
@@ -103,7 +129,12 @@ test('review #5: Sign out ends the session on the server: the old token gets 401
   assertNoThirdParty(context)
 })
 
-test('review #7: opened with no signal the next day, the saved day is not called today and Start is hidden', async ({ page, context, request, browserName }, testInfo) => {
+test('review #7: opened with no signal the next day, the saved day is not called today and Start is hidden', async ({
+  page,
+  context,
+  request,
+  browserName,
+}, testInfo) => {
   await fresh(context, request)
   await planDay(request, 3)
   await page.clock.install({ time: new Date('2026-09-14T12:00:00.000Z') })

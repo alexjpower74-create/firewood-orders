@@ -7,8 +7,13 @@ import { esc, money } from '/ui.js'
 
 const $ = (sel, root = document) => root.querySelector(sel)
 const COLUMNS = [
-  ['goods_cents', 'Goods'], ['stacking_cents', 'Stacking'], ['delivery_cents', 'Delivery'], ['subtotal_cents', 'Subtotal'],
-  ['hst_cents', 'HST'], ['total_cents', 'Total'], ['payments_cents', 'Payments'],
+  ['goods_cents', 'Goods'],
+  ['stacking_cents', 'Stacking'],
+  ['delivery_cents', 'Delivery'],
+  ['subtotal_cents', 'Subtotal'],
+  ['hst_cents', 'HST'],
+  ['total_cents', 'Total'],
+  ['payments_cents', 'Payments'],
 ]
 
 let root = null
@@ -17,7 +22,9 @@ let latestYear = null
 
 export function initTotals(el) {
   root = el
-  root.addEventListener('change', (ev) => { if (ev.target.id === 'season') showTotals(ev.target.value) })
+  root.addEventListener('change', (ev) => {
+    if (ev.target.id === 'season') showTotals(ev.target.value)
+  })
   root.addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-csv]')
     if (b && root.contains(b)) downloadCsv(b)
@@ -45,7 +52,10 @@ function render({ season, months, totals }) {
   root.innerHTML = `
     <div class="totals-head">
       <label class="field season-field"><span class="field-label">Season</span>
-        <select id="season" class="input">${years.sort((a, b) => b - a).map((y) => `<option value="${y}"${y === season.year ? ' selected' : ''}>${y}–${String(y + 1).slice(2)} season</option>`).join('')}</select>
+        <select id="season" class="input">${years
+          .sort((a, b) => b - a)
+          .map((y) => `<option value="${y}"${y === season.year ? ' selected' : ''}>${y}–${String(y + 1).slice(2)} season</option>`)
+          .join('')}</select>
       </label>
       <p class="small season-dates">${esc(season.label)}: ${esc(season.from)} to ${esc(season.to)}. Deliveries count in the month they were delivered, payments in the month they were paid. HST is 15 %, worked out per order.</p>
     </div>
@@ -62,8 +72,16 @@ function render({ season, months, totals }) {
       <div class="table-wrap">
         <table id="totals-table" class="money-table">
           <thead><tr><th scope="col">Month</th><th scope="col" class="num">Delivered</th>${COLUMNS.map(([, l]) => `<th scope="col" class="num">${l}</th>`).join('')}</tr></thead>
-          <tbody>${months.length ? months.map((m) => `<tr data-month="${esc(m.month)}"><th scope="row">${esc(m.label)}</th><td class="num" data-col="delivered">${m.delivered}</td>${cells(m)}</tr>`).join('')
-            : '<tr><td colspan="9" class="small">This season hasn\'t started yet.</td></tr>'}</tbody>
+          <tbody>${
+            months.length
+              ? months
+                  .map(
+                    (m) =>
+                      `<tr data-month="${esc(m.month)}"><th scope="row">${esc(m.label)}</th><td class="num" data-col="delivered">${m.delivered}</td>${cells(m)}</tr>`,
+                  )
+                  .join('')
+              : '<tr><td colspan="9" class="small">This season hasn\'t started yet.</td></tr>'
+          }</tbody>
           <tfoot><tr data-month="season"><th scope="row">Season</th><td class="num" data-col="delivered">${totals.delivered}</td>${cells(totals)}</tr></tfoot>
         </table>
       </div>

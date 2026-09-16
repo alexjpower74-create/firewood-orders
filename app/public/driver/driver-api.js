@@ -4,13 +4,21 @@ const TOKEN_KEY = 'firewood-orders:driver-token'
 export class NetworkError extends Error {}
 
 export function getToken() {
-  try { return localStorage.getItem(TOKEN_KEY) } catch { return null }
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
 }
 export function setToken(token) {
-  try { localStorage.setItem(TOKEN_KEY, token) } catch {}
+  try {
+    localStorage.setItem(TOKEN_KEY, token)
+  } catch {}
 }
 export function clearToken() {
-  try { localStorage.removeItem(TOKEN_KEY) } catch {}
+  try {
+    localStorage.removeItem(TOKEN_KEY)
+  } catch {}
 }
 
 // Answers { status, body } for every HTTP answer; throws NetworkError only when nothing came back (no signal).
@@ -33,7 +41,9 @@ async function request(method, path, { json, raw, type } = {}) {
     throw new NetworkError(String(e))
   }
   let data = null
-  try { data = await r.json() } catch {}
+  try {
+    data = await r.json()
+  } catch {}
   return { status: r.status, body: data }
 }
 

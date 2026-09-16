@@ -4,7 +4,18 @@
 
 import { api, session, SIGNED_OUT } from '/api.js'
 import {
-  esc, money, cords, volumeText, balanceLabel, METHODS, icon, showDealer, copyButton, clearErrors, showError, dollarsToCents,
+  esc,
+  money,
+  cords,
+  volumeText,
+  balanceLabel,
+  METHODS,
+  icon,
+  showDealer,
+  copyButton,
+  clearErrors,
+  showError,
+  dollarsToCents,
 } from '/ui.js'
 import { createOrderForm, FIELD_STEP } from '/order/form.js'
 import { initPlan, showPlan } from '/dealer/plan.js'
@@ -51,7 +62,10 @@ async function start() {
   window.addEventListener(SIGNED_OUT, (ev) => showSignin(ev.detail))
   $('#signin-form').addEventListener('submit', signin)
   $('#signout').addEventListener('click', signout)
-  $('#tabs').addEventListener('click', (ev) => { const t = ev.target.closest('[role="tab"]'); if (t) openTab(t.dataset.tab) })
+  $('#tabs').addEventListener('click', (ev) => {
+    const t = ev.target.closest('[role="tab"]')
+    if (t) openTab(t.dataset.tab)
+  })
   $('#tabs').addEventListener('keydown', tabKeys)
   $('#stats').addEventListener('click', (ev) => {
     const b = ev.target.closest('.stat')
@@ -65,7 +79,10 @@ async function start() {
   initCustomers($('#customers'), {
     dealerInfo: info,
     onPathChange: (id) => setHash(id ? `customers/${id}` : 'customers'),
-    openOrder: (id) => { openTab('orders'); openOrder(id) },
+    openOrder: (id) => {
+      openTab('orders')
+      openOrder(id)
+    },
   })
   initTotals($('#totals'))
   initSettings($('#settings'), { dealerInfo: info, onSaved: refreshInfo })
@@ -110,7 +127,9 @@ async function signin(ev) {
 }
 
 async function signout() {
-  try { await api.signout() } catch {}
+  try {
+    await api.signout()
+  } catch {}
   session.clear()
   openId = null
   showSignin()
@@ -187,10 +206,12 @@ async function loadBoard() {
 
 function renderBoard() {
   if (!board) return
-  $('#stats').innerHTML = BUCKETS.map(([key, label, svg]) => `
+  $('#stats').innerHTML = BUCKETS.map(
+    ([key, label, svg]) => `
     <button type="button" class="stat" data-bucket="${key}" aria-pressed="${key === bucket}">
       <span class="stat-icon">${svg}</span><span class="stat-count">${board.counts[key] ?? 0}</span><span class="stat-label">${label}</span>
-    </button>`).join('')
+    </button>`,
+  ).join('')
   $('#list-title').textContent = BUCKETS.find(([k]) => k === bucket)[1]
   const list = board[bucket] || []
   $('#order-list').dataset.bucket = bucket
@@ -199,7 +220,8 @@ function renderBoard() {
 
 function whenText(o) {
   if (o.status === 'requested') return `Prefers: ${esc(o.preferred_label)}`
-  if (o.status === 'scheduled' || o.status === 'out_for_delivery') return `On ${esc(o.delivery_label)}${o.route_pos ? `, stop ${o.route_pos}` : ''}`
+  if (o.status === 'scheduled' || o.status === 'out_for_delivery')
+    return `On ${esc(o.delivery_label)}${o.route_pos ? `, stop ${o.route_pos}` : ''}`
   if (o.status === 'delivered') return esc(o.delivered_label || 'Delivered')
   return esc(o.status_label)
 }
@@ -275,7 +297,10 @@ function closePicker(slot, button) {
 }
 
 async function togglePicker(slot, o, button) {
-  if (slot.firstElementChild) { closePicker(slot, button); return }
+  if (slot.firstElementChild) {
+    closePicker(slot, button)
+    return
+  }
   button.setAttribute('aria-expanded', 'true')
   slot.innerHTML = '<div class="picker"><p class="small">Loading the days…</p></div>'
   let days
@@ -295,7 +320,11 @@ async function togglePicker(slot, o, button) {
   picker.addEventListener('click', async (ev) => {
     const b = ev.target.closest('button')
     if (!b) return
-    if (b.matches('.picker-cancel')) { closePicker(slot, button); button.focus(); return }
+    if (b.matches('.picker-cancel')) {
+      closePicker(slot, button)
+      button.focus()
+      return
+    }
     if (!b.matches('.day') || b.disabled || picker.dataset.busy) return
     const alert = picker.querySelector('.alert')
     alert.hidden = true
@@ -333,7 +362,8 @@ async function openOrder(id, { scroll = true } = {}) {
   openId = id
   phoneForm = null
   $('#panel-orders').dataset.open = 'order'
-  for (const b of document.querySelectorAll('.card-open')) b.setAttribute('aria-pressed', String(b.closest('.order-card').dataset.order === id))
+  for (const b of document.querySelectorAll('.card-open'))
+    b.setAttribute('aria-pressed', String(b.closest('.order-card').dataset.order === id))
   if (scroll) {
     detailEl().innerHTML = '<p class="detail-empty">Loading the order…</p>'
     if (matchMedia('(max-width: 899px)').matches) window.scrollTo(0, 0)
@@ -356,7 +386,9 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
   const statusLink = `${location.origin}/o/?t=${o.token}`
   const row = (k, v) => (v ? `<div><dt>${k}</dt><dd>${v}</dd></div>` : '')
   const line = (k, cents, cls = '') => `<div class="row ${cls}"><span>${k}</span><span>${money(cents)}</span></div>`
-  const methodOptions = Object.entries(METHODS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')
+  const methodOptions = Object.entries(METHODS)
+    .map(([k, v]) => `<option value="${k}">${v}</option>`)
+    .join('')
 
   detailEl().innerHTML = `
   <div class="detail-head">
@@ -423,14 +455,26 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
 
   <section class="detail-sec">
     <h3>Payments</h3>
-    ${payments.length ? `<ul class="payments">${payments.map((p) => `<li data-voided="${!!p.voided}" data-payment="${esc(p.id)}">
+    ${
+      payments.length
+        ? `<ul class="payments">${payments
+            .map(
+              (p) => `<li data-voided="${!!p.voided}" data-payment="${esc(p.id)}">
         <span class="payment-main">${esc(p.date)} · ${esc(METHODS[p.method] || p.method)}${p.source === 'door' ? ' at the door' : ''}${p.note ? ` · ${esc(p.note)}` : ''}${p.voided ? ' · Voided' : ''}</span>
         <strong>${money(p.amount_cents)}</strong>
-        ${p.voided ? '' : `<button type="button" class="btn btn-ghost btn-small" data-action="void" data-payment="${esc(p.id)}">Void</button>
+        ${
+          p.voided
+            ? ''
+            : `<button type="button" class="btn btn-ghost btn-small" data-action="void" data-payment="${esc(p.id)}">Void</button>
         <div class="confirm" data-confirm-payment="${esc(p.id)}" hidden>
           <p><strong>Void this payment of ${money(p.amount_cents)}?</strong> It stays on record but no longer counts.</p>
           <div class="confirm-buttons"><button type="button" class="btn btn-danger" data-action="void-yes" data-payment="${esc(p.id)}">Void payment</button><button type="button" class="btn btn-ghost" data-action="void-no" data-payment="${esc(p.id)}">Keep it</button></div>
-        </div>`}</li>`).join('')}</ul>` : '<p class="small">No payments on this order yet.</p>'}
+        </div>`
+        }</li>`,
+            )
+            .join('')}</ul>`
+        : '<p class="small">No payments on this order yet.</p>'
+    }
     <p class="alert" data-error-for="void" role="alert" hidden></p>
     <form class="pay-form" id="pay-form" novalidate>
       <h4>Record a payment</h4>
@@ -457,11 +501,19 @@ function renderDetail({ order: o, customer: c, payments, messages }) {
   <section class="detail-sec">
     <h3>Messages</h3>
     <p class="small">Nothing is sent from here. Copy the text and send it from your own phone.</p>
-    ${messages.length ? messages.map((m, i) => `<div class="message" data-kind="${esc(m.kind)}">
+    ${
+      messages.length
+        ? messages
+            .map(
+              (m, i) => `<div class="message" data-kind="${esc(m.kind)}">
         <p class="message-label">${esc(m.label)}</p>
         <p class="message-text">${esc(m.text)}</p>
         <button type="button" class="btn btn-secondary" data-action="copy-text" data-i="${i}">Copy text</button>
-      </div>`).join('') : '<p class="small">No message for this order right now.</p>'}
+      </div>`,
+            )
+            .join('')
+        : '<p class="small">No message for this order right now.</p>'
+    }
   </section>`
 
   const root = detailEl()
@@ -531,13 +583,17 @@ function toggleEdit(slot, o, button) {
   if (!units.includes(o.unit)) units.unshift(o.unit)
   const locked = o.status === 'delivered'
   const off = locked ? ' disabled' : ''
-  const stackable = o.kind === 'wood' && product && product.stacking_cents_per_cord !== null && product.stacking_cents_per_cord !== undefined
+  const stackable =
+    o.kind === 'wood' && product && product.stacking_cents_per_cord !== null && product.stacking_cents_per_cord !== undefined
   const field = (id, key, label, value, extra = '') => `<label class="field"><span class="field-label">${label}</span>
     <input id="${id}" class="input" data-field="${key}" value="${esc(value ?? '')}" ${extra}><p class="error" data-error-for="${key}" role="alert" hidden></p></label>`
   slot.innerHTML = `<form class="pay-form edit-form" id="edit-form" novalidate>
     <h4>Change order</h4>
-    <p class="small">${locked ? 'This order was delivered, so the amount and the price stay as they are. Mark it not delivered to change them.'
-      : "Changing the amount or the fee works the price out again with today's prices."}</p>
+    <p class="small">${
+      locked
+        ? 'This order was delivered, so the amount and the price stay as they are. Mark it not delivered to change them.'
+        : "Changing the amount or the fee works the price out again with today's prices."
+    }</p>
     <div class="pay-grid">
       ${field('edit-qty', 'qty', 'How many', o.qty, `inputmode="numeric" autocomplete="off"${off}`)}
       <label class="field"><span class="field-label">Unit</span><select id="edit-unit" class="input" data-field="unit"${off}>
@@ -581,7 +637,13 @@ async function saveEdit(ev, o) {
     }
     if (fee !== o.delivery_cents) body.delivery_cents = fee
   }
-  for (const [sel, key] of [['#edit-address', 'address'], ['#edit-dump-notes', 'dump_notes'], ['#edit-name', 'name'], ['#edit-phone', 'phone'], ['#edit-note', 'note']]) {
+  for (const [sel, key] of [
+    ['#edit-address', 'address'],
+    ['#edit-dump-notes', 'dump_notes'],
+    ['#edit-name', 'name'],
+    ['#edit-phone', 'phone'],
+    ['#edit-note', 'note'],
+  ]) {
     const value = el(sel).value.trim()
     if (value !== (o[key] ?? '')) body[key] = value
   }
@@ -665,7 +727,12 @@ function openPhoneOrder() {
   }
   const renderPrice = () => phoneForm && phoneForm.renderPrice(root.querySelector('#phone-price'))
   // The quote takes the dealer's fee (docs/API.md), so the total shown before saving is the total that will be saved.
-  phoneForm = createOrderForm(root.querySelector('#phone-form'), { info, mode: 'dealer', onChange: renderPrice, deliveryOverride: override })
+  phoneForm = createOrderForm(root.querySelector('#phone-form'), {
+    info,
+    mode: 'dealer',
+    onChange: renderPrice,
+    deliveryOverride: override,
+  })
   phoneForm.mountMap()
   renderPrice()
   root.querySelector('#delivery-fee')?.addEventListener('input', () => phoneForm.requote())
@@ -715,7 +782,9 @@ function toast(text) {
   el.textContent = text
   el.hidden = false
   clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { el.hidden = true }, 3000)
+  toastTimer = setTimeout(() => {
+    el.hidden = true
+  }, 3000)
 }
 
 start()

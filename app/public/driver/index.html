@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/driver/driver.css">
   <script>
     // Daylight before first paint, so a bright-sun phone never flashes the dark page.
-    try { if (JSON.parse(localStorage.getItem('firewood-orders:daylight')) === true) document.documentElement.dataset.theme = 'daylight' } catch (e) {}
+    try { if (JSON.parse(localStorage.getItem('firewood-orders:daylight')) === true) document.documentElement.dataset.theme = 'daylight' } catch {}
   </script>
   <script type="module" src="/driver/driver.js"></script>
 </head>

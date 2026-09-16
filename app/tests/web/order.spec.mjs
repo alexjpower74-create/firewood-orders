@@ -12,13 +12,18 @@ const EXPLAIN = {
 }
 
 // The quote the page asks once the map has a pin (before that, the page quotes with no pin at all).
-const quoteWithPin = (page) => page.waitForResponse((r) => {
-  if (!r.url().endsWith('/api/quote') || r.request().method() !== 'POST') return false
-  const body = JSON.parse(r.request().postData() || '{}')
-  return typeof body.lat === 'number' && typeof body.lng === 'number'
-})
+const quoteWithPin = (page) =>
+  page.waitForResponse((r) => {
+    if (!r.url().endsWith('/api/quote') || r.request().method() !== 'POST') return false
+    const body = JSON.parse(r.request().postData() || '{}')
+    return typeof body.lat === 'number' && typeof body.lng === 'number'
+  })
 
-test('five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested', async ({ page, context, request }, testInfo) => {
+test('five steps with real taps: the total is the API quote and the hand-worked $373.75, and Request sent opens Requested', async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const info = (await api(request, 'GET', '/api/info')).body
@@ -43,8 +48,10 @@ test('five steps with real taps: the total is the API quote and the hand-worked 
 
   // Before the pin the page asks the API with no pin at all, and the API answers goods and stacking with no delivery,
   // HST or total; the bar shows exactly that. Stacking is switched on here so both numbers show.
-  const noPin = page.waitForResponse((r) => r.url().endsWith('/api/quote') && r.request().method() === 'POST' &&
-    JSON.parse(r.request().postData() || '{}').stacking === true)
+  const noPin = page.waitForResponse(
+    (r) =>
+      r.url().endsWith('/api/quote') && r.request().method() === 'POST' && JSON.parse(r.request().postData() || '{}').stacking === true,
+  )
   await tap(page, page.locator('#stacking'))
   const noPinRes = await noPin
   const noPinBody = JSON.parse(noPinRes.request().postData())
@@ -52,8 +59,14 @@ test('five steps with real taps: the total is the API quote and the hand-worked 
   expect(Object.keys(noPinBody)).not.toContain('lng')
   expect(noPinRes.status()).toBe(200)
   const noPinQuote = await noPinRes.json()
-  expect([noPinQuote.goods_cents, noPinQuote.stacking_cents, noPinQuote.distance_km, noPinQuote.delivery_cents, noPinQuote.hst_cents, noPinQuote.total_cents])
-    .toEqual([30000, 6000, null, null, null, null])
+  expect([
+    noPinQuote.goods_cents,
+    noPinQuote.stacking_cents,
+    noPinQuote.distance_km,
+    noPinQuote.delivery_cents,
+    noPinQuote.hst_cents,
+    noPinQuote.total_cents,
+  ]).toEqual([30000, 6000, null, null, null, null])
   await expect(page.locator('#quote-goods')).toContainText('$300.00')
   await expect(page.locator('#quote-stacking')).toContainText('$60.00')
   await expect(page.locator('#quote-delivery')).toContainText('after the map pin')
@@ -127,7 +140,11 @@ test('five steps with real taps: the total is the API quote and the hand-worked 
   assertNoThirdParty(context)
 })
 
-test('an HST that is not whole cents is rounded half-up per order: 14 bags to King\'s Point is $157.39', async ({ page, context, request }) => {
+test("an HST that is not whole cents is rounded half-up per order: 14 bags to King's Point is $157.39", async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const w = watch(page)
   const info = (await api(request, 'GET', '/api/info')).body
@@ -142,7 +159,7 @@ test('an HST that is not whole cents is rounded half-up per order: 14 bags to Ki
   await quoted
   // 14 × $7.99 = $111.86, + $25.00 delivery = $136.86. 15 % of that is 2 052.9 cents: half-up per order is $20.53.
   const subtotal = 14 * 799 + 2500
-  expect(subtotal * 15 % 100, 'this HST must not be whole cents').not.toBe(0)
+  expect((subtotal * 15) % 100, 'this HST must not be whole cents').not.toBe(0)
   expect(hstOf(subtotal)).toBe(2053)
   await expect(page.locator('#quote-hst')).toContainText('$20.53')
   await expect(page.locator('#quote-total')).toHaveText('$157.39')
@@ -150,7 +167,11 @@ test('an HST that is not whole cents is rounded half-up per order: 14 bags to Ki
   assertNoThirdParty(context)
 })
 
-test('below the minimum and outside the area: the API\'s messages appear under their fields', async ({ page, context, request }, testInfo) => {
+test("below the minimum and outside the area: the API's messages appear under their fields", async ({
+  page,
+  context,
+  request,
+}, testInfo) => {
   await fresh(context, request)
   const w = watch(page)
   const info = (await api(request, 'GET', '/api/info')).body
@@ -183,11 +204,23 @@ test('below the minimum and outside the area: the API\'s messages appear under t
   assertNoThirdParty(context)
 })
 
-test('each product card names the unit its "from" price is for, so green wood does not look dearer than dry', async ({ page, context, request }) => {
+test('each product card names the unit its "from" price is for, so green wood does not look dearer than dry', async ({
+  page,
+  context,
+  request,
+}) => {
   await fresh(context, request)
   const w = watch(page)
   const info = (await api(request, 'GET', '/api/info')).body
-  const EACH = { cord: 'a cord', half_cord: 'a half cord', face_cord: 'a face cord', load: 'a load', bag: 'a bag', ton: 'a ton', skid: 'a skid' }
+  const EACH = {
+    cord: 'a cord',
+    half_cord: 'a half cord',
+    face_cord: 'a face cord',
+    load: 'a load',
+    bag: 'a bag',
+    ton: 'a ton',
+    skid: 'a skid',
+  }
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'What would you like?' })).toBeVisible()
   // Worked out by hand from the SAMPLE price list: the cheapest unit of each product, with its unit.

@@ -15,7 +15,7 @@ test('the SAMPLE placeholder is a valid 240 × 120 RGB PNG with the letters draw
   assert.deepEqual([...png.slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10])
   const view = new DataView(png.buffer, png.byteOffset, png.byteLength)
   const chunks = []
-  for (let o = 8; o < png.length;) {
+  for (let o = 8; o < png.length; ) {
     const len = view.getUint32(o)
     const type = new TextDecoder().decode(png.slice(o + 4, o + 8))
     const data = png.slice(o + 8, o + 8 + len)
@@ -23,7 +23,10 @@ test('the SAMPLE placeholder is a valid 240 × 120 RGB PNG with the letters draw
     chunks.push({ type, data })
     o += 12 + len
   }
-  assert.deepEqual(chunks.map((c) => c.type), ['IHDR', 'IDAT', 'IEND'])
+  assert.deepEqual(
+    chunks.map((c) => c.type),
+    ['IHDR', 'IDAT', 'IEND'],
+  )
   const ihdr = new DataView(chunks[0].data.buffer, chunks[0].data.byteOffset)
   assert.deepEqual([ihdr.getUint32(0), ihdr.getUint32(4), ihdr.getUint8(8), ihdr.getUint8(9)], [240, 120, 8, 2])
   const raw = zlib.inflateSync(chunks[1].data)
@@ -34,5 +37,5 @@ test('the SAMPLE placeholder is a valid 240 × 120 RGB PNG with the letters draw
     assert.equal(raw[row], 0, 'filter byte')
     for (let x = 0; x < 240; x++) if (raw[row + 1 + x * 3] === 48) ink++
   }
-  assert.ok(ink > 1000 && ink < 240 * 120 / 2, `ink pixels ${ink}`)
+  assert.ok(ink > 1000 && ink < (240 * 120) / 2, `ink pixels ${ink}`)
 })

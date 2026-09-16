@@ -8,8 +8,24 @@ import { isValidDate } from './time.js'
 import { cordsToCuIn, unitsFor } from './units.js'
 import { loadProducts, loadSettings, productFromRow } from './views.js'
 
-export const SETTING_KEYS = ['name', 'short_name', 'sample', 'phone', 'deposit_text', 'season_open', 'season_message',
-  'season_start', 'min_order_cents', 'hst_registered', 'yard', 'delivery', 'load', 'truck', 'delivery_weekdays', 'window_days']
+export const SETTING_KEYS = [
+  'name',
+  'short_name',
+  'sample',
+  'phone',
+  'deposit_text',
+  'season_open',
+  'season_message',
+  'season_start',
+  'min_order_cents',
+  'hst_registered',
+  'yard',
+  'delivery',
+  'load',
+  'truck',
+  'delivery_weekdays',
+  'window_days',
+]
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi
@@ -35,49 +51,87 @@ export function validateSettings(b) {
   need(isText(b.deposit_text, 0, 400), 'deposit_text', 'Keep the deposit text to 400 characters.')
   need(typeof b.season_open === 'boolean', 'season_open', 'Say whether the season is open.')
   need(isText(b.season_message, 0, 200), 'season_message', 'Keep the closed-season message to 200 characters.')
-  need(typeof b.season_start === 'string' && /^\d{2}-\d{2}$/.test(b.season_start) && isValidDate(`2001-${b.season_start}`),
-    'season_start', 'Enter the first day of the season as MM-DD, like 09-01.')
+  need(
+    typeof b.season_start === 'string' && /^\d{2}-\d{2}$/.test(b.season_start) && isValidDate(`2001-${b.season_start}`),
+    'season_start',
+    'Enter the first day of the season as MM-DD, like 09-01.',
+  )
   need(isInt(b.min_order_cents, 0, 100000), 'min_order_cents', 'Enter a minimum order from $0.00 to $1,000.00.')
   need(typeof b.hst_registered === 'boolean', 'hst_registered', 'Say whether you charge HST.')
   const y = b.yard
-  need(isObj(y) && inNL(y.lat, y.lng) && isText(y.label, 1, 80), 'yard',
-    'Put the yard pin in Newfoundland and Labrador and give it a name.')
+  need(
+    isObj(y) && inNL(y.lat, y.lng) && isText(y.label, 1, 80),
+    'yard',
+    'Put the yard pin in Newfoundland and Labrador and give it a name.',
+  )
   const d = b.delivery
   need(isObj(d) && (d.mode === 'bands' || d.mode === 'zones'), 'delivery.mode', 'Pick distance bands or zones.')
   const bands = d.bands
-  need(Array.isArray(bands) && bands.length >= 1 && bands.length <= 6 && bands.every((x, i) => isObj(x) &&
-    isNum(x.up_to_km, 0.1, 500) && isInt(x.fee_cents, 0, 50000) && (i === 0 || x.up_to_km > bands[i - 1].up_to_km)),
-  'delivery.bands', 'Use 1 to 6 bands, each farther than the one before (0.1 to 500 km), with a fee from $0.00 to $500.00.')
+  need(
+    Array.isArray(bands) &&
+      bands.length >= 1 &&
+      bands.length <= 6 &&
+      bands.every(
+        (x, i) =>
+          isObj(x) && isNum(x.up_to_km, 0.1, 500) && isInt(x.fee_cents, 0, 50000) && (i === 0 || x.up_to_km > bands[i - 1].up_to_km),
+      ),
+    'delivery.bands',
+    'Use 1 to 6 bands, each farther than the one before (0.1 to 500 km), with a fee from $0.00 to $500.00.',
+  )
   const zones = d.zones
-  need(Array.isArray(zones) && zones.length <= 30 && zones.every((z) => isObj(z) && typeof z.id === 'string' &&
-    /^[a-z0-9_-]{1,40}$/.test(z.id) && isText(z.name, 1, 40) && isInt(z.fee_cents, 0, 50000)) &&
-    new Set(zones.map((z) => z.id)).size === zones.length && (d.mode !== 'zones' || zones.length >= 1),
-  'delivery.zones', 'Give each zone its own name (up to 40 characters) and a fee from $0.00 to $500.00. Zones need at least one zone.')
+  need(
+    Array.isArray(zones) &&
+      zones.length <= 30 &&
+      zones.every(
+        (z) =>
+          isObj(z) && typeof z.id === 'string' && /^[a-z0-9_-]{1,40}$/.test(z.id) && isText(z.name, 1, 40) && isInt(z.fee_cents, 0, 50000),
+      ) &&
+      new Set(zones.map((z) => z.id)).size === zones.length &&
+      (d.mode !== 'zones' || zones.length >= 1),
+    'delivery.zones',
+    'Give each zone its own name (up to 40 characters) and a fee from $0.00 to $500.00. Zones need at least one zone.',
+  )
   need(isText(d.beyond_message, 0, 200), 'delivery.beyond_message', 'Keep the too-far message to 200 characters.')
   const l = b.load
-  need(isObj(l) && isNum(l.cords, 0.25, 10) && twoDp(l.cords), 'load.cords',
-    'Enter a load from 0.25 to 10 cords, with at most 2 decimals.')
+  need(isObj(l) && isNum(l.cords, 0.25, 10) && twoDp(l.cords), 'load.cords', 'Enter a load from 0.25 to 10 cords, with at most 2 decimals.')
   need(isText(l.description, 1, 200), 'load.description', 'Say what a load is, in up to 200 characters.')
   const t = b.truck
   need(isObj(t) && isText(t.name, 1, 80), 'truck.name', 'Give the truck a name, up to 80 characters.')
-  need(isNum(t.wood_cords_per_day, 0, 40) && twoDp(t.wood_cords_per_day), 'truck.wood_cords_per_day',
-    'Enter from 0 to 40 cords a day, with at most 2 decimals.')
+  need(
+    isNum(t.wood_cords_per_day, 0, 40) && twoDp(t.wood_cords_per_day),
+    'truck.wood_cords_per_day',
+    'Enter from 0 to 40 cords a day, with at most 2 decimals.',
+  )
   need(isInt(t.pellet_skids_per_day, 0, 20), 'truck.pellet_skids_per_day', 'Enter from 0 to 20 skids a day.')
   const w = b.delivery_weekdays
-  need(Array.isArray(w) && w.length >= 1 && w.every((x) => isInt(x, 1, 7)) && new Set(w).size === w.length,
-    'delivery_weekdays', 'Pick at least one delivery day of the week.')
+  need(
+    Array.isArray(w) && w.length >= 1 && w.every((x) => isInt(x, 1, 7)) && new Set(w).size === w.length,
+    'delivery_weekdays',
+    'Pick at least one delivery day of the week.',
+  )
   need(isInt(b.window_days, 7, 42), 'window_days', 'Plan from 7 to 42 days ahead.')
   return {
-    name: b.name.trim(), short_name: b.short_name.trim(), sample: b.sample, phone: b.phone.trim(),
-    deposit_text: b.deposit_text.trim(), season_open: b.season_open, season_message: b.season_message.trim(),
-    season_start: b.season_start, min_order_cents: b.min_order_cents, hst_registered: b.hst_registered,
+    name: b.name.trim(),
+    short_name: b.short_name.trim(),
+    sample: b.sample,
+    phone: b.phone.trim(),
+    deposit_text: b.deposit_text.trim(),
+    season_open: b.season_open,
+    season_message: b.season_message.trim(),
+    season_start: b.season_start,
+    min_order_cents: b.min_order_cents,
+    hst_registered: b.hst_registered,
     yard: { lat: y.lat, lng: y.lng, label: y.label.trim() },
-    delivery: { mode: d.mode, bands: bands.map((x) => ({ up_to_km: x.up_to_km, fee_cents: x.fee_cents })),
+    delivery: {
+      mode: d.mode,
+      bands: bands.map((x) => ({ up_to_km: x.up_to_km, fee_cents: x.fee_cents })),
       zones: zones.map((z) => ({ id: z.id, name: z.name.trim(), fee_cents: z.fee_cents })),
-      beyond_message: d.beyond_message.trim() },
+      beyond_message: d.beyond_message.trim(),
+    },
     load: { cords: l.cords, description: l.description.trim() },
     truck: { name: t.name.trim(), wood_cords_per_day: t.wood_cords_per_day, pellet_skids_per_day: t.pellet_skids_per_day },
-    delivery_weekdays: [...w].sort((a, b2) => a - b2), window_days: b.window_days,
+    delivery_weekdays: [...w].sort((a, b2) => a - b2),
+    window_days: b.window_days,
   }
 }
 
@@ -99,9 +153,10 @@ export async function putSettings(c) {
   for (const k of SETTING_KEYS) if (body[k] !== undefined) merged[k] = body[k]
   const s = validateSettings(merged)
   const products = await loadProducts(c.db)
-  await c.db.prepare('UPDATE settings SET data = ?, load_cu_in = ?, cap_cu_in = ?, cap_bags = ?, updated_at = ? WHERE id = 1')
-    .bind(JSON.stringify(s), cordsToCuIn(s.load.cords), cordsToCuIn(s.truck.wood_cords_per_day), capBagsFor(s, products),
-      c.nowIso).run()
+  await c.db
+    .prepare('UPDATE settings SET data = ?, load_cu_in = ?, cap_cu_in = ?, cap_bags = ?, updated_at = ? WHERE id = 1')
+    .bind(JSON.stringify(s), cordsToCuIn(s.load.cords), cordsToCuIn(s.truck.wood_cords_per_day), capBagsFor(s, products), c.nowIso)
+    .run()
   return getSettings(c)
 }
 
@@ -128,31 +183,70 @@ function validateProduct(p) {
   need(isInt(p.sort, 0, 1000), 'sort', 'Enter a sort position from 0 to 1000.')
   for (const u of unitsFor(p.kind)) {
     const v = p.price_cents[u]
-    need(v === null || v === undefined || isInt(v, 1, PRICE_MAX), `price_cents.${u}`,
-      'Enter a price from $0.01 to $100,000.00, or leave it not sold.')
+    need(
+      v === null || v === undefined || isInt(v, 1, PRICE_MAX),
+      `price_cents.${u}`,
+      'Enter a price from $0.01 to $100,000.00, or leave it not sold.',
+    )
   }
   const price = (u) => p.price_cents[u] ?? null
-  const row = { kind: p.kind, name: p.name.trim(), active: p.active ? 1 : 0, sort: p.sort, species: null, dryness: null,
-    cut_in: null, split: null, stacking_cents_per_cord: null, price_cord: null, price_half_cord: null, price_face_cord: null,
-    price_load: null, brand: null, bag_lb: null, bags_per_ton: null, bags_per_skid: null, price_bag: null, price_ton: null,
-    price_skid: null }
+  const row = {
+    kind: p.kind,
+    name: p.name.trim(),
+    active: p.active ? 1 : 0,
+    sort: p.sort,
+    species: null,
+    dryness: null,
+    cut_in: null,
+    split: null,
+    stacking_cents_per_cord: null,
+    price_cord: null,
+    price_half_cord: null,
+    price_face_cord: null,
+    price_load: null,
+    brand: null,
+    bag_lb: null,
+    bags_per_ton: null,
+    bags_per_skid: null,
+    price_bag: null,
+    price_ton: null,
+    price_skid: null,
+  }
   if (p.kind === 'wood') {
     need(isText(p.species, 0, 80), 'species', 'Keep the species to 80 characters.')
     need(p.dryness === 'dry' || p.dryness === 'green', 'dryness', 'Pick dry or green.')
     need(isInt(p.cut_in, 12, 24), 'cut_in', 'Enter a piece length from 12 to 24 inches.')
     need(typeof p.split === 'boolean', 'split', 'Say whether the wood is split.')
-    need(p.stacking_cents_per_cord === null || isInt(p.stacking_cents_per_cord, 0, 50000), 'stacking_cents_per_cord',
-      'Enter a stacking price from $0.00 to $500.00 a cord, or leave stacking off.')
-    Object.assign(row, { species: p.species.trim(), dryness: p.dryness, cut_in: p.cut_in, split: p.split ? 1 : 0,
-      stacking_cents_per_cord: p.stacking_cents_per_cord, price_cord: price('cord'), price_half_cord: price('half_cord'),
-      price_face_cord: price('face_cord'), price_load: price('load') })
+    need(
+      p.stacking_cents_per_cord === null || isInt(p.stacking_cents_per_cord, 0, 50000),
+      'stacking_cents_per_cord',
+      'Enter a stacking price from $0.00 to $500.00 a cord, or leave stacking off.',
+    )
+    Object.assign(row, {
+      species: p.species.trim(),
+      dryness: p.dryness,
+      cut_in: p.cut_in,
+      split: p.split ? 1 : 0,
+      stacking_cents_per_cord: p.stacking_cents_per_cord,
+      price_cord: price('cord'),
+      price_half_cord: price('half_cord'),
+      price_face_cord: price('face_cord'),
+      price_load: price('load'),
+    })
   } else {
     need(isText(p.brand, 0, 80), 'brand', 'Keep the brand to 80 characters.')
     need(isInt(p.bag_lb, 10, 80), 'bag_lb', 'Enter a bag weight from 10 to 80 lb.')
     need(isInt(p.bags_per_ton, 1, 200), 'bags_per_ton', 'Enter from 1 to 200 bags in a ton.')
     need(isInt(p.bags_per_skid, 1, 200), 'bags_per_skid', 'Enter from 1 to 200 bags on a skid.')
-    Object.assign(row, { brand: p.brand.trim(), bag_lb: p.bag_lb, bags_per_ton: p.bags_per_ton, bags_per_skid: p.bags_per_skid,
-      price_bag: price('bag'), price_ton: price('ton'), price_skid: price('skid') })
+    Object.assign(row, {
+      brand: p.brand.trim(),
+      bag_lb: p.bag_lb,
+      bags_per_ton: p.bags_per_ton,
+      bags_per_skid: p.bags_per_skid,
+      price_bag: price('bag'),
+      price_ton: price('ton'),
+      price_skid: price('skid'),
+    })
   }
   return row
 }
@@ -168,15 +262,30 @@ export async function createProduct(c) {
   if (!isObj(b)) throw bad('body', 'Send the product as JSON.')
   need(b.kind === 'wood' || b.kind === 'pellets', 'kind', 'Pick firewood or pellets.')
   const next = await c.db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS n FROM products').first()
-  const defaults = b.kind === 'wood'
-    ? { species: '', dryness: 'dry', cut_in: 16, split: true, stacking_cents_per_cord: null,
-      price_cents: { cord: null, half_cord: null, face_cord: null, load: null } }
-    : { brand: '', bag_lb: 40, bags_per_ton: 50, bags_per_skid: 70, price_cents: { bag: null, ton: null, skid: null } }
-  const row = validateProduct({ ...defaults, active: true, sort: Math.min(next.n, 1000), ...b, kind: b.kind,
-    price_cents: mergePrices(defaults.price_cents, b.price_cents) })
+  const defaults =
+    b.kind === 'wood'
+      ? {
+          species: '',
+          dryness: 'dry',
+          cut_in: 16,
+          split: true,
+          stacking_cents_per_cord: null,
+          price_cents: { cord: null, half_cord: null, face_cord: null, load: null },
+        }
+      : { brand: '', bag_lb: 40, bags_per_ton: 50, bags_per_skid: 70, price_cents: { bag: null, ton: null, skid: null } }
+  const row = validateProduct({
+    ...defaults,
+    active: true,
+    sort: Math.min(next.n, 1000),
+    ...b,
+    kind: b.kind,
+    price_cents: mergePrices(defaults.price_cents, b.price_cents),
+  })
   const full = { ...row, id: randomId('p'), stock_cu_in: 0, stock_bags: 0 }
-  await c.db.prepare(`INSERT INTO products (${PRODUCT_COLUMNS.join(', ')}) VALUES (${PRODUCT_COLUMNS.map(() => '?').join(', ')})`)
-    .bind(...PRODUCT_COLUMNS.map((k) => full[k])).run()
+  await c.db
+    .prepare(`INSERT INTO products (${PRODUCT_COLUMNS.join(', ')}) VALUES (${PRODUCT_COLUMNS.map(() => '?').join(', ')})`)
+    .bind(...PRODUCT_COLUMNS.map((k) => full[k]))
+    .run()
   await refreshCapBags(c)
   return json({ product: await productById(c, full.id) }, 201)
 }
@@ -190,8 +299,10 @@ export async function updateProduct(c) {
   }
   const row = validateProduct({ ...existing, ...b, kind: existing.kind, price_cents: mergePrices(existing.price_cents, b.price_cents) })
   const cols = Object.keys(row).filter((k) => k !== 'kind')
-  await c.db.prepare(`UPDATE products SET ${cols.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`)
-    .bind(...cols.map((k) => row[k]), existing.id).run()
+  await c.db
+    .prepare(`UPDATE products SET ${cols.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`)
+    .bind(...cols.map((k) => row[k]), existing.id)
+    .run()
   await refreshCapBags(c)
   return json({ product: await productById(c, existing.id) })
 }
@@ -204,14 +315,21 @@ export async function adjustStock(c) {
   let change
   let col
   if (p.kind === 'wood') {
-    need(isNum(b.cords, set ? 0 : -10000, 10000) && twoDp(b.cords) && (set || b.cords !== 0), 'cords',
-      set ? 'Enter the cords in the yard, from 0 to 10,000, with at most 2 decimals.'
-        : 'Enter the cords to add (or take off with a minus), with at most 2 decimals.')
+    need(
+      isNum(b.cords, set ? 0 : -10000, 10000) && twoDp(b.cords) && (set || b.cords !== 0),
+      'cords',
+      set
+        ? 'Enter the cords in the yard, from 0 to 10,000, with at most 2 decimals.'
+        : 'Enter the cords to add (or take off with a minus), with at most 2 decimals.',
+    )
     col = 'stock_cu_in'
     change = set ? cordsToCuIn(b.cords) - p.stock_cu_in : cordsToCuIn(b.cords)
   } else {
-    need(isInt(b.bags, set ? 0 : -1000000, 1000000) && (set || b.bags !== 0), 'bags',
-      set ? 'Enter the bags in the yard, from 0 to 1,000,000.' : 'Enter the bags to add (or take off with a minus).')
+    need(
+      isInt(b.bags, set ? 0 : -1000000, 1000000) && (set || b.bags !== 0),
+      'bags',
+      set ? 'Enter the bags in the yard, from 0 to 1,000,000.' : 'Enter the bags to add (or take off with a minus).',
+    )
     col = 'stock_bags'
     change = set ? b.bags - p.stock_bags : b.bags
   }
@@ -220,7 +338,8 @@ export async function adjustStock(c) {
   if (change !== 0) {
     await c.db.batch([
       c.db.prepare(`UPDATE products SET ${col} = ${col} + ? WHERE id = ?`).bind(change, p.id),
-      c.db.prepare(`INSERT INTO stock_moves (product_id, change, reason, note, at) VALUES (?, ?, 'adjust', ?, ?)`)
+      c.db
+        .prepare(`INSERT INTO stock_moves (product_id, change, reason, note, at) VALUES (?, ?, 'adjust', ?, ?)`)
         .bind(p.id, change, note.trim(), c.nowIso),
     ])
   }
@@ -233,7 +352,9 @@ export async function changePin(c) {
   const b = (await c.body()) || {}
   need(b.which === 'dealer' || b.which === 'driver', 'which', 'Pick the dealer PIN or the driver PIN.')
   await assertSigninAllowed(c)
-  const row = await c.db.prepare('SELECT dealer_pin_hash, dealer_pin_salt, driver_pin_hash, driver_pin_salt FROM settings WHERE id = 1').first()
+  const row = await c.db
+    .prepare('SELECT dealer_pin_hash, dealer_pin_salt, driver_pin_hash, driver_pin_salt FROM settings WHERE id = 1')
+    .first()
   const current = typeof b.current_dealer_pin === 'string' ? b.current_dealer_pin : ''
   const ok = /^\d{4,8}$/.test(current) && sameHex(await hashPin(current, row.dealer_pin_salt), row.dealer_pin_hash)
   if (!ok) {
@@ -249,7 +370,8 @@ export async function changePin(c) {
   const hash = await hashPin(b.new_pin, salt)
   // Everyone signed in with the old PIN of that role must sign in again; the dealer making the change stays signed in.
   await c.db.batch([
-    c.db.prepare(`UPDATE settings SET ${b.which}_pin_hash = ?, ${b.which}_pin_salt = ?, updated_at = ? WHERE id = 1`)
+    c.db
+      .prepare(`UPDATE settings SET ${b.which}_pin_hash = ?, ${b.which}_pin_salt = ?, updated_at = ? WHERE id = 1`)
       .bind(hash, salt, c.nowIso),
     c.db.prepare('DELETE FROM sessions WHERE role = ? AND token_hash <> ?').bind(b.which, await sha256Hex(c.token)),
   ])

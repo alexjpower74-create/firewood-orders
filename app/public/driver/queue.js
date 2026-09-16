@@ -22,15 +22,21 @@ function openDb() {
 }
 
 function withStore(mode, fn) {
-  return openDb().then((db) => new Promise((resolve, reject) => {
-    const t = db.transaction(STORE, mode)
-    const req = fn(t.objectStore(STORE))
-    let result
-    if (req) req.onsuccess = () => { result = req.result }
-    t.oncomplete = () => resolve(result)
-    t.onerror = () => reject(t.error)
-    t.onabort = () => reject(t.error)
-  }))
+  return openDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const t = db.transaction(STORE, mode)
+        const req = fn(t.objectStore(STORE))
+        let result
+        if (req)
+          req.onsuccess = () => {
+            result = req.result
+          }
+        t.oncomplete = () => resolve(result)
+        t.onerror = () => reject(t.error)
+        t.onabort = () => reject(t.error)
+      }),
+  )
 }
 
 export const addItem = (item) => withStore('readwrite', (s) => s.add(item))

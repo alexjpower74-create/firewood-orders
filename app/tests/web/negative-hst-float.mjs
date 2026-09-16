@@ -6,11 +6,13 @@ import { runNegative } from './negative-lib.mjs'
 const ok = runNegative({
   name: 'hst-float',
   what: 'the price bar total = subtotal + subtotal * 0.15 (float, unrounded) instead of the API total',
-  breaks: [{
-    file: 'order/form.js',
-    find: '      if (pinned) total = money(q.total_cents)\n',
-    replace: '      if (pinned) total = money(q.subtotal_cents + q.subtotal_cents * 0.15)\n',
-  }],
+  breaks: [
+    {
+      file: 'order/form.js',
+      find: '      if (pinned) total = money(q.total_cents)\n',
+      replace: '      if (pinned) total = money(q.subtotal_cents + q.subtotal_cents * 0.15)\n',
+    },
+  ],
   spec: 'tests/web/order.spec.mjs',
   grep: 'not whole cents',
   red: /#quote-total[\s\S]*\$157\.39/,

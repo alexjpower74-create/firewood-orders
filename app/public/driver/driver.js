@@ -28,10 +28,16 @@ const state = {
 }
 
 function read(key) {
-  try { return JSON.parse(localStorage.getItem(key)) } catch { return null }
+  try {
+    return JSON.parse(localStorage.getItem(key))
+  } catch {
+    return null
+  }
 }
 function write(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)) } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {}
 }
 
 // $1,234.56 from integer cents.
@@ -57,21 +63,31 @@ function addDays(date, n) {
 const today = () => state.info?.today || null
 
 const sender = createSender({
-  onAccepted: async (item, body) => patchDay(item.date, (day) => {
-    const stop = day.stops.find((s) => s.order_id === item.order_id)
-    const o = body?.order
-    if (stop && o) {
-      Object.assign(stop, { status: o.status, paid_cents: o.paid_cents, owing_cents: o.owing_cents,
-        delivered_label: o.delivered_label, door_payment: o.door_payment })
-    }
-  }),
-  onStarted: async (item) => patchDay(item.date, (day) => {
-    day.started = true
-    for (const s of day.stops) if (s.status === 'scheduled') s.status = 'out_for_delivery'
-  }),
-  onPhotoRefused: (item, r) => notice(r.status === 413 || r.status === 415
-    ? "The delivery was saved; the photo couldn't be used."
-    : `The delivery was saved; the photo didn't send: ${r.body?.error || `answer ${r.status}`}`),
+  onAccepted: async (item, body) =>
+    patchDay(item.date, (day) => {
+      const stop = day.stops.find((s) => s.order_id === item.order_id)
+      const o = body?.order
+      if (stop && o) {
+        Object.assign(stop, {
+          status: o.status,
+          paid_cents: o.paid_cents,
+          owing_cents: o.owing_cents,
+          delivered_label: o.delivered_label,
+          door_payment: o.door_payment,
+        })
+      }
+    }),
+  onStarted: async (item) =>
+    patchDay(item.date, (day) => {
+      day.started = true
+      for (const s of day.stops) if (s.status === 'scheduled') s.status = 'out_for_delivery'
+    }),
+  onPhotoRefused: (_item, r) =>
+    notice(
+      r.status === 413 || r.status === 415
+        ? "The delivery was saved; the photo couldn't be used."
+        : `The delivery was saved; the photo didn't send: ${r.body?.error || `answer ${r.status}`}`,
+    ),
   onChange: async () => {
     state.items = await allItems()
     render()
@@ -147,8 +163,12 @@ function merged() {
     if (it.kind === 'checkin' && it.state === 'queued') {
       const stop = stops.find((s) => s.order_id === it.order_id)
       if (stop && stop.status !== 'delivered') {
-        Object.assign(stop, { status: 'delivered', local: true, door_payment: it.payment.method,
-          delivered_label: `Saved on this phone at ${clock.format(new Date(it.at))}` })
+        Object.assign(stop, {
+          status: 'delivered',
+          local: true,
+          door_payment: it.payment.method,
+          delivered_label: `Saved on this phone at ${clock.format(new Date(it.at))}`,
+        })
       }
     }
   }
@@ -165,9 +185,7 @@ function render() {
   const signedIn = !!getToken() && !state.authNeeded
   $('signin-view').hidden = signedIn
   $('day-view').hidden = !signedIn
-  $('signin-lead').textContent = state.authNeeded
-    ? 'Sign in again. Nothing saved on this phone is lost.'
-    : 'Enter the driver PIN.'
+  $('signin-lead').textContent = state.authNeeded ? 'Sign in again. Nothing saved on this phone is lost.' : 'Enter the driver PIN.'
   renderStrip()
   if (!signedIn) {
     $('day-label').textContent = ''
@@ -185,7 +203,9 @@ function renderStrip() {
   const offline = !navigator.onLine || sender.status().offline
   const saved = pending
     ? `${pending} ${pending === 1 ? 'delivery' : 'deliveries'} saved on this phone`
-    : photos ? `${photos} ${photos === 1 ? 'photo' : 'photos'} saved on this phone` : 'The route start is saved on this phone'
+    : photos
+      ? `${photos} ${photos === 1 ? 'photo' : 'photos'} saved on this phone`
+      : 'The route start is saved on this phone'
   let text
   let mode
   if (!live.length) {
@@ -214,8 +234,11 @@ function renderDay() {
   const isToday = state.viewDate === today()
   // With no signal, "today" is only the day saved on this phone: it may be yesterday. Never call it today (fo2 review #7).
   const savedOnly = isToday && state.infoFailed
-  $('day-title').textContent = !isToday ? "Tomorrow's deliveries"
-    : savedOnly ? `Saved ${view?.long_label || 'day'} (no signal)` : "Today's deliveries"
+  $('day-title').textContent = !isToday
+    ? "Tomorrow's deliveries"
+    : savedOnly
+      ? `Saved ${view?.long_label || 'day'} (no signal)`
+      : "Today's deliveries"
   $('show-today').setAttribute('aria-pressed', String(isToday))
   $('show-tomorrow').setAttribute('aria-pressed', String(!isToday))
   $('day-label').textContent = view?.long_label || ''
@@ -224,7 +247,9 @@ function renderDay() {
   if (!view) {
     empty.hidden = false
     empty.textContent = today()
-      ? (state.offline ? 'No signal, and this day is not saved on this phone yet.' : 'Getting the day…')
+      ? state.offline
+        ? 'No signal, and this day is not saved on this phone yet.'
+        : 'Getting the day…'
       : 'No signal. Open this page once with signal to save the day on this phone.'
     for (const id of ['start-route', 'next', 'all-done']) $(id).hidden = true
     $('stops').replaceChildren()
@@ -248,34 +273,40 @@ function renderDay() {
     $('next-dump').hidden = !next.dump_notes
     $('next-what').textContent = `${next.qty_label} of ${next.product_label}${next.stacking ? ', stacked' : ''}`
     const owing = $('next-owing')
-    owing.textContent = next.owing_cents > 0 ? `Balance owing ${money(next.owing_cents)}`
-      : next.owing_cents === 0 ? 'Paid in full' : `Credit ${money(-next.owing_cents)}`
+    owing.textContent =
+      next.owing_cents > 0
+        ? `Balance owing ${money(next.owing_cents)}`
+        : next.owing_cents === 0
+          ? 'Paid in full'
+          : `Credit ${money(-next.owing_cents)}`
     owing.className = `pill ${next.owing_cents > 0 ? 'owing' : next.owing_cents === 0 ? 'paid' : 'credit'}`
     $('open-maps').href = next.maps_url
   }
 
   const list = $('stops')
-  list.replaceChildren(...stops.map((s) => {
-    const li = document.createElement('li')
-    li.dataset.stop = s.order_id
-    li.className = `st-${s.status}${s.local ? ' local' : ''}`
-    const pos = document.createElement('span')
-    pos.className = 'pos'
-    pos.textContent = String(s.pos)
-    const body = document.createElement('div')
-    const name = document.createElement('strong')
-    name.textContent = s.name
-    const addr = document.createElement('span')
-    addr.className = 'addr'
-    addr.textContent = `${s.address} · ${s.qty_label} of ${s.product_label}`
-    const st = document.createElement('span')
-    st.className = 'state'
-    const pay = s.door_payment ? ` · ${METHOD[s.door_payment]}` : ''
-    st.textContent = s.local ? `Saved on this phone${pay}` : `${STATUS[s.status] || s.status}${s.status === 'delivered' ? pay : ''}`
-    body.append(name, addr, st)
-    li.append(pos, body)
-    return li
-  }))
+  list.replaceChildren(
+    ...stops.map((s) => {
+      const li = document.createElement('li')
+      li.dataset.stop = s.order_id
+      li.className = `st-${s.status}${s.local ? ' local' : ''}`
+      const pos = document.createElement('span')
+      pos.className = 'pos'
+      pos.textContent = String(s.pos)
+      const body = document.createElement('div')
+      const name = document.createElement('strong')
+      name.textContent = s.name
+      const addr = document.createElement('span')
+      addr.className = 'addr'
+      addr.textContent = `${s.address} · ${s.qty_label} of ${s.product_label}`
+      const st = document.createElement('span')
+      st.className = 'state'
+      const pay = s.door_payment ? ` · ${METHOD[s.door_payment]}` : ''
+      st.textContent = s.local ? `Saved on this phone${pay}` : `${STATUS[s.status] || s.status}${s.status === 'delivered' ? pay : ''}`
+      body.append(name, addr, st)
+      li.append(pos, body)
+      return li
+    }),
+  )
 }
 
 function renderRejected() {
@@ -283,22 +314,24 @@ function renderRejected() {
   // An Undo for a delivery the office refused means nothing, and its bar would sit over Remove from this phone.
   if (state.undo && bad.some((i) => i.op_id === state.undo.op_id)) hideUndo()
   $('rejected').hidden = !bad.length
-  $('rejected-list').replaceChildren(...bad.map((it) => {
-    const li = document.createElement('li')
-    const p = document.createElement('p')
-    p.textContent = `${it.kind === 'start' ? 'Start the route' : it.name}: ${it.message}`
-    const b = document.createElement('button')
-    b.type = 'button'
-    b.className = 'btn secondary'
-    b.textContent = 'Remove from this phone'
-    b.addEventListener('click', async () => {
-      await removeItem(it.seq)
-      state.items = await allItems()
-      render()
-    })
-    li.append(p, b)
-    return li
-  }))
+  $('rejected-list').replaceChildren(
+    ...bad.map((it) => {
+      const li = document.createElement('li')
+      const p = document.createElement('p')
+      p.textContent = `${it.kind === 'start' ? 'Start the route' : it.name}: ${it.message}`
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'btn secondary'
+      b.textContent = 'Remove from this phone'
+      b.addEventListener('click', async () => {
+        await removeItem(it.seq)
+        state.items = await allItems()
+        render()
+      })
+      li.append(p, b)
+      return li
+    }),
+  )
 }
 
 function notice(text) {
@@ -408,7 +441,9 @@ async function photoChosen() {
     state.photo = null
   } finally {
     state.photoBusy = false
-    $('photo-note').textContent = state.photo ? 'Photo added. It sends with the delivery.' : "That photo can't be used. Try again, or save without it."
+    $('photo-note').textContent = state.photo
+      ? 'Photo added. It sends with the delivery.'
+      : "That photo can't be used. Try again, or save without it."
     $('photo-note').hidden = false
     $('save-delivery').disabled = !state.method
   }
@@ -433,8 +468,18 @@ async function save() {
       payment.amount_cents = cents
     }
   }
-  const item = { kind: 'checkin', state: 'queued', op_id: crypto.randomUUID(), order_id: state.sheet.order_id,
-    date: state.sheet.date, at, payment, note: '', photo: state.photo, name: state.sheet.name }
+  const item = {
+    kind: 'checkin',
+    state: 'queued',
+    op_id: crypto.randomUUID(),
+    order_id: state.sheet.order_id,
+    date: state.sheet.date,
+    at,
+    payment,
+    note: '',
+    photo: state.photo,
+    name: state.sheet.name,
+  }
   await addItem(item)
   closeSheet()
   state.items = await allItems()
@@ -478,8 +523,13 @@ async function undo() {
         const stop = day.stops.find((s) => s.order_id === u.order_id)
         const o = r.body.order
         if (stop && o) {
-          Object.assign(stop, { status: o.status, paid_cents: o.paid_cents, owing_cents: o.owing_cents,
-            delivered_label: o.delivered_label, door_payment: o.door_payment })
+          Object.assign(stop, {
+            status: o.status,
+            paid_cents: o.paid_cents,
+            owing_cents: o.owing_cents,
+            delivered_label: o.delivered_label,
+            door_payment: o.door_payment,
+          })
         }
       })
       state.items = await allItems()
@@ -536,7 +586,9 @@ function bind() {
   $('start-route').addEventListener('click', startRoute)
   $('delivered').addEventListener('click', openSheet)
   for (const b of document.querySelectorAll('button.pay')) b.addEventListener('click', () => choose(b.dataset.method))
-  $('amount').addEventListener('input', () => { $('amount-error').hidden = true })
+  $('amount').addEventListener('input', () => {
+    $('amount-error').hidden = true
+  })
   $('photo-input').addEventListener('change', photoChosen)
   $('save-delivery').addEventListener('click', save)
   $('sheet-cancel').addEventListener('click', closeSheet)
